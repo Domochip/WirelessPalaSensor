@@ -1,6 +1,8 @@
 #ifndef Main_h
 #define Main_h
 
+#include <arduino.h>
+
 #include "data\status.html.gz.h"
 #include "data\config.html.gz.h"
 #include "data\fw.html.gz.h"
@@ -21,13 +23,11 @@
 //include Application header file
 #include "WirelessPalaSensor.h"
 
-#define APPLICATION_NAME "DomoChip Wireless Palazzetti Sensor"
-#define APPLICATION_CLASS WebPalaSensor
-#define APPLICATION_VAR webPalaSensor
+#define APPLICATION1_NAME "WPalaSensor"
+#define APPLICATION1_DESC "DomoChip Wireless Palazzetti Sensor"
+#define APPLICATION1_CLASS WebPalaSensor
 
 #define VERSION_NUMBER "3.2.2"
-
-#define MODEL "WPalaSensor"
 
 #define DEFAULT_AP_SSID "WirelessPala"
 #define DEFAULT_AP_PSK "PasswordPala"

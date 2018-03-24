@@ -17,7 +17,7 @@ $templatesWithCustoFiles=@{
         ShortApplicationName=$shortApplicationName
         ;
         HTMLContent=@'
-        <h2 class="content-subhead">PalaSensor <span id="l2"><h6 style="display:inline"><b> Loading...</b></h6></span></h2>
+        <h2 class="content-subhead">PalaSensor<span id="l3"><h6 style="display:inline"><b> Loading...</b></h6></span></h2>
         Last Home Automation HTTP Result : <span id="lhar"></span><br>
         Last Home Automation Temperature : <span id="lhat"></span><br>
         <br>
@@ -35,10 +35,10 @@ $templatesWithCustoFiles=@{
             $.each(GS1,function(k,v){
                 $('#'+k).html(v);
             })
-            $("#l2").fadeOut();
+            $("#l3").fadeOut();
         })
         .fail(function(){
-            $("#l2").html('<h4 style="display:inline;color:red;"><b> Failed</b></h4>');
+            $("#l3").html('<h4 style="display:inline;color:red;"><b> Failed</b></h4>');
         });
 '@
     }
@@ -50,8 +50,11 @@ $templatesWithCustoFiles=@{
         ShortApplicationName=$shortApplicationName
         ;
         HTMLContent=@'
-        <h2 class="content-subhead">Sensor Simulator</h2>
+        <h2 class="content-subhead">Sensor Simulator<span id="l1"><h6 style="display:inline"><b> Loading...</b></h6></span></h2>
+        <form class="pure-form pure-form-aligned" id='f1'>
+            <fieldset>
 
+        <h3 class="content-subhead">Calibration</h3>
         <div class="pure-control-group">
             <label>Calibrator</label>
             <a class="pure-button" href="/calib" style="background: rgb(28, 184, 65);">Run</a>
@@ -69,7 +72,7 @@ $templatesWithCustoFiles=@{
             <input type='number' id='shc' name='shc' step="0.0000000000000001" size=30>
         </div>
 
-        <h2 class="content-subhead">Home Automation</h2>
+        <h3 class="content-subhead">Home Automation</h3>
 
         <div class="pure-control-group">
             <label for="hae">Type</label>
@@ -124,7 +127,7 @@ $templatesWithCustoFiles=@{
             </div>
         </div>
 
-        <h2 class="content-subhead">Palazzetti</h2>
+        <h3 class="content-subhead">Palazzetti</h3>
         
         <div class="pure-control-group">
             <label for="cbe" class="pure-checkbox">Palazzetti ConnectionBox</label>
@@ -136,6 +139,13 @@ $templatesWithCustoFiles=@{
                 <input type='text' id='cbi' name='cbi' pattern='((^|\.)((25[0-5])|(2[0-4]\d)|(1\d\d)|([1-9]?\d))){4}$'>
             </div>
         </div>
+
+                <div class="pure-controls">
+                    <input type='submit' value='Save' class="pure-button pure-button-primary" disabled>
+                </div>
+            </fieldset>
+        </form>
+        <span id='r1'></span>
 '@
         ;
         HTMLScript=@'
@@ -169,9 +179,38 @@ $templatesWithCustoFiles=@{
             else $("#cb").hide();
         };
         $("#cbe").change(onCBEChange);
+
+        $("#f1").submit(function(event){
+            $("#r1").html("Saving Configuration...");
+            $.post("/sc1",$("#f1").serialize(),function(){ 
+                $("#f1").hide();
+                var reload5sec=document.createElement('script');
+                reload5sec.text='var count=4;var cdi=setInterval(function(){$("#cd").text(count);if(!count){clearInterval(cdi);location.reload();}count--;},1000);';
+                $('#r1').html('<h3><b>Configuration saved <span style="color: green;">successfully</span>. System is restarting now.</b></h3>This page will be reloaded in <span id="cd">5</span>sec.').append(reload5sec);
+            }).fail(function(){
+                $('#r1').html('<h3><b>Configuration <span style="color: red;">error</span>.</b></h3>');
+            });
+            event.preventDefault();
+        });
 '@
         ;
-        HTMLFillinConfigForm=@'
+        HTMLScriptInReady=@'
+        $.getJSON("/gc1", function(GC1){
+
+            $.each(GC1,function(k,v){
+
+                if($('#'+k).prop('type')!='checkbox') $('#'+k).val(v);
+                else $('#'+k).prop("checked",v);
+
+                $('#'+k).trigger("change");
+            })
+
+            $("input[type=submit]",$("#f1")).prop("disabled",false);
+            $("#l1").fadeOut();
+        })
+        .fail(function(){
+            $("#l1").html('<h6 style="display:inline;color:red;"><b> Failed</b></h6>');
+        });
 '@
     }
     ;
