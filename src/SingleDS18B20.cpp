@@ -120,9 +120,7 @@ float SingleDS18B20::ReadTemp()
   if (!GetReady())
     return 12.3456;
 
-  byte i, j;
   byte data[9];
-  boolean scratchPadReaded;
 
   startConvertT(_owROMCode);
 

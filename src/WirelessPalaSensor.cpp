@@ -26,7 +26,7 @@ void WebPalaSensor::SetDualDigiPot(int resistance)
   SetDualDigiPot(digiPot50k_position, digiPot5k_position + digipotsNTC.dp5kOffset);
 }
 
-void WebPalaSensor::SetDualDigiPot(int dp50kPosition, int dp5kPosition)
+void WebPalaSensor::SetDualDigiPot(unsigned int dp50kPosition, unsigned int dp5kPosition)
 {
   //Set DigiPot position
   if (_mcp4151_50k.getPosition(0) != dp50kPosition)
@@ -138,7 +138,7 @@ void WebPalaSensor::TimerTick()
       stream = http2.getStreamPtr();
 
       //get the answer line
-      int nb = stream->readBytes(payload, (http2.getSize() > sizeof(payload) - 1) ? sizeof(payload) - 1 : http2.getSize());
+      int nb = stream->readBytes(payload, (http2.getSize() > (int)sizeof(payload) - 1) ? sizeof(payload) - 1 : http2.getSize());
       payload[nb] = 0;
 
       if (nb)
@@ -504,9 +504,11 @@ bool WebPalaSensor::AppInit(bool reInit)
 
   //then next will be done by SimpleTimer object
   if (!reInit)
+  {
     _refreshTimer.setInterval(REFRESH_PERIOD, [this]() {
       this->TimerTick();
     });
+  }
 
   return _ds18b20.GetReady();
 };
@@ -522,7 +524,6 @@ void WebPalaSensor::AppInitWebServer(AsyncWebServer &server, bool &shouldReboot,
 
   //GetDigiPot
   server.on("/gdp", HTTP_GET, [this](AsyncWebServerRequest *request) {
-
     String dpJSON('{');
     dpJSON = dpJSON + F("\"r\":") + (_mcp4151_50k.getPosition(0) * digipotsNTC.rBW50KStep + _mcp4151_5k.getPosition(0) * digipotsNTC.rBW5KStep + digipotsNTC.rWTotal);
 #if DEVELOPPER_MODE
@@ -538,9 +539,6 @@ void WebPalaSensor::AppInitWebServer(AsyncWebServer &server, bool &shouldReboot,
   server.on("/sdp", HTTP_POST, [this](AsyncWebServerRequest *request) {
 
 #define TICK_TO_SKIP 20
-
-    char parseBuffer[6] = {0}; //6 because of 5 numbers value + end for resistance
-
     //look for temperature to apply
     if (request->hasParam(F("temperature"), true))
     {

@@ -7,8 +7,8 @@
 #include <ESPAsyncWebServer.h>
 
 #include "Main.h"
-#include "src\Utils.h"
-#include "src\Base.h"
+#include "base\Utils.h"
+#include "base\Base.h"
 
 #include <SPI.h>
 #include <math.h>
@@ -63,10 +63,9 @@ private:
   HomeAutomation ha;
   ConnectionBox connectionBox;
 
-
+  SingleDS18B20 _ds18b20;
   McpDigitalPot _mcp4151_5k;
   McpDigitalPot _mcp4151_50k;
-  SingleDS18B20 _ds18b20;
 
   SimpleTimer _refreshTimer;
   byte _skipTick = 0;
@@ -84,7 +83,7 @@ private:
 
   void SetDualDigiPot(float temperature);
   void SetDualDigiPot(int resistance);
-  void SetDualDigiPot(int dp50kPosition, int dp5kPosition);
+  void SetDualDigiPot(unsigned int dp50kPosition, unsigned int dp5kPosition);
   void TimerTick();
 
   void SetConfigDefaultValues();

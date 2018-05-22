@@ -230,10 +230,10 @@ $templatesWithCustoFiles=@{
 }
 
 #call script that prepare Common Web Files and contain compression/Convert/Merge functions
-. ..\src\data\_prepareCommonWebFiles.ps1
+. ..\base\data\_prepareCommonWebFiles.ps1
 
 $path=(Split-Path -Path $MyInvocation.MyCommand.Path)
-$templatePath=($path+"\..\src\data")
+$templatePath=($path+"\..\base\data")
 
 Write-Host "--- Prepare Application Web Files ---"
 Convert-TemplatesWithCustoToCppHeader -templatePath $templatePath -filesAndCusto $templatesWithCustoFiles -destinationPath $path

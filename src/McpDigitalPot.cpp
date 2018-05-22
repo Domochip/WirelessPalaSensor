@@ -37,10 +37,10 @@ void McpDigitalPot::spiWrite(byte cmd_byte, byte data_byte)
 {
   cmd_byte |= kCMD_WRITE;
   ::digitalWrite(slave_select_pin, LOW);
-  byte high_byte = SPI.transfer(cmd_byte);
-  byte low_byte  = SPI.transfer(data_byte);
+  /*byte high_byte = */SPI.transfer(cmd_byte);
+  /*byte low_byte  = */SPI.transfer(data_byte);
   ::digitalWrite(slave_select_pin, HIGH);
-  bool result = ~low_byte;
+  //bool result = ~low_byte;
 }
 
 uint16_t McpDigitalPot::spiRead(byte cmd_byte)

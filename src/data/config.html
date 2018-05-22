@@ -3,11 +3,28 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="$ShortApplicationName$">
-        <title>Domochip $ApplicationName$</title>
+        <meta name="description" content="WPalaSensor">
+        <title>Domochip WirelessPalaSensor</title>
         
         <link rel="stylesheet" href="pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
         <link rel="stylesheet" href="side-menu.css">
+        <style>
+            .infotip{
+                background:#1Cb841;
+                padding:0.3em 0.3em;
+                border-radius:3px;
+                color:#fff;
+                font-weight:bold;
+            }
+            .infotipdiv{
+                background:#1Cb841;
+                padding:0.3em 1em;
+                border-radius:3px;
+                color:#fff;
+                margin-bottom: 0.5em;
+                display: inline-block;
+            }
+        </style>
     </head>
     <body>
 
@@ -21,7 +38,7 @@
             <div id="menu">
                 <div class="pure-menu">
                     <div class="pure-menu-heading">Domochip</div>
-                    <div class="pure-menu-heading">$ShortApplicationName$</div>
+                    <div class="pure-menu-heading">WPalaSensor</div>
 
                     <ul class="pure-menu-list">
                         <li class="pure-menu-item"><a href="./" class="pure-menu-link">Status</a></li>
@@ -89,7 +106,102 @@
                         </fieldset>
                     </form>
                     <span id='rw'></span>
-                    $HTMLContent$
+                            <h2 class="content-subhead">Sensor Simulator<span id="l1"><h6 style="display:inline"><b> Loading...</b></h6></span></h2>
+        <form class="pure-form pure-form-aligned" id='f1'>
+            <fieldset>
+
+        <h3 class="content-subhead">Calibration</h3>
+        <div class="pure-control-group">
+            <label>Calibrator</label>
+            <a class="pure-button" href="/calib" style="background: rgb(28, 184, 65);">Run</a>
+        </div>
+        <div class="pure-control-group">
+            <label for="sha">Coeff A</label>
+            <input type='number' id='sha' name='sha' step="0.0000000000000001" size=30>
+        </div>
+        <div class="pure-control-group">
+            <label for="shb">Coeff B</label>
+            <input type='number' id='shb' name='shb' step="0.0000000000000001" size=30>
+        </div>
+        <div class="pure-control-group">
+            <label for="shc">Coeff C</label>
+            <input type='number' id='shc' name='shc' step="0.0000000000000001" size=30>
+        </div>
+
+        <h3 class="content-subhead">Home Automation</h3>
+
+        <div class="pure-control-group">
+            <label for="hae">Type</label>
+            <select id='hae' name='hae'>
+                <option value="0">None</option>
+                <option value="1">Jeedom</option>
+                <option value="2">Fibaro</option>
+            </select>
+        </div>
+
+        <div id='ha' style='display:none'>
+            <div class="pure-control-group">
+                <label for="hatls">SSL/TLS</label>
+                <input type='checkbox' id='hatls' name='hatls'>
+            </div>
+            <div class="pure-control-group">
+                <label for="hah">Hostname</label>
+                <input type='text' id='hah' name='hah' maxlength='64' pattern='[A-Za-z0-9-.]+' size='50' title='DNS name or IP of the Jeedom server'>
+                <span class="pure-form-message-inline">(Hostname should match with certificate name if SSL/TLS is enabled)</span>
+            </div>
+
+            <div id='j' style='display:none'>
+
+                <div class="pure-control-group">
+                    <label for="ja">ApiKey</label>
+                    <input type='password' id='ja' name='ja' maxlength='48' pattern='[A-Za-z0-9-.]+' size=50 title='APIKey from Jeedom configuration webpage'>
+                </div>
+            </div>
+
+            <div id='fib' style='display:none'>
+            
+                <div class="pure-control-group">
+                    <label for="fu">Username</label>
+                    <input type='text' id='fu' name='fu' maxlength='64'>
+                </div>
+                <div class="pure-control-group">
+                    <label for="fp">Password</label>
+                    <input type='password' id='fp' name='fp' maxlength='64'>
+                </div>
+            </div>
+            <div class="pure-control-group">
+                <label for="hatid">Temperature Id</label>
+                <input type='number' id='hatid' name='hatid' min='0' max='65535'>
+                <span class="pure-form-message-inline">(Command Or Device Id)</span>
+            </div>
+            <div id='hatlse'>
+                <div class="pure-control-group">
+                    <label for="hafp">TLS FingerPrint</label>
+                    <input type='text' id='hafp' name='hafp' maxlength='59' pattern='^([0-9A-Fa-f]{2}[ :-]*){19}([0-9A-Fa-f]{2})$' size='65'>
+                    <span class="pure-form-message-inline">(separators are : &lt;none&gt;,&lt;space&gt;,:,-)</span>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="content-subhead">Palazzetti</h3>
+        
+        <div class="pure-control-group">
+            <label for="cbe" class="pure-checkbox">Palazzetti ConnectionBox</label>
+            <input type='checkbox' id='cbe' name='cbe'>
+        </div>
+        <div id='cb' style='display:none'>
+            <div class="pure-control-group">
+                <label for="cbi">ConnectionBox IP</label>
+                <input type='text' id='cbi' name='cbi' pattern='((^|\.)((25[0-5])|(2[0-4]\d)|(1\d\d)|([1-9]?\d))){4}$'>
+            </div>
+        </div>
+
+                <div class="pure-controls">
+                    <input type='submit' value='Save' class="pure-button pure-button-primary" disabled>
+                </div>
+            </fieldset>
+        </form>
+        <span id='r1'></span>
                 </div>
             </div>
         </div>
@@ -180,7 +292,49 @@
                 });
             }
 
-            $HTMLScript$
+                    function onHAEChange(){
+            switch($("#hae").val()){
+                case "0":
+                    $("#ha").hide();
+                    break;
+                case "1":
+                    $("#fib").hide();
+                    $("#j").show();
+                    $("#ha").show();
+                    break;
+                case "2":
+                    $("#j").hide();
+                    $("#fib").show();
+                    $("#ha").show();
+                    break;
+            }
+        };
+        $("#hae").change(onHAEChange);
+
+        function onHATLSChange(){
+            if($("#hatls").prop("checked")) $("#hatlse").show();
+            else $("#hatlse").hide();
+        };
+        $("#hatls").change(onHATLSChange);
+
+        function onCBEChange(){
+            if($("#cbe").prop("checked")) $("#cb").show();
+            else $("#cb").hide();
+        };
+        $("#cbe").change(onCBEChange);
+
+        $("#f1").submit(function(event){
+            $("#r1").html("Saving Configuration...");
+            $.post("/sc1",$("#f1").serialize(),function(){ 
+                $("#f1").hide();
+                var reload5sec=document.createElement('script');
+                reload5sec.text='var count=4;var cdi=setInterval(function(){$("#cd").text(count);if(!count){clearInterval(cdi);location.reload();}count--;},1000);';
+                $('#r1').html('<h3><b>Configuration saved <span style="color: green;">successfully</span>. System is restarting now.</b></h3>This page will be reloaded in <span id="cd">5</span>sec.').append(reload5sec);
+            }).fail(function(){
+                $('#r1').html('<h3><b>Configuration <span style="color: red;">error</span>.</b></h3>');
+            });
+            event.preventDefault();
+        });
 
             $(document).ready(function(){
                 $.getJSON("/gcw", function(GCW){
@@ -202,7 +356,22 @@
                     $("#lw").html('<h6 style="display:inline;color:red;"><b> Failed</b></h6>');
                 });
 
-                $HTMLScriptInReady$
+                        $.getJSON("/gc1", function(GC1){
+
+            $.each(GC1,function(k,v){
+
+                if($('#'+k).prop('type')!='checkbox') $('#'+k).val(v);
+                else $('#'+k).prop("checked",v);
+
+                $('#'+k).trigger("change");
+            })
+
+            $("input[type=submit]",$("#f1")).prop("disabled",false);
+            $("#l1").fadeOut();
+        })
+        .fail(function(){
+            $("#l1").html('<h6 style="display:inline;color:red;"><b> Failed</b></h6>');
+        });
             });
         </script>
         <script src="side-menu.js"></script>
