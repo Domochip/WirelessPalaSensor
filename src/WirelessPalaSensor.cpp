@@ -513,6 +513,37 @@ bool WebPalaSensor::AppInit(bool reInit)
   return _ds18b20.GetReady();
 };
 //------------------------------------------
+//Return HTML Code to insert into Status Web page
+const uint8_t* WebPalaSensor::GetHTMLContent(WebPageForPlaceHolder wp){
+      switch(wp){
+    case status:
+      return (const uint8_t*) status1htmlgz;
+      break;
+    case config:
+      return (const uint8_t*) config1htmlgz;
+      break;
+    default:
+      return nullptr;
+      break;
+  };
+  return nullptr;
+};
+//and his Size
+size_t WebPalaSensor::GetHTMLContentSize(WebPageForPlaceHolder wp){
+  switch(wp){
+    case status:
+      return sizeof(status1htmlgz);
+      break;
+    case config:
+      return sizeof(config1htmlgz);
+      break;
+    default:
+      return 0;
+      break;
+  };
+  return 0;
+};
+//------------------------------------------
 //code to register web request answer to the web server
 void WebPalaSensor::AppInitWebServer(AsyncWebServer &server, bool &shouldReboot, bool &pauseApplication)
 {

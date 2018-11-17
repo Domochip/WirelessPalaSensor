@@ -1,0 +1,26 @@
+<div id="applicationName" style="display: none;">WirelessPalaSensor</div>
+<div id="shortApplicationName" style="display: none;">WPalaSensor</div>
+
+<h2 class="content-subhead">PalaSensor<span id="l3"><h6 style="display:inline"><b> Loading...</b></h6></span></h2>
+Last Home Automation HTTP Result : <span id="lhar"></span><br>
+Last Home Automation Temperature : <span id="lhat"></span><br>
+<br>
+Last ConnectionBox HTTP Result : <span id="lcr"></span><br>
+Last ConnectionBox Temperature : <span id="lct"></span><br>
+<br>
+Last Built-In Temperature : <span id="low"></span> (<span id="owu"></span>Used)<br>
+<br>
+Pushed Temperature <span id="pt"></span> (pos : <span id="p50"></span>/<span id="p5"></span>)<br>
+
+<script>
+    $.getJSON("/gs1", function(GS1){
+
+        $.each(GS1,function(k,v){
+            $('#'+k).html(v);
+        })
+        $("#l3").fadeOut();
+    })
+    .fail(function(){
+        $("#l3").html('<h4 style="display:inline;color:red;"><b> Failed</b></h4>');
+    });
+</script>>

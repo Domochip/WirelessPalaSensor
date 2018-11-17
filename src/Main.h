@@ -3,11 +3,6 @@
 
 #include <arduino.h>
 
-#include "data\status.html.gz.h"
-#include "data\config.html.gz.h"
-#include "data\fw.html.gz.h"
-#include "data\discover.html.gz.h"
-
 //Specific
 #include "data\calib.html.gz.h"
 
