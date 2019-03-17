@@ -77,10 +77,11 @@ void WebPalaSensor::TimerTick()
   //if ConnectionBox option enabled in config
   if (connectionBox.enabled)
   {
+    WiFiClient client;
     HTTPClient http1;
 
     //try to get current stove temperature info ----------------------
-    http1.begin(String(F("http://")) + IPAddress(connectionBox.ip).toString() + F("/sendmsg.php?cmd=GET%20TMPS"));
+    http1.begin(client, String(F("http://")) + IPAddress(connectionBox.ip).toString() + F("/sendmsg.php?cmd=GET%20TMPS"));
     //set timeOut
     http1.setTimeout(5000);
     //send request
@@ -121,11 +122,16 @@ void WebPalaSensor::TimerTick()
     //try to get house automation sensor value -----------------
     String completeURI = String(F("http")) + (ha.tls ? F("s") : F("")) + F("://") + ha.hostname + F("/core/api/jeeApi.php?apikey=") + ha.jeedom.apiKey + F("&type=cmd&id=") + ha.temperatureId;
     if (!ha.tls)
-      http2.begin(completeURI);
+    {
+      WiFiClient client;
+      http2.begin(client, completeURI);
+    }
     else
     {
+      WiFiClientSecure clientSecure;
       char fpStr[41];
-      http2.begin(completeURI, Utils::FingerPrintA2S(fpStr, ha.fingerPrint));
+      clientSecure.setFingerprint(Utils::FingerPrintA2S(fpStr, ha.fingerPrint));
+      http2.begin(clientSecure, completeURI);
     }
     //set timeOut
     http2.setTimeout(5000);
@@ -165,11 +171,16 @@ void WebPalaSensor::TimerTick()
     String completeURI = String(F("http")) + (ha.tls ? F("s") : F("")) + F("://") + ha.hostname + F("/api/devices?id=") + ha.temperatureId;
     //String completeURI = String(F("http")) + (ha.tls ? F("s") : F("")) + F("://") + ha.hostname + F("/devices.json");
     if (!ha.tls)
-      http3.begin(completeURI);
+    {
+      WiFiClient client;
+      http3.begin(client, completeURI);
+    }
     else
     {
+      WiFiClientSecure clientSecure;
       char fpStr[41];
-      http3.begin(completeURI, Utils::FingerPrintA2S(fpStr, ha.fingerPrint));
+      clientSecure.setFingerprint(Utils::FingerPrintA2S(fpStr, ha.fingerPrint));
+      http3.begin(clientSecure, completeURI);
     }
 
     //Pass authentication if specified in configuration
@@ -291,38 +302,38 @@ void WebPalaSensor::SetConfigDefaultValues()
 };
 //------------------------------------------
 //Parse JSON object into configuration properties
-void WebPalaSensor::ParseConfigJSON(JsonObject &root)
+void WebPalaSensor::ParseConfigJSON(DynamicJsonDocument &doc)
 {
-  if (root[F("sha")].success())
-    digipotsNTC.steinhartHartCoeffs[0] = root[F("sha")];
-  if (root[F("shb")].success())
-    digipotsNTC.steinhartHartCoeffs[1] = root[F("shb")];
-  if (root[F("shc")].success())
-    digipotsNTC.steinhartHartCoeffs[2] = root[F("shc")];
+  if (!doc[F("sha")].isNull())
+    digipotsNTC.steinhartHartCoeffs[0] = doc[F("sha")];
+  if (!doc[F("shb")].isNull())
+    digipotsNTC.steinhartHartCoeffs[1] = doc[F("shb")];
+  if (!doc[F("shc")].isNull())
+    digipotsNTC.steinhartHartCoeffs[2] = doc[F("shc")];
 
-  if (root[F("hae")].success())
-    ha.enabled = root[F("hae")];
-  if (root[F("hatls")].success())
-    ha.tls = root[F("hatls")];
-  if (root[F("hah")].success())
-    strlcpy(ha.hostname, root["hah"], sizeof(ha.hostname));
-  if (root[F("hatid")].success())
-    ha.temperatureId = root[F("hatid")];
-  if (root["hafp"].success())
-    Utils::FingerPrintS2A(ha.fingerPrint, root["hafp"]);
+  if (!doc[F("hae")].isNull())
+    ha.enabled = doc[F("hae")];
+  if (!doc[F("hatls")].isNull())
+    ha.tls = doc[F("hatls")];
+  if (!doc[F("hah")].isNull())
+    strlcpy(ha.hostname, doc["hah"], sizeof(ha.hostname));
+  if (!doc[F("hatid")].isNull())
+    ha.temperatureId = doc[F("hatid")];
+  if (!doc["hafp"].isNull())
+    Utils::FingerPrintS2A(ha.fingerPrint, doc["hafp"]);
 
-  if (root["ja"].success())
-    strlcpy(ha.jeedom.apiKey, root["ja"], sizeof(ha.jeedom.apiKey));
+  if (!doc["ja"].isNull())
+    strlcpy(ha.jeedom.apiKey, doc["ja"], sizeof(ha.jeedom.apiKey));
 
-  if (root["fu"].success())
-    strlcpy(ha.fibaro.username, root["fu"], sizeof(ha.fibaro.username));
-  if (root["fp"].success())
-    strlcpy(ha.fibaro.password, root["fp"], sizeof(ha.fibaro.password));
+  if (!doc["fu"].isNull())
+    strlcpy(ha.fibaro.username, doc["fu"], sizeof(ha.fibaro.username));
+  if (!doc["fp"].isNull())
+    strlcpy(ha.fibaro.password, doc["fp"], sizeof(ha.fibaro.password));
 
-  if (root[F("cbe")].success())
-    connectionBox.enabled = root[F("cbe")];
-  if (root[F("cbi")].success())
-    connectionBox.ip = root[F("cbi")];
+  if (!doc[F("cbe")].isNull())
+    connectionBox.enabled = doc[F("cbe")];
+  if (!doc[F("cbi")].isNull())
+    connectionBox.ip = doc[F("cbi")];
 };
 //------------------------------------------
 //Parse HTTP POST parameters in request into configuration properties
@@ -514,32 +525,36 @@ bool WebPalaSensor::AppInit(bool reInit)
 };
 //------------------------------------------
 //Return HTML Code to insert into Status Web page
-const uint8_t* WebPalaSensor::GetHTMLContent(WebPageForPlaceHolder wp){
-      switch(wp){
-    case status:
-      return (const uint8_t*) status1htmlgz;
-      break;
-    case config:
-      return (const uint8_t*) config1htmlgz;
-      break;
-    default:
-      return nullptr;
-      break;
+const uint8_t *WebPalaSensor::GetHTMLContent(WebPageForPlaceHolder wp)
+{
+  switch (wp)
+  {
+  case status:
+    return (const uint8_t *)status1htmlgz;
+    break;
+  case config:
+    return (const uint8_t *)config1htmlgz;
+    break;
+  default:
+    return nullptr;
+    break;
   };
   return nullptr;
 };
 //and his Size
-size_t WebPalaSensor::GetHTMLContentSize(WebPageForPlaceHolder wp){
-  switch(wp){
-    case status:
-      return sizeof(status1htmlgz);
-      break;
-    case config:
-      return sizeof(config1htmlgz);
-      break;
-    default:
-      return 0;
-      break;
+size_t WebPalaSensor::GetHTMLContentSize(WebPageForPlaceHolder wp)
+{
+  switch (wp)
+  {
+  case status:
+    return sizeof(status1htmlgz);
+    break;
+  case config:
+    return sizeof(config1htmlgz);
+    break;
+  default:
+    return 0;
+    break;
   };
   return 0;
 };

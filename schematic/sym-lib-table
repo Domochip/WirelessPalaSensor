@@ -1,0 +1,6 @@
+(sym_lib_table
+  (lib (name ESP8266)(type Legacy)(uri ${KIPRJMOD}/lib/ESP8266.lib)(options "")(descr ""))
+  (lib (name DigiPot)(type Legacy)(uri ${KIPRJMOD}/lib/DigiPot.lib)(options "")(descr ""))
+  (lib (name maxim)(type Legacy)(uri ${KIPRJMOD}/lib/maxim.lib)(options "")(descr ""))
+  (lib (name sk6812)(type Legacy)(uri ${KIPRJMOD}/lib/sk6812.lib)(options "")(descr ""))
+)
