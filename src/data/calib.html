@@ -1,239 +1,183 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="WPalaSensor">
-        <title>Domochip WirelessPalaSensor</title>
+<span id="l1"><h2><b>Loading...</b></h2></span>
+<form class="pure-form pure-form-aligned" id='f1' style='display:none'>
+    <fieldset>
         
-        <link rel="stylesheet" href="pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
-        <link rel="stylesheet" href="side-menu.css">
-    </head>
-    <body>
+        <h2 class="content-subhead">Step 1 : Thermistor simulator calibration</h2>
 
-        <div id="layout">
-            <!-- Menu toggle -->
-            <a href="#menu" id="menuLink" class="menu-link">
-                <!-- Hamburger icon -->
-                <span></span>
-            </a>
-
-            <div id="menu">
-                <div class="pure-menu">
-                    <div class="pure-menu-heading">Domochip</div>
-                    <div class="pure-menu-heading">WPalaSensor</div>
-
-                    <ul class="pure-menu-list">
-                        <li class="pure-menu-item"><a href="./" class="pure-menu-link">Status</a></li>
-                        <li class="pure-menu-item pure-menu-selected"><a href="config" class="pure-menu-link">Config</a></li>
-                        <li class="pure-menu-item"><a href="fw" class="pure-menu-link">Firmware</a></li>
-                        <li class="pure-menu-item"><a href="discover" class="pure-menu-link">Discover</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div id="main">
-                <div class="header">
-                    <h1>Calibration <span id="l1"><h6 style="display:inline"><b> Loading...</b></h6></span></h1>
-                    <span id='i'></span><br>
-                </div>
-
-                <div class="content">
-                
-                    <form class="pure-form pure-form-aligned" id='f' style='display:none'>
-                        <fieldset>
-                            
-                            <h2 class="content-subhead">Step 1 : Thermistor simulator calibration</h2>
-
-                            <div class="pure-control-group">
-                                <label for="set10">Click</label>
-                                <input type='button' id='set10' value='Set Thermistor to 10°'><span id='set10res'>
-                            </div>
-                            <div class="pure-control-group">
-                                <label for="set10d">Adjust to get 10.0° on stove display</label>
-                                <input type='button' id='set10d' value='-'><input type='button' id='set10u' value='+'>
-                            </div>
-
-                            <br>
-                            <div class="pure-control-group">
-                                <label for="set20">Click</label>
-                                <input type='button' id='set20' value='Set Thermistor to 20°'><span id='set20res'>
-                            </div>
-                            <div class="pure-control-group">
-                                <label for="set20d">Adjust to get 20.0° on stove display</label>
-                                <input type='button' id='set20d' value='-'><input type='button' id='set20u' value='+'>
-                            </div>
-
-                            <br>
-                            <div class="pure-control-group">
-                                <label for="set30">Click</label>
-                                <input type='button' id='set30' value='Set Thermistor to 30°'><span id='set30res'>
-                            </div>
-                            <div class="pure-control-group">
-                                <label for="set30d">Adjust to get 30.0° on stove display</label>
-                                <input type='button' id='set30d' value='-'><input type='button' id='set30u' value='+'>
-                            </div>
-
-                            <h2 class="content-subhead">Step 2 : calculate</h2>
-
-                            <div class="pure-control-group">
-                                <label for="calc">Click</label>
-                                <input type='button' id='calc' value='Run Calculation'>
-                            </div>
-
-                            <h2 class="content-subhead">Results</h2>
-
-                            <div class="pure-control-group">
-                                <label for="sha">Coeff A</label>
-                                <input type='number' id='sha' name='sha' step="0.0000000000000001" size=21>
-                            </div>
-                            <div class="pure-control-group">
-                                <label for="shb">Coeff B</label>
-                                <input type='number' id='shb' name='shb' step="0.0000000000000001" size=21>
-                            </div>
-                            <div class="pure-control-group">
-                                <label for="shc">Coeff C</label>
-                                <input type='number' id='shc' name='shc' step="0.0000000000000001" size=21>
-                            </div>
-        
-                            <div class="pure-controls">
-                                <input type='submit' value='Save' class="pure-button pure-button-primary">
-                            </div>
-                        </fieldset>
-                    </form>
-                    <span id='r'></span>
-                </div>
-            </div>
+        <div class="pure-control-group">
+            <label for="set10">Click</label>
+            <input type='button' id='set10' value='Set Thermistor to 10°'><span id='set10res'>
+        </div>
+        <div class="pure-control-group">
+            <label for="set10d">Adjust to get 10.0° on stove display</label>
+            <input type='button' id='set10d' value='-'><input type='button' id='set10u' value='+'>
         </div>
 
-        <input type='number' id='R1' style='display:none'>
-        <input type='number' id='R2' style='display:none'>
-        <input type='number' id='R3' style='display:none'>
+        <br>
+        <div class="pure-control-group">
+            <label for="set20">Click</label>
+            <input type='button' id='set20' value='Set Thermistor to 20°'><span id='set20res'>
+        </div>
+        <div class="pure-control-group">
+            <label for="set20d">Adjust to get 20.0° on stove display</label>
+            <input type='button' id='set20d' value='-'><input type='button' id='set20u' value='+'>
+        </div>
 
-        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-        <script>
-            if (!window.jQuery){
-                document.write('<script type="text/javascript" src="/jquery-3.2.1.min.js"><\/script>');
-                document.getElementById('l').innerHTML='<h4 style="display:inline"> (JQuery loaded locally)</h4>';
+        <br>
+        <div class="pure-control-group">
+            <label for="set30">Click</label>
+            <input type='button' id='set30' value='Set Thermistor to 30°'><span id='set30res'>
+        </div>
+        <div class="pure-control-group">
+            <label for="set30d">Adjust to get 30.0° on stove display</label>
+            <input type='button' id='set30d' value='-'><input type='button' id='set30u' value='+'>
+        </div>
+
+        <h2 class="content-subhead">Step 2 : calculate</h2>
+
+        <div class="pure-control-group">
+            <label for="calc">Click</label>
+            <input type='button' id='calc' value='Run Calculation'>
+        </div>
+
+        <h2 class="content-subhead">Results</h2>
+
+        <div class="pure-control-group">
+            <label for="sha">Coeff A</label>
+            <input type='number' id='sha' name='sha' step="0.0000000000000001" size=21>
+        </div>
+        <div class="pure-control-group">
+            <label for="shb">Coeff B</label>
+            <input type='number' id='shb' name='shb' step="0.0000000000000001" size=21>
+        </div>
+        <div class="pure-control-group">
+            <label for="shc">Coeff C</label>
+            <input type='number' id='shc' name='shc' step="0.0000000000000001" size=21>
+        </div>
+
+        <div class="pure-controls">
+            <input type='submit' value='Save' class="pure-button pure-button-primary">
+        </div>
+    </fieldset>
+</form>
+<span id='r1'></span>
+
+<input type='number' id='R1' style='display:none'>
+<input type='number' id='R2' style='display:none'>
+<input type='number' id='R3' style='display:none'>
+
+<script>
+
+    function getSteinhartHart(R1,T1,R2,T2,R3,T3){
+        T1=T1+273.15;T2=T2+273.15;T3=T3+273.15;
+
+        var L1=Math.log(R1);var L2=Math.log(R2);var L3=Math.log(R3);
+
+        var Y1=1/T1;var Y2=1/T2;var Y3=1/T3;
+
+        var Lambda2=(Y2-Y1)/(L2-L1);
+        var Lambda3=(Y3-Y1)/(L3-L1);
+
+        var C=((Lambda3-Lambda2) / (L3-L2)) / (L1+L2+L3);
+        var B=Lambda2-C*(L1*L1 + L1*L2 + L2*L2);
+        var A=Y1-(B+L1*L1*C)*L1;
+        return [A,B,C];
+    }
+
+    $("#f1").addEventListener('submit',function(event){
+        $("#r1").innerHTML="Saving Configuration...";
+        post("/sc1",
+            new FormData($("#f1")),
+            function(){ 
+                $("#f1").style.display='none';
+
+                $('#r1').innerHTML='<h3><b>Configuration saved <span style="color: green;">successfully</span>.</b></h3>This page will be reloaded in <span id="cd">5</span>sec.';
+                runScript('var count=4;var cdi=setInterval(function(){$("#cd").innerText=count;if(!count){clearInterval(cdi);location.reload();}count--;},1000);');
+            },
+            function(){
+                $('#r1').innerHTML='<h3><b>Configuration <span style="color: red;">error</span>.</b></h3>';
             }
-            else $("#l").fadeOut();
-        </script>
-        <script>
-            if (!window.jQuery) {
-                document.getElementById('l').innerHTML='';
-                document.getElementById('l1').innerHTML='<h6 style="display:inline;color:red;"><b> Failed</b></h6>';
-                document.getElementById('i').innerHTML='<h3 style="color:red"> JQuery is required. We were not able to load it :-(</h3>';
+        );
+        event.preventDefault();
+    });
+
+    $("#set10").addEventListener('click',function(){
+        post("/sdp",{temperature:10.0},function(){
+            getJSON("/gdp",function(data){$("#R1").value=data.r})
+        })
+    })
+
+    $("#set10d").addEventListener('click',function(){
+        post("/sdp",{up:1},function(){
+            getJSON("/gdp",function(data){$("#R1").value=data.r})
+        })
+    })
+
+    $("#set10u").addEventListener('click',function(){
+        post("/sdp",{down:1},function(){
+            getJSON("/gdp",function(data){$("#R1").value=data.r})
+        })
+    })
+    
+    $("#set20").addEventListener('click',function(){
+        post("/sdp",{temperature:20.0},function(){
+            getJSON("/gdp",function(data){$("#R2").value=data.r})
+        })
+    })
+
+    $("#set20d").addEventListener('click',function(){
+        post("/sdp",{up:1},function(){
+            getJSON("/gdp",function(data){$("#R2").value=data.r})
+        })
+    })
+
+    $("#set20u").addEventListener('click',function(){
+        post("/sdp",{down:1},function(){
+            getJSON("/gdp",function(data){$("#R2").value=data.r})
+        })
+    })
+
+    $("#set30").addEventListener('click',function(){
+        post("/sdp",{temperature:30.0},function(){
+            getJSON("/gdp",function(data){$("#R3").value=data.r})
+        })
+    })
+
+    $("#set30d").addEventListener('click',function(){
+        post("/sdp",{up:1},function(){
+            getJSON("/gdp",function(data){$("#R3").value=data.r})
+        })
+    })
+
+    $("#set30u").addEventListener('click',function(){
+        post("/sdp",{down:1},function(){
+            getJSON("/gdp",function(data){$("#R3").value=data.r})
+        })
+    })
+
+    $("#calc").addEventListener('click',function(){
+        var coeffs=getSteinhartHart($("#R1").value,10.0,$("#R2").value,20.0,$("#R3").value,30.0);
+        $("#sha").value=Math.round(coeffs[0]*10000000000000000)/10000000000000000;
+        $("#shb").value=Math.round(coeffs[1]*10000000000000000)/10000000000000000;
+        $("#shc").value=Math.round(coeffs[2]*10000000000000000)/10000000000000000;
+    })
+
+    getJSON("/gc1",
+        function(GC1){
+            for(k in GC1){
+                if($('#'+k)){
+                    if($('#'+k).type!='checkbox') $('#'+k).value=GC1[k];
+                    else $('#'+k).checked=GC1[k];
+
+                    triggerEvent($('#'+k),'change');
+                }
             }
-        </script>
-        <script>
 
-            function getSteinhartHart(R1,T1,R2,T2,R3,T3){
-                T1=T1+273.15;T2=T2+273.15;T3=T3+273.15;
-
-                var L1=Math.log(R1);var L2=Math.log(R2);var L3=Math.log(R3);
-
-                var Y1=1/T1;var Y2=1/T2;var Y3=1/T3;
-
-                var Lambda2=(Y2-Y1)/(L2-L1);
-                var Lambda3=(Y3-Y1)/(L3-L1);
-
-                var C=((Lambda3-Lambda2) / (L3-L2)) / (L1+L2+L3);
-                var B=Lambda2-C*(L1*L1 + L1*L2 + L2*L2);
-                var A=Y1-(B+L1*L1*C)*L1;
-                return [A,B,C];
-            }
-
-            $("#f").submit(function(event){
-                $("#r").html("Saving Configuration...");
-                $.post("/sc1",$("#f").serialize(),function(){ 
-                    $("#f").hide();
-                var reload5sec=document.createElement('script');
-                reload5sec.text='var count=4;var cdi=setInterval(function(){$("#cd").text(count);if(!count){clearInterval(cdi);location.reload();}count--;},1000);';
-                $('#r').html('<h3><b>Configuration saved <span style="color: green;">successfully</span>. System is restarting now.</b></h3>This page will be reloaded in <span id="cd">5</span>sec.').append(reload5sec);
-                }).fail(function(){
-                    $('#r').html('<h3><b>Configuration <span style="color: red;">error</span>.</b></h3>');
-                });
-                event.preventDefault();
-            });
-
-            $("#set10").click(function(){
-                $.post("/sdp",{temperature:10.0},function(){
-                    $.getJSON("/gdp",function(data){$("#R1").val(data.r)})
-                })
-            })
-
-            $("#set10d").click(function(){
-                $.post("/sdp",{up:1},function(){
-                    $.getJSON("/gdp",function(data){$("#R1").val(data.r)})
-                })
-            })
-
-            $("#set10u").click(function(){
-                $.post("/sdp",{down:1},function(){
-                    $.getJSON("/gdp",function(data){$("#R1").val(data.r)})
-                })
-            })
-            
-            $("#set20").click(function(){
-                $.post("/sdp",{temperature:20.0},function(){
-                    $.getJSON("/gdp",function(data){$("#R2").val(data.r)})
-                })
-            })
-
-            $("#set20d").click(function(){
-                $.post("/sdp",{up:1},function(){
-                    $.getJSON("/gdp",function(data){$("#R2").val(data.r)})
-                })
-            })
-
-            $("#set20u").click(function(){
-                $.post("/sdp",{down:1},function(){
-                    $.getJSON("/gdp",function(data){$("#R2").val(data.r)})
-                })
-            })
-
-            $("#set30").click(function(){
-                $.post("/sdp",{temperature:30.0},function(){
-                    $.getJSON("/gdp",function(data){$("#R3").val(data.r)})
-                })
-            })
-
-            $("#set30d").click(function(){
-                $.post("/sdp",{up:1},function(){
-                    $.getJSON("/gdp",function(data){$("#R3").val(data.r)})
-                })
-            })
-
-            $("#set30u").click(function(){
-                $.post("/sdp",{down:1},function(){
-                    $.getJSON("/gdp",function(data){$("#R3").val(data.r)})
-                })
-            })
-
-            $("#calc").click(function(){
-                var coeffs=getSteinhartHart($("#R1").val(),10.0,$("#R2").val(),20.0,$("#R3").val(),30.0);
-                $("#sha").val(Math.round(coeffs[0]*10000000000000000)/10000000000000000);
-                $("#shb").val(Math.round(coeffs[1]*10000000000000000)/10000000000000000);
-                $("#shc").val(Math.round(coeffs[2]*10000000000000000)/10000000000000000);
-            })
-
-            $(document).ready(function(){
-                $.getJSON("/gc1", function(GC1){
-                    $.each(GC1,function(k,v){
-
-                        if($('#'+k).prop('type')!='checkbox') $('#'+k).val(v);
-                        else $('#'+k).prop("checked",v);
-
-                        $('#'+k).trigger("change");
-                    })
-
-                    $("#f").show();
-                    $("#l1").fadeOut();
-                })
-                .fail(function(){
-                    $("#l1").html('<h6 style="display:inline;color:red;"><b> Failed</b></h6>');
-                });
-            });
-        </script>
-    </body>
-</html>
+            $("#f1").style.display='';
+            fadeOut($("#l1"));
+        },
+        function(){
+            $("#l1").innerHTML='<h6 style="color:red;"><b> Failed</b></h6>';
+        }
+    );
+</script>

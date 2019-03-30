@@ -8,7 +8,7 @@
 <h3 class="content-subhead">Calibration</h3>
 <div class="pure-control-group">
     <label>Calibrator</label>
-    <a class="pure-button" href="/calib" style="background: rgb(28, 184, 65);">Run</a>
+    <a class="pure-button" id="calibButton" style="background: rgb(28, 184, 65);">Run</a>
 </div>
 <div class="pure-control-group">
     <label for="sha">Coeff A</label>
@@ -99,64 +99,74 @@
 <span id='r1'></span>
 
 <script>
-    function onHAEChange(){
-        switch($("#hae").val()){
+    $("#calibButton").addEventListener('click',function (evt){
+        evt.preventDefault();
+        emptyContents();
+        $("#mainHeader").textContent="Calibration";
+        load($("#content0"),"/calib.html");
+    });
+
+    $("#hae").addEventListener('change',function (){
+        switch($("#hae").value){
             case "0":
-                $("#ha").hide();
+                $("#ha").style.display='none';
                 break;
             case "1":
-                $("#fib").hide();
-                $("#j").show();
-                $("#ha").show();
+                $("#fib").style.display='none';
+                $("#j").style.display='';
+                $("#ha").style.display='';
                 break;
             case "2":
-                $("#j").hide();
-                $("#fib").show();
-                $("#ha").show();
+                $("#j").style.display='none';
+                $("#fib").style.display='';
+                $("#ha").style.display='';
                 break;
         }
-    };
-    $("#hae").change(onHAEChange);
+    });
 
-    function onHATLSChange(){
-        if($("#hatls").prop("checked")) $("#hatlse").show();
-        else $("#hatlse").hide();
-    };
-    $("#hatls").change(onHATLSChange);
+    $("#hatls").addEventListener('change',function (){
+        if($("#hatls").checked) $("#hatlse").style.display='';
+        else $("#hatlse").style.display='none';
+    });
 
-    function onCBEChange(){
-        if($("#cbe").prop("checked")) $("#cb").show();
-        else $("#cb").hide();
-    };
-    $("#cbe").change(onCBEChange);
+    $("#cbe").addEventListener('change',function (){
+        if($("#cbe").checked) $("#cb").style.display='';
+        else $("#cb").style.display='none';
+    });
 
-    $("#f1").submit(function(event){
-        $("#r1").html("Saving Configuration...");
-        $.post("/sc1",$("#f1").serialize(),function(){ 
-            $("#f1").hide();
-            var reload5sec=document.createElement('script');
-            reload5sec.text='var count=4;var cdi=setInterval(function(){$("#cd").text(count);if(!count){clearInterval(cdi);location.reload();}count--;},1000);';
-            $('#r1').html('<h3><b>Configuration saved <span style="color: green;">successfully</span>. System is restarting now.</b></h3>This page will be reloaded in <span id="cd">5</span>sec.').append(reload5sec);
-        }).fail(function(){
-            $('#r1').html('<h3><b>Configuration <span style="color: red;">error</span>.</b></h3>');
-        });
+    $("#f1").addEventListener('submit',function(event){
+        $("#r1").innerHTML="Saving Configuration...";
+        post("/sc1",
+            new FormData($("#f1")),
+            function(){ 
+                $("#f1").style.display='none';
+
+                $('#r1').innerHTML='<h3><b>Configuration saved <span style="color: green;">successfully</span>.</b></h3>This page will be reloaded in <span id="cd">5</span>sec.';
+                runScript('var count=4;var cdi=setInterval(function(){$("#cd").innerText=count;if(!count){clearInterval(cdi);location.reload();}count--;},1000);');
+            },
+            function(){
+                $('#r1').innerHTML='<h3><b>Configuration <span style="color: red;">error</span>.</b></h3>';
+            }
+        );
         event.preventDefault();
     });
 
-    $.getJSON("/gc1", function(GC1){
+    getJSON("/gc1",
+        function(GC1){
+            for(k in GC1){
+                if($('#'+k)){
+                    if($('#'+k).type!='checkbox') $('#'+k).value=GC1[k];
+                    else $('#'+k).checked=GC1[k];
 
-        $.each(GC1,function(k,v){
+                    triggerEvent($('#'+k),'change');
+                }
+            }
 
-            if($('#'+k).prop('type')!='checkbox') $('#'+k).val(v);
-            else $('#'+k).prop("checked",v);
-
-            $('#'+k).trigger("change");
-        })
-
-        $("input[type=submit]",$("#f1")).prop("disabled",false);
-        $("#l1").fadeOut();
-    })
-    .fail(function(){
-        $("#l1").html('<h6 style="display:inline;color:red;"><b> Failed</b></h6>');
-    });
+            $("#f1 input[type=submit]").disabled=false;
+            fadeOut($("#l1"));
+        },
+        function(){
+            $("#l1").innerHTML='<h6 style="display:inline;color:red;"><b> Failed</b></h6>';
+        }
+    );
 </script>

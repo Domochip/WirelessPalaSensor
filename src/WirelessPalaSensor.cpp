@@ -448,7 +448,7 @@ String WebPalaSensor::GenerateConfigJSON(bool forSaveFile = false)
   gc = gc + F(",\"cbe\":") + connectionBox.enabled;
   if (forSaveFile)
     gc = gc + F(",\"cbi\":") + connectionBox.ip;
-  else
+  else if (connectionBox.ip)
     gc = gc + F(",\"cbi\":\"") + IPAddress(connectionBox.ip).toString() + '"';
 
   gc += '}';
@@ -562,7 +562,7 @@ size_t WebPalaSensor::GetHTMLContentSize(WebPageForPlaceHolder wp)
 //code to register web request answer to the web server
 void WebPalaSensor::AppInitWebServer(AsyncWebServer &server, bool &shouldReboot, bool &pauseApplication)
 {
-  server.on("/calib", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("/calib.html", HTTP_GET, [](AsyncWebServerRequest *request) {
     AsyncWebServerResponse *response = request->beginResponse_P(200, F("text/html"), (const uint8_t *)calibhtmlgz, sizeof(calibhtmlgz));
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
