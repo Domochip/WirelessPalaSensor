@@ -81,7 +81,7 @@ void WebPalaSensor::TimerTick()
     HTTPClient http1;
 
     //try to get current stove temperature info ----------------------
-    http1.begin(client, String(F("http://")) + IPAddress(connectionBox.ip).toString() + F("/sendmsg.php?cmd=GET%20TMPS"));
+    http1.begin(client, String(F("http://")) + IPAddress(connectionBox.ip).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
     //set timeOut
     http1.setTimeout(5000);
     //send request
@@ -92,8 +92,8 @@ void WebPalaSensor::TimerTick()
 
       stream = http1.getStreamPtr();
 
-      //if we found TMP_ROOM_WATER in answer
-      if (stream->find("\"TMP_ROOM_WATER\""))
+      //if we found T1 in answer
+      if (stream->find("\"T1\""))
       {
         //read until the comma into payload variable
         int nb = stream->readBytesUntil(',', payload, sizeof(payload) - 1);
@@ -101,7 +101,7 @@ void WebPalaSensor::TimerTick()
         //if we read some bytes
         if (nb)
         {
-          //look for start position of TMP_ROOM_WATER value
+          //look for start position of T1 value
           byte posTRW = 0;
           while ((payload[posTRW] == ' ' || payload[posTRW] == ':' || payload[posTRW] == '\t') && posTRW < nb)
             posTRW++;
