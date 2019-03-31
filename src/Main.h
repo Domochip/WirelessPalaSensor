@@ -22,7 +22,7 @@
 #define APPLICATION1_DESC "DomoChip Wireless Palazzetti Sensor"
 #define APPLICATION1_CLASS WebPalaSensor
 
-#define VERSION_NUMBER "3.2.5"
+#define VERSION_NUMBER "3.2.6"
 
 #define DEFAULT_AP_SSID "WirelessPala"
 #define DEFAULT_AP_PSK "PasswordPala"

@@ -25,13 +25,14 @@ private:
   uint32_t dns2 = 0;
 
   //Run properties
-  WiFiEventHandler _wifiHandler1, _wifiHandler2;
+  WiFiEventHandler _discoEventHandler;
   int _apChannel = 2;
   char _apSsid[64];
-  Ticker _retryTicker;
-  uint16_t _retryPeriod = 300;
+  Ticker _refreshTicker;
+  uint16_t _refreshPeriod = 120;
 
-  void RetryTick();
+  void EnableAP(bool force);
+  void RefreshTick();
 
   void SetConfigDefaultValues();
   void ParseConfigJSON(DynamicJsonDocument &doc);
@@ -39,7 +40,7 @@ private:
   String GenerateConfigJSON(bool forSaveFile);
   String GenerateStatusJSON();
   bool AppInit(bool reInit);
-  const uint8_t* GetHTMLContent(WebPageForPlaceHolder wp);
+  const uint8_t *GetHTMLContent(WebPageForPlaceHolder wp);
   size_t GetHTMLContentSize(WebPageForPlaceHolder wp);
   void AppInitWebServer(AsyncWebServer &server, bool &shouldReboot, bool &pauseApplication);
   void AppRun();
