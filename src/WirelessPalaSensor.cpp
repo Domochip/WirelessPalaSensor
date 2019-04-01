@@ -513,7 +513,7 @@ bool WebPalaSensor::AppInit(bool reInit)
 
   //then next will be done by refreshTicker
   if (!reInit)
-    _refreshTicker.attach_scheduled(REFRESH_PERIOD, std::bind(&WebPalaSensor::TimerTick, this));
+    _refreshTicker.attach_scheduled(REFRESH_PERIOD, [this]() { this->_needTick = true; });
 
   return _ds18b20.GetReady();
 };
@@ -641,7 +641,15 @@ void WebPalaSensor::AppInitWebServer(AsyncWebServer &server, bool &shouldReboot,
 
 //------------------------------------------
 //Run for timer
-void WebPalaSensor::AppRun() {}
+void WebPalaSensor::AppRun()
+{
+  if (_needTick)
+  {
+    TimerTick();
+    //tick done
+    _needTick = false;
+  }
+}
 
 //------------------------------------------
 //Constructor

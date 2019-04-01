@@ -28,11 +28,12 @@ private:
   WiFiEventHandler _discoEventHandler;
   int _apChannel = 2;
   char _apSsid[64];
+  bool _needRefreshWifi = false;
   Ticker _refreshTicker;
   uint16_t _refreshPeriod = 120;
 
   void EnableAP(bool force);
-  void RefreshTick();
+  void RefreshWiFi();
 
   void SetConfigDefaultValues();
   void ParseConfigJSON(DynamicJsonDocument &doc);
