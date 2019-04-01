@@ -17,8 +17,8 @@ const char appDataPredefPassword[] PROGMEM = "ewcXoCt4HHjZUvY1";
 #include <ESP8266HTTPClient.h>
 #include <SPI.h>
 #include <math.h>
+#include <Ticker.h>
 #include "SingleDS18B20.h"
-#include "SimpleTimer.h"
 #include "McpDigitalPot.h"
 
 class WebPalaSensor : public Application
@@ -70,7 +70,7 @@ private:
   McpDigitalPot _mcp4151_5k;
   McpDigitalPot _mcp4151_50k;
 
-  SimpleTimer _refreshTimer;
+  Ticker _refreshTicker;
   byte _skipTick = 0;
   //Used in TimerTick for logic and calculation
   int _homeAutomationRequestResult = 0;

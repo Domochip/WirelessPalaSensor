@@ -89,7 +89,6 @@ void WebPalaSensor::TimerTick()
     //if we get successfull HTTP answer
     if (_stoveRequestResult == 200)
     {
-
       stream = http1.getStreamPtr();
 
       //if we found T1 in answer
@@ -140,7 +139,6 @@ void WebPalaSensor::TimerTick()
     //if we get successfull HTTP answer
     if (_homeAutomationRequestResult == 200)
     {
-
       stream = http2.getStreamPtr();
 
       //get the answer line
@@ -149,7 +147,6 @@ void WebPalaSensor::TimerTick()
 
       if (nb)
       {
-
         //convert
         _homeAutomationTemperature = atof(payload);
         //round it to tenth
@@ -195,12 +192,10 @@ void WebPalaSensor::TimerTick()
     //if we get successfull HTTP answer
     if (_homeAutomationRequestResult == 200)
     {
-
       stream = http3.getStreamPtr();
 
       while (http3.connected() && stream->find("\"value\""))
       {
-
         //go to first next double quote (or return false if a comma appears first)
         if (stream->findUntil("\"", ","))
         {
@@ -495,6 +490,9 @@ String WebPalaSensor::GenerateStatusJSON()
 //code to execute during initialization and reinitialization of the app
 bool WebPalaSensor::AppInit(bool reInit)
 {
+  //stop Ticker
+  _refreshTicker.detach();
+
   if (reInit)
   {
     //reset run variables to initial values
@@ -513,13 +511,9 @@ bool WebPalaSensor::AppInit(bool reInit)
   //first call
   TimerTick();
 
-  //then next will be done by SimpleTimer object
+  //then next will be done by refreshTicker
   if (!reInit)
-  {
-    _refreshTimer.setInterval(REFRESH_PERIOD, [this]() {
-      this->TimerTick();
-    });
-  }
+    _refreshTicker.attach_scheduled(REFRESH_PERIOD, std::bind(&WebPalaSensor::TimerTick, this));
 
   return _ds18b20.GetReady();
 };
@@ -647,10 +641,7 @@ void WebPalaSensor::AppInitWebServer(AsyncWebServer &server, bool &shouldReboot,
 
 //------------------------------------------
 //Run for timer
-void WebPalaSensor::AppRun()
-{
-  _refreshTimer.run();
-}
+void WebPalaSensor::AppRun() {}
 
 //------------------------------------------
 //Constructor
