@@ -512,8 +512,7 @@ bool WebPalaSensor::AppInit(bool reInit)
   TimerTick();
 
   //then next will be done by refreshTicker
-  if (!reInit)
-    _refreshTicker.attach_scheduled(REFRESH_PERIOD, [this]() { this->_needTick = true; });
+  _refreshTicker.attach_scheduled(REFRESH_PERIOD, [this]() { this->_needTick = true; });
 
   return _ds18b20.GetReady();
 };

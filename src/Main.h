@@ -27,8 +27,8 @@
 #define DEFAULT_AP_SSID "WirelessPala"
 #define DEFAULT_AP_PSK "PasswordPala"
 
-//Time between request to home automation
-#define REFRESH_PERIOD 30000
+//Time between request to home automation in seconds
+#define REFRESH_PERIOD 30
 
 //Pin 12, 13 and 14 are used by DigiPot Bus
 //Choose Pins used for DigiPot Select
