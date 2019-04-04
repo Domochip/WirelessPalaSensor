@@ -71,33 +71,33 @@ void WebPalaSensor::TimerTick()
     _owTemperature /= 10;
   }
 
-  char payload[60];
-  WiFiClient *stream;
-
-  //if ConnectionBox option enabled in config
-  if (connectionBox.enabled)
+  //if ConnectionBox option enabled in config and WiFi connected
+  if (connectionBox.enabled && WiFi.isConnected())
   {
     WiFiClient client;
-    HTTPClient http1;
+    HTTPClient http;
+
+    //set timeOut
+    http.setTimeout(5000);
 
     //try to get current stove temperature info ----------------------
-    http1.begin(client, String(F("http://")) + IPAddress(connectionBox.ip).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
-    //set timeOut
-    http1.setTimeout(5000);
+    http.begin(client, String(F("http://")) + IPAddress(connectionBox.ip).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
+
     //send request
-    _stoveRequestResult = http1.GET();
+    _stoveRequestResult = http.GET();
     //if we get successfull HTTP answer
     if (_stoveRequestResult == 200)
     {
-      stream = http1.getStreamPtr();
+      WiFiClient *stream = http.getStreamPtr();
 
       //if we found T1 in answer
       if (stream->find("\"T1\""))
       {
+        char payload[8];
         //read until the comma into payload variable
         int nb = stream->readBytesUntil(',', payload, sizeof(payload) - 1);
         payload[nb] = 0; //end payload char[]
-        //if we read some bytes
+        //if we readed some bytes
         if (nb)
         {
           //look for start position of T1 value
@@ -107,42 +107,42 @@ void WebPalaSensor::TimerTick()
 
           _stoveTemperature = atof(payload + posTRW); //convert
         }
-        payload[0] = 0;
       }
     }
-    http1.end();
+    http.end();
   }
 
-  //if Jeedom option enabled in config
-  if (ha.enabled == 1)
+  //if Jeedom option enabled in config and WiFi connected
+  if (ha.enabled == 1 && WiFi.isConnected())
   {
-    HTTPClient http2;
+    WiFiClient client;
+    WiFiClientSecure clientSecure;
+
+    HTTPClient http;
+
+    //set timeOut
+    http.setTimeout(5000);
 
     //try to get house automation sensor value -----------------
     String completeURI = String(F("http")) + (ha.tls ? F("s") : F("")) + F("://") + ha.hostname + F("/core/api/jeeApi.php?apikey=") + ha.jeedom.apiKey + F("&type=cmd&id=") + ha.temperatureId;
     if (!ha.tls)
-    {
-      WiFiClient client;
-      http2.begin(client, completeURI);
-    }
+      http.begin(client, completeURI);
     else
     {
-      WiFiClientSecure clientSecure;
       char fpStr[41];
       clientSecure.setFingerprint(Utils::FingerPrintA2S(fpStr, ha.fingerPrint));
-      http2.begin(clientSecure, completeURI);
+      http.begin(clientSecure, completeURI);
     }
-    //set timeOut
-    http2.setTimeout(5000);
     //send request
-    _homeAutomationRequestResult = http2.GET();
+    _homeAutomationRequestResult = http.GET();
     //if we get successfull HTTP answer
     if (_homeAutomationRequestResult == 200)
     {
-      stream = http2.getStreamPtr();
+      WiFiClient *stream = http.getStreamPtr();
 
-      //get the answer line
-      int nb = stream->readBytes(payload, (http2.getSize() > (int)sizeof(payload) - 1) ? sizeof(payload) - 1 : http2.getSize());
+      //get the answer content
+      char payload[6];
+      int nb = stream->readBytes(payload, sizeof(payload) - 1);
       payload[nb] = 0;
 
       if (nb)
@@ -154,51 +154,50 @@ void WebPalaSensor::TimerTick()
         _homeAutomationTemperature = round(_homeAutomationTemperature);
         _homeAutomationTemperature /= 10;
       }
-      payload[0] = 0;
     }
-    http2.end();
+    http.end();
   }
 
-  //if Fibaro option enabled in config
-  if (ha.enabled == 2)
+  //if Fibaro option enabled in config and WiFi connected
+  if (ha.enabled == 2 && WiFi.isConnected())
   {
-    HTTPClient http3;
+    WiFiClient client;
+    WiFiClientSecure clientSecure;
+    HTTPClient http;
+
+    //set timeOut
+    http.setTimeout(5000);
 
     //try to get house automation sensor value -----------------
     String completeURI = String(F("http")) + (ha.tls ? F("s") : F("")) + F("://") + ha.hostname + F("/api/devices?id=") + ha.temperatureId;
     //String completeURI = String(F("http")) + (ha.tls ? F("s") : F("")) + F("://") + ha.hostname + F("/devices.json");
     if (!ha.tls)
-    {
-      WiFiClient client;
-      http3.begin(client, completeURI);
-    }
+      http.begin(client, completeURI);
     else
     {
-      WiFiClientSecure clientSecure;
       char fpStr[41];
       clientSecure.setFingerprint(Utils::FingerPrintA2S(fpStr, ha.fingerPrint));
-      http3.begin(clientSecure, completeURI);
+      http.begin(clientSecure, completeURI);
     }
 
     //Pass authentication if specified in configuration
     if (ha.fibaro.username[0])
-      http3.setAuthorization(ha.fibaro.username, ha.fibaro.password);
+      http.setAuthorization(ha.fibaro.username, ha.fibaro.password);
 
-    //set timeOut
-    http3.setTimeout(5000);
     //send request
-    _homeAutomationRequestResult = http3.GET();
+    _homeAutomationRequestResult = http.GET();
 
     //if we get successfull HTTP answer
     if (_homeAutomationRequestResult == 200)
     {
-      stream = http3.getStreamPtr();
+      WiFiClient *stream = http.getStreamPtr();
 
-      while (http3.connected() && stream->find("\"value\""))
+      while (http.connected() && stream->find("\"value\""))
       {
         //go to first next double quote (or return false if a comma appears first)
         if (stream->findUntil("\"", ","))
         {
+          char payload[60];
           //read value (read until next doublequote)
           int nb = stream->readBytesUntil('"', payload, sizeof(payload) - 1);
           payload[nb] = 0;
@@ -211,11 +210,10 @@ void WebPalaSensor::TimerTick()
             _homeAutomationTemperature = round(_homeAutomationTemperature);
             _homeAutomationTemperature /= 10;
           }
-          payload[0] = 0;
         }
       }
     }
-    http3.end();
+    http.end();
   }
 
   //select temperature source
@@ -644,9 +642,10 @@ void WebPalaSensor::AppRun()
 {
   if (_needTick)
   {
-    TimerTick();
-    //tick done
+    //disable needTick
     _needTick = false;
+    //then run
+    TimerTick();
   }
 }
 
