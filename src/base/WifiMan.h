@@ -26,11 +26,15 @@ private:
 
   //Run properties
   WiFiEventHandler _discoEventHandler;
+  WiFiEventHandler _staConnectedHandler;
+  WiFiEventHandler _staDisconnectedHandler;
   int _apChannel = 2;
   char _apSsid[64];
   bool _needRefreshWifi = false;
+  bool _stationConnectedToSoftAP = false;
   Ticker _refreshTicker;
-  uint16_t _refreshPeriod = 120;
+  uint8_t _refreshPeriod = 60; //try to reconnect as station mode every 60 seconds
+  uint8_t _reconnectDuration = 20; //duration to try to connect to Wifi in seconds
 
   void EnableAP(bool force);
   void RefreshWiFi();
