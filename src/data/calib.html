@@ -102,55 +102,55 @@
     });
 
     $("#set10").addEventListener('click',function(){
-        post("/sdp",{temperature:10.0},function(){
+        post("/sdp","temperature=10",function(){
             getJSON("/gdp",function(data){$("#R1").value=data.r})
         })
     })
 
     $("#set10d").addEventListener('click',function(){
-        post("/sdp",{up:1},function(){
+        post("/sdp","up=1",function(){
             getJSON("/gdp",function(data){$("#R1").value=data.r})
         })
     })
 
     $("#set10u").addEventListener('click',function(){
-        post("/sdp",{down:1},function(){
+        post("/sdp","down=1",function(){
             getJSON("/gdp",function(data){$("#R1").value=data.r})
         })
     })
     
     $("#set20").addEventListener('click',function(){
-        post("/sdp",{temperature:20.0},function(){
+        post("/sdp","temperature=20.0",function(){
             getJSON("/gdp",function(data){$("#R2").value=data.r})
         })
     })
 
     $("#set20d").addEventListener('click',function(){
-        post("/sdp",{up:1},function(){
+        post("/sdp","up=1",function(){
             getJSON("/gdp",function(data){$("#R2").value=data.r})
         })
     })
 
     $("#set20u").addEventListener('click',function(){
-        post("/sdp",{down:1},function(){
+        post("/sdp","down=1",function(){
             getJSON("/gdp",function(data){$("#R2").value=data.r})
         })
     })
 
     $("#set30").addEventListener('click',function(){
-        post("/sdp",{temperature:30.0},function(){
+        post("/sdp","temperature=30.0",function(){
             getJSON("/gdp",function(data){$("#R3").value=data.r})
         })
     })
 
     $("#set30d").addEventListener('click',function(){
-        post("/sdp",{up:1},function(){
+        post("/sdp","up=1",function(){
             getJSON("/gdp",function(data){$("#R3").value=data.r})
         })
     })
 
     $("#set30u").addEventListener('click',function(){
-        post("/sdp",{down:1},function(){
+        post("/sdp","down=1",function(){
             getJSON("/gdp",function(data){$("#R3").value=data.r})
         })
     })
