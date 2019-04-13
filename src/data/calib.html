@@ -1,5 +1,5 @@
-<span id="l1"><h2><b>Loading...</b></h2></span>
-<form class="pure-form pure-form-aligned" id='f1' style='display:none'>
+<span id="l"><h2><b>Loading...</b></h2></span>
+<form class="pure-form pure-form-aligned" id='f' style='display:none'>
     <fieldset>
         
         <h2 class="content-subhead">Step 1 : Thermistor simulator calibration</h2>
@@ -60,13 +60,15 @@
         </div>
     </fieldset>
 </form>
-<span id='r1'></span>
+<span id='r'></span>
 
 <input type='number' id='R1' style='display:none'>
 <input type='number' id='R2' style='display:none'>
 <input type='number' id='R3' style='display:none'>
 
 <script>
+    //QuerySelector Prefix is added by load function to know into what element queySelector need to look for
+    //var qsp = '#contentX ';
 
     function getSteinhartHart(R1,T1,R2,T2,R3,T3){
         T1=T1+273.15;T2=T2+273.15;T3=T3+273.15;
@@ -84,100 +86,100 @@
         return [A,B,C];
     }
 
-    $("#f1").addEventListener('submit',function(event){
-        $("#r1").innerHTML="Saving Configuration...";
-        post("/sc1",
-            new FormData($("#f1")),
+    $(qsp+"#f").addEventListener('submit',function(event){
+        $(qsp+"#r").innerHTML="Saving Configuration...";
+        post("/sc"+qsp[8],
+            new FormData($(qsp+"#f")),
             function(){ 
-                $("#f1").style.display='none';
+                $(qsp+"#f").style.display='none';
 
-                $('#r1').innerHTML='<h3><b>Configuration saved <span style="color: green;">successfully</span>.</b></h3>This page will be reloaded in <span id="cd">5</span>sec.';
+                $(qsp+'#r').innerHTML='<h3><b>Configuration saved <span style="color: green;">successfully</span>.</b></h3>This page will be reloaded in <span id="cd">5</span>sec.';
                 runScript('var count=4;var cdi=setInterval(function(){$("#cd").innerText=count;if(!count){clearInterval(cdi);location.reload();}count--;},1000);');
             },
             function(){
-                $('#r1').innerHTML='<h3><b>Configuration <span style="color: red;">error</span>.</b></h3>';
+                $(qsp+'#r').innerHTML='<h3><b>Configuration <span style="color: red;">error</span>.</b></h3>';
             }
         );
         event.preventDefault();
     });
 
-    $("#set10").addEventListener('click',function(){
+    $(qsp+"#set10").addEventListener('click',function(){
         post("/sdp","temperature=10",function(){
-            getJSON("/gdp",function(data){$("#R1").value=data.r})
+            getJSON("/gdp",function(data){$(qsp+"#R1").value=data.r})
         })
     })
 
-    $("#set10d").addEventListener('click',function(){
+    $(qsp+"#set10d").addEventListener('click',function(){
         post("/sdp","up=1",function(){
-            getJSON("/gdp",function(data){$("#R1").value=data.r})
+            getJSON("/gdp",function(data){$(qsp+"#R1").value=data.r})
         })
     })
 
-    $("#set10u").addEventListener('click',function(){
+    $(qsp+"#set10u").addEventListener('click',function(){
         post("/sdp","down=1",function(){
-            getJSON("/gdp",function(data){$("#R1").value=data.r})
+            getJSON("/gdp",function(data){$(qsp+"#R1").value=data.r})
         })
     })
     
-    $("#set20").addEventListener('click',function(){
+    $(qsp+"#set20").addEventListener('click',function(){
         post("/sdp","temperature=20.0",function(){
-            getJSON("/gdp",function(data){$("#R2").value=data.r})
+            getJSON("/gdp",function(data){$(qsp+"#R2").value=data.r})
         })
     })
 
-    $("#set20d").addEventListener('click',function(){
+    $(qsp+"#set20d").addEventListener('click',function(){
         post("/sdp","up=1",function(){
-            getJSON("/gdp",function(data){$("#R2").value=data.r})
+            getJSON("/gdp",function(data){$(qsp+"#R2").value=data.r})
         })
     })
 
-    $("#set20u").addEventListener('click',function(){
+    $(qsp+"#set20u").addEventListener('click',function(){
         post("/sdp","down=1",function(){
-            getJSON("/gdp",function(data){$("#R2").value=data.r})
+            getJSON("/gdp",function(data){$(qsp+"#R2").value=data.r})
         })
     })
 
-    $("#set30").addEventListener('click',function(){
+    $(qsp+"#set30").addEventListener('click',function(){
         post("/sdp","temperature=30.0",function(){
-            getJSON("/gdp",function(data){$("#R3").value=data.r})
+            getJSON("/gdp",function(data){$(qsp+"#R3").value=data.r})
         })
     })
 
-    $("#set30d").addEventListener('click',function(){
+    $(qsp+"#set30d").addEventListener('click',function(){
         post("/sdp","up=1",function(){
-            getJSON("/gdp",function(data){$("#R3").value=data.r})
+            getJSON("/gdp",function(data){$(qsp+"#R3").value=data.r})
         })
     })
 
-    $("#set30u").addEventListener('click',function(){
+    $(qsp+"#set30u").addEventListener('click',function(){
         post("/sdp","down=1",function(){
-            getJSON("/gdp",function(data){$("#R3").value=data.r})
+            getJSON("/gdp",function(data){$(qsp+"#R3").value=data.r})
         })
     })
 
-    $("#calc").addEventListener('click',function(){
-        var coeffs=getSteinhartHart($("#R1").value,10.0,$("#R2").value,20.0,$("#R3").value,30.0);
-        $("#sha").value=Math.round(coeffs[0]*10000000000000000)/10000000000000000;
-        $("#shb").value=Math.round(coeffs[1]*10000000000000000)/10000000000000000;
-        $("#shc").value=Math.round(coeffs[2]*10000000000000000)/10000000000000000;
+    $(qsp+"#calc").addEventListener('click',function(){
+        var coeffs=getSteinhartHart($(qsp+"#R1").value,10.0,$(qsp+"#R2").value,20.0,$(qsp+"#R3").value,30.0);
+        $(qsp+"#sha").value=Math.round(coeffs[0]*10000000000000000)/10000000000000000;
+        $(qsp+"#shb").value=Math.round(coeffs[1]*10000000000000000)/10000000000000000;
+        $(qsp+"#shc").value=Math.round(coeffs[2]*10000000000000000)/10000000000000000;
     })
 
-    getJSON("/gc1",
-        function(GC1){
-            for(k in GC1){
-                if($('#'+k)){
-                    if($('#'+k).type!='checkbox') $('#'+k).value=GC1[k];
-                    else $('#'+k).checked=GC1[k];
+    getJSON("/gc"+qsp[8],
+        function(GC){
+            for(k in GC){
+                if($(qsp+'#'+k)){
+                    if($(qsp+'#'+k).type!='checkbox') $(qsp+'#'+k).value=GC[k];
+                    else $(qsp+'#'+k).checked=GC[k];
 
-                    triggerEvent($('#'+k),'change');
+                    triggerEvent($(qsp+'#'+k),'change');
                 }
             }
 
-            $("#f1").style.display='';
-            fadeOut($("#l1"));
+            $(qsp+"#f").style.display='';
+            fadeOut($(qsp+"#l"));
         },
         function(){
-            $("#l1").innerHTML='<h6 style="color:red;"><b> Failed</b></h6>';
+            $(qsp+"#l").innerHTML='<h6 style="color:red;"><b> Failed</b></h6>';
         }
     );
 </script>

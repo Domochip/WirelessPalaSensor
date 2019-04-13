@@ -8,7 +8,6 @@
 
 //DomoChip Informations
 //Project done for ESP-12
-//------------Compile for 1M 64K SPIFFS------------
 //Configuration Web Pages :
 //http://IP/
 //http://IP/config

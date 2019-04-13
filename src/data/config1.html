@@ -1,8 +1,5 @@
-<div id="applicationName" style="display: none;">WirelessPalaSensor</div>
-<div id="shortApplicationName" style="display: none;">WPalaSensor</div>
-
-<h2 class="content-subhead">Sensor Simulator<span id="l1"><h6 style="display:inline"><b> Loading...</b></h6></span></h2>
-<form class="pure-form pure-form-aligned" id='f1'>
+<h2 class="content-subhead">Sensor Simulator<span id="l"><h6 style="display:inline"><b> Loading...</b></h6></span></h2>
+<form class="pure-form pure-form-aligned" id='f'>
     <fieldset>
 
 <h3 class="content-subhead">Calibration</h3>
@@ -96,77 +93,80 @@
         </div>
     </fieldset>
 </form>
-<span id='r1'></span>
+<span id='r'></span>
 
 <script>
-    $("#calibButton").addEventListener('click',function (evt){
+    //QuerySelector Prefix is added by load function to know into what element queySelector need to look for
+    //var qsp = '#contentX ';
+
+    $(qsp+"#calibButton").addEventListener('click',function (evt){
         evt.preventDefault();
         emptyContents();
         $("#mainHeader").textContent="Calibration";
         load($("#content0"),"/calib.html");
     });
 
-    $("#hae").addEventListener('change',function (){
-        switch($("#hae").value){
+    $(qsp+"#hae").addEventListener('change',function (){
+        switch($(qsp+"#hae").value){
             case "0":
-                $("#ha").style.display='none';
+                $(qsp+"#ha").style.display='none';
                 break;
             case "1":
-                $("#fib").style.display='none';
-                $("#j").style.display='';
-                $("#ha").style.display='';
+                $(qsp+"#fib").style.display='none';
+                $(qsp+"#j").style.display='';
+                $(qsp+"#ha").style.display='';
                 break;
             case "2":
-                $("#j").style.display='none';
-                $("#fib").style.display='';
-                $("#ha").style.display='';
+                $(qsp+"#j").style.display='none';
+                $(qsp+"#fib").style.display='';
+                $(qsp+"#ha").style.display='';
                 break;
         }
     });
 
-    $("#hatls").addEventListener('change',function (){
-        if($("#hatls").checked) $("#hatlse").style.display='';
-        else $("#hatlse").style.display='none';
+    $(qsp+"#hatls").addEventListener('change',function (){
+        if($(qsp+"#hatls").checked) $(qsp+"#hatlse").style.display='';
+        else $(qsp+"#hatlse").style.display='none';
     });
 
-    $("#cbe").addEventListener('change',function (){
-        if($("#cbe").checked) $("#cb").style.display='';
-        else $("#cb").style.display='none';
+    $(qsp+"#cbe").addEventListener('change',function (){
+        if($(qsp+"#cbe").checked) $(qsp+"#cb").style.display='';
+        else $(qsp+"#cb").style.display='none';
     });
 
-    $("#f1").addEventListener('submit',function(event){
-        $("#r1").innerHTML="Saving Configuration...";
-        post("/sc1",
-            new FormData($("#f1")),
+    $(qsp+"#f").addEventListener('submit',function(event){
+        $(qsp+"#r").innerHTML="Saving Configuration...";
+        post("/sc"+qsp[8],
+            new FormData($(qsp+"#f")),
             function(){ 
-                $("#f1").style.display='none';
+                $(qsp+"#f").style.display='none';
 
-                $('#r1').innerHTML='<h3><b>Configuration saved <span style="color: green;">successfully</span>.</b></h3>This page will be reloaded in <span id="cd">5</span>sec.';
+                $(qsp+'#r').innerHTML='<h3><b>Configuration saved <span style="color: green;">successfully</span>.</b></h3>This page will be reloaded in <span id="cd">5</span>sec.';
                 runScript('var count=4;var cdi=setInterval(function(){$("#cd").innerText=count;if(!count){clearInterval(cdi);location.reload();}count--;},1000);');
             },
             function(){
-                $('#r1').innerHTML='<h3><b>Configuration <span style="color: red;">error</span>.</b></h3>';
+                $(qsp+'#r').innerHTML='<h3><b>Configuration <span style="color: red;">error</span>.</b></h3>';
             }
         );
         event.preventDefault();
     });
 
-    getJSON("/gc1",
-        function(GC1){
-            for(k in GC1){
-                if($('#'+k)){
-                    if($('#'+k).type!='checkbox') $('#'+k).value=GC1[k];
-                    else $('#'+k).checked=GC1[k];
+    getJSON("/gc"+qsp[8],
+        function(GC){
+            for(k in GC){
+                if($(qsp+'#'+k)){
+                    if($(qsp+'#'+k).type!='checkbox') $(qsp+'#'+k).value=GC[k];
+                    else $(qsp+'#'+k).checked=GC[k];
 
-                    triggerEvent($('#'+k),'change');
+                    triggerEvent($(qsp+'#'+k),'change');
                 }
             }
 
-            $("#f1 input[type=submit]").disabled=false;
-            fadeOut($("#l1"));
+            $(qsp+"#f input[type=submit]").disabled=false;
+            fadeOut($(qsp+"#l"));
         },
         function(){
-            $("#l1").innerHTML='<h6 style="display:inline;color:red;"><b> Failed</b></h6>';
+            $(qsp+"#l").innerHTML='<h6 style="display:inline;color:red;"><b> Failed</b></h6>';
         }
     );
 </script>
