@@ -159,7 +159,7 @@
   (module wemos_d1_mini:wemos-d1-mini-DIL-only (layer B.Cu) (tedit 5C042D9C) (tstamp 5CF288FC)
     (at 32.385 38.1 90)
     (path /5CF18BFF)
-    (fp_text reference U1 (at -19.3 0) (layer B.SilkS)
+    (fp_text reference U1 (at -19.3 0) (layer B.SilkS) hide
       (effects (font (size 1 1) (thickness 0.15)) (justify mirror))
     )
     (fp_text value WeMos_mini (at 0 0 270) (layer B.Fab) hide
