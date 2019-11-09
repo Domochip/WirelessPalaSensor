@@ -7,16 +7,11 @@
 #include "data\calib.html.gz.h"
 
 //DomoChip Informations
-//Project done for ESP-12
 //Configuration Web Pages :
 //http://IP/
-//http://IP/config
-//http://IP/fw
-//http://IP/calib
 
-//include Application header file
-#include "WirelessPalaSensor.h"
 
+#define APPLICATION1_HEADER "WirelessPalaSensor.h"
 #define APPLICATION1_NAME "WPalaSensor"
 #define APPLICATION1_DESC "DomoChip Wireless Palazzetti Sensor"
 #define APPLICATION1_CLASS WebPalaSensor
@@ -40,8 +35,10 @@
 //Enable developper mode (fwdev webpage and SPIFFS is used)
 #define DEVELOPPER_MODE 0
 
-//Choose Serial Speed
-#define SERIAL_SPEED 115200
+//Log Serial Object
+#define LOG_SERIAL Serial
+//Choose Log Serial Speed
+#define LOG_SERIAL_SPEED 115200
 
 //Choose Pin used to boot in Rescue Mode
 //#define RESCUE_BTN_PIN 16

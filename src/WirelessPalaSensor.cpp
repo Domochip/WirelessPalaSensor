@@ -57,7 +57,7 @@ void WebPalaSensor::TimerTick()
   _homeAutomationTemperatureUsed = false;
 
   //LOG
-  Serial.println(F("TimerTick"));
+  LOG_SERIAL.println(F("TimerTick"));
 
   //read temperature from the local sensor
   _owTemperature = _ds18b20.ReadTemp();
