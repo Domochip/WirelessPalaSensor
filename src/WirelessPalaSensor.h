@@ -1,10 +1,6 @@
 #ifndef WirelessPalaSensor_h
 #define WirelessPalaSensor_h
 
-#include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-
 #include "Main.h"
 #include "base\Utils.h"
 #include "base\Application.h"
