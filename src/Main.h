@@ -21,6 +21,9 @@
 #define DEFAULT_AP_SSID "WirelessPala"
 #define DEFAULT_AP_PSK "PasswordPala"
 
+//Enable status webpage EventSource
+#define ENABLE_STATUS_EVENTSOURCE 0
+
 //Time between request to home automation in seconds
 #define REFRESH_PERIOD 30
 
