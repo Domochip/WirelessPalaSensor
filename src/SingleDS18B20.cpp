@@ -102,22 +102,22 @@ SingleDS18B20::SingleDS18B20(uint8_t owPin) : OneWire(owPin)
     copyScratchPad(_owROMCode); //so we finally can copy scratchpad to memory
   }
 
-  _tempSensorFound = (ReadTemp() != 12.3456);
+  _tempSensorFound = (readTemp() != 12.3456);
 }
 
 //------------------------------------------
 // function that return true if SingleDS18B20 is ready for temperature reading
-bool SingleDS18B20::GetReady()
+bool SingleDS18B20::getReady()
 {
   return _tempSensorFound;
 }
 
 //------------------------------------------
 // function that get temperature from a DS18X20 (run convertion, get scratchpad then calculate temperature)
-float SingleDS18B20::ReadTemp()
+float SingleDS18B20::readTemp()
 {
 
-  if (!GetReady())
+  if (!getReady())
     return 12.3456;
 
   byte data[9];

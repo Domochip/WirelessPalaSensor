@@ -58,9 +58,9 @@ private:
     uint32_t ip = 0;
   } ConnectionBox;
 
-  DigiPotsNTC digipotsNTC;
-  HomeAutomation ha;
-  ConnectionBox connectionBox;
+  DigiPotsNTC _digipotsNTC;
+  HomeAutomation _ha;
+  ConnectionBox _connectionBox;
 
   SingleDS18B20 _ds18b20;
   McpDigitalPot _mcp4151_5k;
@@ -81,21 +81,21 @@ private:
   float _stoveDelta = 0.0;
   float _pushedTemperature = 0.0;
 
-  void SetDualDigiPot(float temperature);
-  void SetDualDigiPot(int resistance);
-  void SetDualDigiPot(unsigned int dp50kPosition, unsigned int dp5kPosition);
-  void TimerTick();
+  void setDualDigiPot(float temperature);
+  void setDualDigiPot(int resistance);
+  void setDualDigiPot(unsigned int dp50kPosition, unsigned int dp5kPosition);
+  void timerTick();
 
-  void SetConfigDefaultValues();
-  void ParseConfigJSON(DynamicJsonDocument &doc);
-  bool ParseConfigWebRequest(AsyncWebServerRequest *request);
-  String GenerateConfigJSON(bool forSaveFile);
-  String GenerateStatusJSON();
-  bool AppInit(bool reInit);
-  const uint8_t *GetHTMLContent(WebPageForPlaceHolder wp);
-  size_t GetHTMLContentSize(WebPageForPlaceHolder wp);
-  void AppInitWebServer(AsyncWebServer &server, bool &shouldReboot, bool &pauseApplication);
-  void AppRun();
+  void setConfigDefaultValues();
+  void parseConfigJSON(DynamicJsonDocument &doc);
+  bool parseConfigWebRequest(AsyncWebServerRequest *request);
+  String generateConfigJSON(bool forSaveFile);
+  String generateStatusJSON();
+  bool appInit(bool reInit);
+  const uint8_t *getHTMLContent(WebPageForPlaceHolder wp);
+  size_t getHTMLContentSize(WebPageForPlaceHolder wp);
+  void appInitWebServer(AsyncWebServer &server, bool &shouldReboot, bool &pauseApplication);
+  void appRun();
 
 public:
   WebPalaSensor(char appId, String fileName);

@@ -16,8 +16,8 @@ private:
 
 public:
   SingleDS18B20(uint8_t owPin);
-  bool GetReady();
-  float ReadTemp();
+  bool getReady();
+  float readTemp();
 };
 
 #endif

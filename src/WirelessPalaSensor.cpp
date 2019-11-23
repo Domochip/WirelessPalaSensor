@@ -3,30 +3,30 @@
 //-----------------------------------------------------------------------
 // Steinhart–Hart reverse function
 //-----------------------------------------------------------------------
-void WebPalaSensor::SetDualDigiPot(float temperature)
+void WebPalaSensor::setDualDigiPot(float temperature)
 {
   //convert temperature from Celsius to Kevin degrees
   float temperatureK = temperature + 273.15;
 
   //calculate and return resistance value based on provided temperature
-  double x = (1 / digipotsNTC.steinhartHartCoeffs[2]) * (digipotsNTC.steinhartHartCoeffs[0] - (1 / temperatureK));
-  double y = sqrt(pow(digipotsNTC.steinhartHartCoeffs[1] / (3 * digipotsNTC.steinhartHartCoeffs[2]), 3) + pow(x / 2, 2));
-  SetDualDigiPot((int)(exp(pow(y - (x / 2), 1.0F / 3) - pow(y + (x / 2), 1.0F / 3))));
+  double x = (1 / _digipotsNTC.steinhartHartCoeffs[2]) * (_digipotsNTC.steinhartHartCoeffs[0] - (1 / temperatureK));
+  double y = sqrt(pow(_digipotsNTC.steinhartHartCoeffs[1] / (3 * _digipotsNTC.steinhartHartCoeffs[2]), 3) + pow(x / 2, 2));
+  setDualDigiPot((int)(exp(pow(y - (x / 2), 1.0F / 3) - pow(y + (x / 2), 1.0F / 3))));
 }
 //-----------------------------------------------------------------------
 // Set Dual DigiPot resistance (serial rBW)
 //-----------------------------------------------------------------------
-void WebPalaSensor::SetDualDigiPot(int resistance)
+void WebPalaSensor::setDualDigiPot(int resistance)
 {
-  float adjustedResistance = resistance - digipotsNTC.rWTotal - (digipotsNTC.rBW5KStep * digipotsNTC.dp5kOffset);
+  float adjustedResistance = resistance - _digipotsNTC.rWTotal - (_digipotsNTC.rBW5KStep * _digipotsNTC.dp5kOffset);
 
   //DigiPot positions calculation
-  int digiPot50k_position = floor((adjustedResistance) / (digipotsNTC.rBW50KStep * digipotsNTC.dp50kStepSize)) * digipotsNTC.dp50kStepSize;
-  int digiPot5k_position = round((adjustedResistance - (digiPot50k_position * digipotsNTC.rBW50KStep)) / digipotsNTC.rBW5KStep);
-  SetDualDigiPot(digiPot50k_position, digiPot5k_position + digipotsNTC.dp5kOffset);
+  int digiPot50k_position = floor((adjustedResistance) / (_digipotsNTC.rBW50KStep * _digipotsNTC.dp50kStepSize)) * _digipotsNTC.dp50kStepSize;
+  int digiPot5k_position = round((adjustedResistance - (digiPot50k_position * _digipotsNTC.rBW50KStep)) / _digipotsNTC.rBW5KStep);
+  setDualDigiPot(digiPot50k_position, digiPot5k_position + _digipotsNTC.dp5kOffset);
 }
 
-void WebPalaSensor::SetDualDigiPot(unsigned int dp50kPosition, unsigned int dp5kPosition)
+void WebPalaSensor::setDualDigiPot(unsigned int dp50kPosition, unsigned int dp5kPosition)
 {
   //Set DigiPot position
   if (_mcp4151_50k.getPosition(0) != dp50kPosition)
@@ -38,7 +38,7 @@ void WebPalaSensor::SetDualDigiPot(unsigned int dp50kPosition, unsigned int dp5k
 //-----------------------------------------------------------------------
 // Main Timer Tick (aka this should be done every 30sec)
 //-----------------------------------------------------------------------
-void WebPalaSensor::TimerTick()
+void WebPalaSensor::timerTick()
 {
   if (_skipTick)
   {
@@ -60,7 +60,7 @@ void WebPalaSensor::TimerTick()
   LOG_SERIAL.println(F("TimerTick"));
 
   //read temperature from the local sensor
-  _owTemperature = _ds18b20.ReadTemp();
+  _owTemperature = _ds18b20.readTemp();
   if (_owTemperature == 12.3456F)
     _owTemperature = 20.0; //if reading of local sensor failed so push 20°C
   else
@@ -72,7 +72,7 @@ void WebPalaSensor::TimerTick()
   }
 
   //if ConnectionBox option enabled in config and WiFi connected
-  if (connectionBox.enabled && WiFi.isConnected())
+  if (_connectionBox.enabled && WiFi.isConnected())
   {
     WiFiClient client;
     HTTPClient http;
@@ -81,7 +81,7 @@ void WebPalaSensor::TimerTick()
     http.setTimeout(5000);
 
     //try to get current stove temperature info ----------------------
-    http.begin(client, String(F("http://")) + IPAddress(connectionBox.ip).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
+    http.begin(client, String(F("http://")) + IPAddress(_connectionBox.ip).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
 
     //send request
     _stoveRequestResult = http.GET();
@@ -113,7 +113,7 @@ void WebPalaSensor::TimerTick()
   }
 
   //if Jeedom option enabled in config and WiFi connected
-  if (ha.enabled == 1 && WiFi.isConnected())
+  if (_ha.enabled == 1 && WiFi.isConnected())
   {
     WiFiClient client;
     WiFiClientSecure clientSecure;
@@ -124,13 +124,13 @@ void WebPalaSensor::TimerTick()
     http.setTimeout(5000);
 
     //try to get house automation sensor value -----------------
-    String completeURI = String(F("http")) + (ha.tls ? F("s") : F("")) + F("://") + ha.hostname + F("/core/api/jeeApi.php?apikey=") + ha.jeedom.apiKey + F("&type=cmd&id=") + ha.temperatureId;
-    if (!ha.tls)
+    String completeURI = String(F("http")) + (_ha.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/core/api/jeeApi.php?apikey=") + _ha.jeedom.apiKey + F("&type=cmd&id=") + _ha.temperatureId;
+    if (!_ha.tls)
       http.begin(client, completeURI);
     else
     {
       char fpStr[41];
-      clientSecure.setFingerprint(Utils::FingerPrintA2S(fpStr, ha.fingerPrint));
+      clientSecure.setFingerprint(Utils::fingerPrintA2S(fpStr, _ha.fingerPrint));
       http.begin(clientSecure, completeURI);
     }
     //send request
@@ -159,7 +159,7 @@ void WebPalaSensor::TimerTick()
   }
 
   //if Fibaro option enabled in config and WiFi connected
-  if (ha.enabled == 2 && WiFi.isConnected())
+  if (_ha.enabled == 2 && WiFi.isConnected())
   {
     WiFiClient client;
     WiFiClientSecure clientSecure;
@@ -169,20 +169,20 @@ void WebPalaSensor::TimerTick()
     http.setTimeout(5000);
 
     //try to get house automation sensor value -----------------
-    String completeURI = String(F("http")) + (ha.tls ? F("s") : F("")) + F("://") + ha.hostname + F("/api/devices?id=") + ha.temperatureId;
-    //String completeURI = String(F("http")) + (ha.tls ? F("s") : F("")) + F("://") + ha.hostname + F("/devices.json");
-    if (!ha.tls)
+    String completeURI = String(F("http")) + (_ha.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/api/devices?id=") + _ha.temperatureId;
+    //String completeURI = String(F("http")) + (_ha.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/devices.json");
+    if (!_ha.tls)
       http.begin(client, completeURI);
     else
     {
       char fpStr[41];
-      clientSecure.setFingerprint(Utils::FingerPrintA2S(fpStr, ha.fingerPrint));
+      clientSecure.setFingerprint(Utils::fingerPrintA2S(fpStr, _ha.fingerPrint));
       http.begin(clientSecure, completeURI);
     }
 
     //Pass authentication if specified in configuration
-    if (ha.fibaro.username[0])
-      http.setAuthorization(ha.fibaro.username, ha.fibaro.password);
+    if (_ha.fibaro.username[0])
+      http.setAuthorization(_ha.fibaro.username, _ha.fibaro.password);
 
     //send request
     _homeAutomationRequestResult = http.GET();
@@ -217,7 +217,7 @@ void WebPalaSensor::TimerTick()
   }
 
   //select temperature source
-  if (ha.enabled)
+  if (_ha.enabled)
   {
     //if we got an HA temperature
     if (_homeAutomationTemperature > 0.1)
@@ -245,7 +245,7 @@ void WebPalaSensor::TimerTick()
     temperatureToDisplay = _owTemperature; //HA not enable
 
   //if connectionBox is enabled
-  if (connectionBox.enabled)
+  if (_connectionBox.enabled)
   {
 
     //if _stoveTemperature is correct so failed counter reset
@@ -263,103 +263,103 @@ void WebPalaSensor::TimerTick()
   }
 
   //Set DigiPot position according to resistance calculated from temperature to display with delta
-  SetDualDigiPot(temperatureToDisplay + _stoveDelta);
+  setDualDigiPot(temperatureToDisplay + _stoveDelta);
 
   _pushedTemperature = temperatureToDisplay + _stoveDelta;
 }
 
 //------------------------------------------
 //Used to initialize configuration properties to default values
-void WebPalaSensor::SetConfigDefaultValues()
+void WebPalaSensor::setConfigDefaultValues()
 {
-  digipotsNTC.rWTotal = 240.0;
-  digipotsNTC.steinhartHartCoeffs[0] = 0.001067860568;
-  digipotsNTC.steinhartHartCoeffs[1] = 0.0002269969431;
-  digipotsNTC.steinhartHartCoeffs[2] = 0.0000002641627999;
-  digipotsNTC.rBW5KStep = 19.0; //TODO
-  digipotsNTC.rBW50KStep = 190.0;
-  digipotsNTC.dp50kStepSize = 1;
-  digipotsNTC.dp5kOffset = 10; //TODO
+  _digipotsNTC.rWTotal = 240.0;
+  _digipotsNTC.steinhartHartCoeffs[0] = 0.001067860568;
+  _digipotsNTC.steinhartHartCoeffs[1] = 0.0002269969431;
+  _digipotsNTC.steinhartHartCoeffs[2] = 0.0000002641627999;
+  _digipotsNTC.rBW5KStep = 19.0; //TODO
+  _digipotsNTC.rBW50KStep = 190.0;
+  _digipotsNTC.dp50kStepSize = 1;
+  _digipotsNTC.dp5kOffset = 10; //TODO
 
-  ha.enabled = 0;
-  ha.tls = true;
-  memset(ha.fingerPrint, 0, 20);
-  ha.hostname[0] = 0;
-  ha.temperatureId = 0;
-  ha.jeedom.apiKey[0] = 0;
-  ha.fibaro.username[0] = 0;
-  ha.fibaro.password[0] = 0;
+  _ha.enabled = 0;
+  _ha.tls = true;
+  memset(_ha.fingerPrint, 0, 20);
+  _ha.hostname[0] = 0;
+  _ha.temperatureId = 0;
+  _ha.jeedom.apiKey[0] = 0;
+  _ha.fibaro.username[0] = 0;
+  _ha.fibaro.password[0] = 0;
 
-  connectionBox.enabled = false;
-  connectionBox.ip = 0;
+  _connectionBox.enabled = false;
+  _connectionBox.ip = 0;
 };
 //------------------------------------------
 //Parse JSON object into configuration properties
-void WebPalaSensor::ParseConfigJSON(DynamicJsonDocument &doc)
+void WebPalaSensor::parseConfigJSON(DynamicJsonDocument &doc)
 {
   if (!doc[F("sha")].isNull())
-    digipotsNTC.steinhartHartCoeffs[0] = doc[F("sha")];
+    _digipotsNTC.steinhartHartCoeffs[0] = doc[F("sha")];
   if (!doc[F("shb")].isNull())
-    digipotsNTC.steinhartHartCoeffs[1] = doc[F("shb")];
+    _digipotsNTC.steinhartHartCoeffs[1] = doc[F("shb")];
   if (!doc[F("shc")].isNull())
-    digipotsNTC.steinhartHartCoeffs[2] = doc[F("shc")];
+    _digipotsNTC.steinhartHartCoeffs[2] = doc[F("shc")];
 
   if (!doc[F("hae")].isNull())
-    ha.enabled = doc[F("hae")];
+    _ha.enabled = doc[F("hae")];
   if (!doc[F("hatls")].isNull())
-    ha.tls = doc[F("hatls")];
+    _ha.tls = doc[F("hatls")];
   if (!doc[F("hah")].isNull())
-    strlcpy(ha.hostname, doc["hah"], sizeof(ha.hostname));
+    strlcpy(_ha.hostname, doc["hah"], sizeof(_ha.hostname));
   if (!doc[F("hatid")].isNull())
-    ha.temperatureId = doc[F("hatid")];
+    _ha.temperatureId = doc[F("hatid")];
   if (!doc["hafp"].isNull())
-    Utils::FingerPrintS2A(ha.fingerPrint, doc["hafp"]);
+    Utils::fingerPrintS2A(_ha.fingerPrint, doc["hafp"]);
 
   if (!doc["ja"].isNull())
-    strlcpy(ha.jeedom.apiKey, doc["ja"], sizeof(ha.jeedom.apiKey));
+    strlcpy(_ha.jeedom.apiKey, doc["ja"], sizeof(_ha.jeedom.apiKey));
 
   if (!doc["fu"].isNull())
-    strlcpy(ha.fibaro.username, doc["fu"], sizeof(ha.fibaro.username));
+    strlcpy(_ha.fibaro.username, doc["fu"], sizeof(_ha.fibaro.username));
   if (!doc["fp"].isNull())
-    strlcpy(ha.fibaro.password, doc["fp"], sizeof(ha.fibaro.password));
+    strlcpy(_ha.fibaro.password, doc["fp"], sizeof(_ha.fibaro.password));
 
   if (!doc[F("cbe")].isNull())
-    connectionBox.enabled = doc[F("cbe")];
+    _connectionBox.enabled = doc[F("cbe")];
   if (!doc[F("cbi")].isNull())
-    connectionBox.ip = doc[F("cbi")];
+    _connectionBox.ip = doc[F("cbi")];
 };
 //------------------------------------------
 //Parse HTTP POST parameters in request into configuration properties
-bool WebPalaSensor::ParseConfigWebRequest(AsyncWebServerRequest *request)
+bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
 {
   //Find Steinhart-Hart coeff then convert to double
   //AND handle scientific notation
   if (request->hasParam(F("sha"), true))
-    digipotsNTC.steinhartHartCoeffs[0] = request->getParam(F("sha"), true)->value().toFloat();
+    _digipotsNTC.steinhartHartCoeffs[0] = request->getParam(F("sha"), true)->value().toFloat();
   if (request->hasParam(F("shb"), true))
-    digipotsNTC.steinhartHartCoeffs[1] = request->getParam(F("shb"), true)->value().toFloat();
+    _digipotsNTC.steinhartHartCoeffs[1] = request->getParam(F("shb"), true)->value().toFloat();
   if (request->hasParam(F("shc"), true))
-    digipotsNTC.steinhartHartCoeffs[2] = request->getParam(F("shc"), true)->value().toFloat();
+    _digipotsNTC.steinhartHartCoeffs[2] = request->getParam(F("shc"), true)->value().toFloat();
 
   if (request->hasParam(F("hae"), true))
-    ha.enabled = request->getParam(F("hae"), true)->value().toInt();
+    _ha.enabled = request->getParam(F("hae"), true)->value().toInt();
   //if an home Automation system is enabled then get common param
-  if (ha.enabled)
+  if (_ha.enabled)
   {
     if (request->hasParam(F("hatls"), true))
-      ha.tls = (request->getParam(F("hatls"), true)->value() == F("on"));
+      _ha.tls = (request->getParam(F("hatls"), true)->value() == F("on"));
     else
-      ha.tls = false;
-    if (request->hasParam(F("hah"), true) && request->getParam(F("hah"), true)->value().length() < sizeof(ha.hostname))
-      strcpy(ha.hostname, request->getParam(F("hah"), true)->value().c_str());
+      _ha.tls = false;
+    if (request->hasParam(F("hah"), true) && request->getParam(F("hah"), true)->value().length() < sizeof(_ha.hostname))
+      strcpy(_ha.hostname, request->getParam(F("hah"), true)->value().c_str());
     if (request->hasParam(F("hatid"), true))
-      ha.temperatureId = request->getParam(F("hatid"), true)->value().toInt();
+      _ha.temperatureId = request->getParam(F("hatid"), true)->value().toInt();
     if (request->hasParam(F("hafp"), true))
-      Utils::FingerPrintS2A(ha.fingerPrint, request->getParam(F("hafp"), true)->value().c_str());
+      Utils::fingerPrintS2A(_ha.fingerPrint, request->getParam(F("hafp"), true)->value().c_str());
   }
 
   //Now get specific param
-  switch (ha.enabled)
+  switch (_ha.enabled)
   {
   case 1: //Jeedom
     char tempApiKey[48 + 1];
@@ -368,81 +368,81 @@ bool WebPalaSensor::ParseConfigWebRequest(AsyncWebServerRequest *request)
       strcpy(tempApiKey, request->getParam(F("ja"), true)->value().c_str());
     //check for previous apiKey (there is a predefined special password that mean to keep already saved one)
     if (strcmp_P(tempApiKey, appDataPredefPassword))
-      strcpy(ha.jeedom.apiKey, tempApiKey);
-    if (!ha.hostname[0] || !ha.jeedom.apiKey[0])
-      ha.enabled = 0;
+      strcpy(_ha.jeedom.apiKey, tempApiKey);
+    if (!_ha.hostname[0] || !_ha.jeedom.apiKey[0])
+      _ha.enabled = 0;
     break;
   case 2: //Fibaro
     char tempFibaroPassword[64 + 1];
-    if (request->hasParam(F("fu"), true) && request->getParam(F("fu"), true)->value().length() < sizeof(ha.fibaro.username))
-      strcpy(ha.fibaro.username, request->getParam(F("fu"), true)->value().c_str());
-    if (request->hasParam(F("fp"), true) && request->getParam(F("fp"), true)->value().length() < sizeof(ha.fibaro.password))
+    if (request->hasParam(F("fu"), true) && request->getParam(F("fu"), true)->value().length() < sizeof(_ha.fibaro.username))
+      strcpy(_ha.fibaro.username, request->getParam(F("fu"), true)->value().c_str());
+    if (request->hasParam(F("fp"), true) && request->getParam(F("fp"), true)->value().length() < sizeof(_ha.fibaro.password))
       strcpy(tempFibaroPassword, request->getParam(F("fp"), true)->value().c_str());
     //check for previous fibaro password (there is a predefined special password that mean to keep already saved one)
     if (strcmp_P(tempFibaroPassword, appDataPredefPassword))
-      strcpy(ha.fibaro.password, tempFibaroPassword);
-    if (!ha.hostname[0])
-      ha.enabled = 0;
+      strcpy(_ha.fibaro.password, tempFibaroPassword);
+    if (!_ha.hostname[0])
+      _ha.enabled = 0;
     break;
   }
 
   if (request->hasParam(F("cbe"), true))
-    connectionBox.enabled = (request->getParam(F("cbe"), true)->value() == F("on"));
+    _connectionBox.enabled = (request->getParam(F("cbe"), true)->value() == F("on"));
   else
-    connectionBox.enabled = false;
+    _connectionBox.enabled = false;
 
   if (request->hasParam(F("cbi"), true))
   {
     IPAddress ipParser;
     if (ipParser.fromString(request->getParam(F("cbi"), true)->value()))
-      connectionBox.ip = static_cast<uint32_t>(ipParser);
+      _connectionBox.ip = static_cast<uint32_t>(ipParser);
     else
-      connectionBox.ip = 0;
+      _connectionBox.ip = 0;
   }
 
   return true;
 };
 //------------------------------------------
 //Generate JSON from configuration properties
-String WebPalaSensor::GenerateConfigJSON(bool forSaveFile = false)
+String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
 {
   String gc('{');
 
   char fpStr[60];
 
-  gc = gc + F("\"sha\":") + String(digipotsNTC.steinhartHartCoeffs[0], 16);
-  gc = gc + F(",\"shb\":") + String(digipotsNTC.steinhartHartCoeffs[1], 16);
-  gc = gc + F(",\"shc\":") + String(digipotsNTC.steinhartHartCoeffs[2], 16);
+  gc = gc + F("\"sha\":") + String(_digipotsNTC.steinhartHartCoeffs[0], 16);
+  gc = gc + F(",\"shb\":") + String(_digipotsNTC.steinhartHartCoeffs[1], 16);
+  gc = gc + F(",\"shc\":") + String(_digipotsNTC.steinhartHartCoeffs[2], 16);
 
-  gc = gc + F(",\"hae\":") + ha.enabled;
-  gc = gc + F(",\"hatls\":") + ha.tls;
-  gc = gc + F(",\"hah\":\"") + ha.hostname + '"';
-  gc = gc + F(",\"hatid\":") + ha.temperatureId;
-  gc = gc + F(",\"hafp\":\"") + Utils::FingerPrintA2S(fpStr, ha.fingerPrint, ':') + '"';
+  gc = gc + F(",\"hae\":") + _ha.enabled;
+  gc = gc + F(",\"hatls\":") + _ha.tls;
+  gc = gc + F(",\"hah\":\"") + _ha.hostname + '"';
+  gc = gc + F(",\"hatid\":") + _ha.temperatureId;
+  gc = gc + F(",\"hafp\":\"") + Utils::fingerPrintA2S(fpStr, _ha.fingerPrint, ':') + '"';
   if (forSaveFile)
   {
-    if (ha.enabled == 1)
-      gc = gc + F(",\"ja\":\"") + ha.jeedom.apiKey + '"';
+    if (_ha.enabled == 1)
+      gc = gc + F(",\"ja\":\"") + _ha.jeedom.apiKey + '"';
   }
   else
     //Jeedom apiKey: there is a predefined special password (mean to keep already saved one)
     gc = gc + F(",\"ja\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"';
 
-  gc = gc + F(",\"fu\":\"") + ha.fibaro.username + '"';
+  gc = gc + F(",\"fu\":\"") + _ha.fibaro.username + '"';
   if (forSaveFile)
   {
-    if (ha.enabled == 2)
-      gc = gc + F(",\"fp\":\"") + ha.fibaro.password + '"';
+    if (_ha.enabled == 2)
+      gc = gc + F(",\"fp\":\"") + _ha.fibaro.password + '"';
   }
   else
     //Fibaro password : there is a predefined special password (mean to keep already saved one)
     gc = gc + F(",\"fp\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"';
 
-  gc = gc + F(",\"cbe\":") + connectionBox.enabled;
+  gc = gc + F(",\"cbe\":") + _connectionBox.enabled;
   if (forSaveFile)
-    gc = gc + F(",\"cbi\":") + connectionBox.ip;
-  else if (connectionBox.ip)
-    gc = gc + F(",\"cbi\":\"") + IPAddress(connectionBox.ip).toString() + '"';
+    gc = gc + F(",\"cbi\":") + _connectionBox.ip;
+  else if (_connectionBox.ip)
+    gc = gc + F(",\"cbi\":\"") + IPAddress(_connectionBox.ip).toString() + '"';
 
   gc += '}';
 
@@ -450,12 +450,12 @@ String WebPalaSensor::GenerateConfigJSON(bool forSaveFile = false)
 };
 //------------------------------------------
 //Generate JSON of application status
-String WebPalaSensor::GenerateStatusJSON()
+String WebPalaSensor::generateStatusJSON()
 {
   String gs('{');
 
   //Home Automation infos
-  if (ha.enabled)
+  if (_ha.enabled)
   {
     gs = gs + F("\"lhar\":") + _homeAutomationRequestResult;
     gs = gs + F(",\"lhat\":") + _homeAutomationTemperature;
@@ -465,7 +465,7 @@ String WebPalaSensor::GenerateStatusJSON()
     gs = gs + F("\"lhar\":\"NA\",\"lhat\":\"NA\",\"hafc\":\"NA\"");
 
   //stove(ConnectionBox) infos
-  if (connectionBox.enabled)
+  if (_connectionBox.enabled)
   {
     gs = gs + F(",\"lcr\":") + _stoveRequestResult;
     gs = gs + F(",\"lct\":") + _stoveTemperature;
@@ -486,7 +486,7 @@ String WebPalaSensor::GenerateStatusJSON()
 };
 //------------------------------------------
 //code to execute during initialization and reinitialization of the app
-bool WebPalaSensor::AppInit(bool reInit)
+bool WebPalaSensor::appInit(bool reInit)
 {
   //stop Ticker
   _refreshTicker.detach();
@@ -507,16 +507,16 @@ bool WebPalaSensor::AppInit(bool reInit)
   }
 
   //first call
-  TimerTick();
+  timerTick();
 
   //then next will be done by refreshTicker
   _refreshTicker.attach_scheduled(REFRESH_PERIOD, [this]() { this->_needTick = true; });
 
-  return _ds18b20.GetReady();
+  return _ds18b20.getReady();
 };
 //------------------------------------------
 //Return HTML Code to insert into Status Web page
-const uint8_t *WebPalaSensor::GetHTMLContent(WebPageForPlaceHolder wp)
+const uint8_t *WebPalaSensor::getHTMLContent(WebPageForPlaceHolder wp)
 {
   switch (wp)
   {
@@ -533,7 +533,7 @@ const uint8_t *WebPalaSensor::GetHTMLContent(WebPageForPlaceHolder wp)
   return nullptr;
 };
 //and his Size
-size_t WebPalaSensor::GetHTMLContentSize(WebPageForPlaceHolder wp)
+size_t WebPalaSensor::getHTMLContentSize(WebPageForPlaceHolder wp)
 {
   switch (wp)
   {
@@ -551,7 +551,7 @@ size_t WebPalaSensor::GetHTMLContentSize(WebPageForPlaceHolder wp)
 };
 //------------------------------------------
 //code to register web request answer to the web server
-void WebPalaSensor::AppInitWebServer(AsyncWebServer &server, bool &shouldReboot, bool &pauseApplication)
+void WebPalaSensor::appInitWebServer(AsyncWebServer &server, bool &shouldReboot, bool &pauseApplication)
 {
   server.on("/calib.html", HTTP_GET, [](AsyncWebServerRequest *request) {
     AsyncWebServerResponse *response = request->beginResponse_P(200, F("text/html"), (const uint8_t *)calibhtmlgz, sizeof(calibhtmlgz));
@@ -562,7 +562,7 @@ void WebPalaSensor::AppInitWebServer(AsyncWebServer &server, bool &shouldReboot,
   //GetDigiPot
   server.on("/gdp", HTTP_GET, [this](AsyncWebServerRequest *request) {
     String dpJSON('{');
-    dpJSON = dpJSON + F("\"r\":") + (_mcp4151_50k.getPosition(0) * digipotsNTC.rBW50KStep + _mcp4151_5k.getPosition(0) * digipotsNTC.rBW5KStep + digipotsNTC.rWTotal);
+    dpJSON = dpJSON + F("\"r\":") + (_mcp4151_50k.getPosition(0) * _digipotsNTC.rBW50KStep + _mcp4151_5k.getPosition(0) * _digipotsNTC.rBW5KStep + _digipotsNTC.rWTotal);
 #if DEVELOPPER_MODE
     dpJSON = dpJSON + F(",\"dp5k\":") + _mcp4151_5k.getPosition(0);
     dpJSON = dpJSON + F(",\"dp50k\":") + _mcp4151_50k.getPosition(0);
@@ -580,7 +580,7 @@ void WebPalaSensor::AppInitWebServer(AsyncWebServer &server, bool &shouldReboot,
     if (request->hasParam(F("temperature"), true))
     {
       //convert and set it
-      SetDualDigiPot(request->getParam(F("temperature"), true)->value().toFloat());
+      setDualDigiPot(request->getParam(F("temperature"), true)->value().toFloat());
       //go for timer tick skipped (time to look a value on stove)
       _skipTick = TICK_TO_SKIP;
     }
@@ -589,7 +589,7 @@ void WebPalaSensor::AppInitWebServer(AsyncWebServer &server, bool &shouldReboot,
     if (request->hasParam(F("up"), true))
     {
       //go one step up
-      SetDualDigiPot((int)(_mcp4151_50k.getPosition(0) * digipotsNTC.rBW50KStep + _mcp4151_5k.getPosition(0) * digipotsNTC.rBW5KStep + digipotsNTC.rWTotal + digipotsNTC.rBW5KStep));
+      setDualDigiPot((int)(_mcp4151_50k.getPosition(0) * _digipotsNTC.rBW50KStep + _mcp4151_5k.getPosition(0) * _digipotsNTC.rBW5KStep + _digipotsNTC.rWTotal + _digipotsNTC.rBW5KStep));
       //go for timer tick skipped (time to look a value on stove)
       _skipTick = TICK_TO_SKIP;
     }
@@ -598,7 +598,7 @@ void WebPalaSensor::AppInitWebServer(AsyncWebServer &server, bool &shouldReboot,
     if (request->hasParam(F("down"), true))
     {
       //go one step down
-      SetDualDigiPot((int)(_mcp4151_50k.getPosition(0) * digipotsNTC.rBW50KStep + _mcp4151_5k.getPosition(0) * digipotsNTC.rBW5KStep + digipotsNTC.rWTotal - digipotsNTC.rBW5KStep));
+      setDualDigiPot((int)(_mcp4151_50k.getPosition(0) * _digipotsNTC.rBW50KStep + _mcp4151_5k.getPosition(0) * _digipotsNTC.rBW5KStep + _digipotsNTC.rWTotal - _digipotsNTC.rBW5KStep));
       //go for timer tick skipped (time to look a value on stove)
       _skipTick = TICK_TO_SKIP;
     }
@@ -626,7 +626,7 @@ void WebPalaSensor::AppInitWebServer(AsyncWebServer &server, bool &shouldReboot,
     if (request->hasParam(F("resistance"), true))
     {
       //convert resistance value and call right function
-      SetDualDigiPot(0, request->getParam(F("resistance"), true)->value().toInt());
+      setDualDigiPot(0, request->getParam(F("resistance"), true)->value().toInt());
       //go for timer tick skipped (time to look a value on stove)
       _skipTick = TICK_TO_SKIP;
     }
@@ -638,14 +638,14 @@ void WebPalaSensor::AppInitWebServer(AsyncWebServer &server, bool &shouldReboot,
 
 //------------------------------------------
 //Run for timer
-void WebPalaSensor::AppRun()
+void WebPalaSensor::appRun()
 {
   if (_needTick)
   {
     //disable needTick
     _needTick = false;
     //then run
-    TimerTick();
+    timerTick();
   }
 }
 
