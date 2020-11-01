@@ -229,7 +229,7 @@ void WebPalaSensor::timerTick()
     else
     {
       //else if failed count is good and previousTemperature is good too
-      if (_homeAutomationFailedCount < 6 && previousTemperatureToDisplay > 0.1)
+      if (_homeAutomationFailedCount < 11 && previousTemperatureToDisplay > 0.1)
       {
         _homeAutomationFailedCount++;
         _homeAutomationTemperatureUsed = true;
