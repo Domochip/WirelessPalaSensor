@@ -1,7 +1,11 @@
+#ifdef ESP8266
 #include <ESP8266WiFi.h>
+#else
+#include <WiFi.h>
+#endif
 #include <EEPROM.h>
+#include <LittleFS.h>
 #include <FS.h>
-#include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
 #include "Version.h"
@@ -111,7 +115,7 @@ void setup()
     LOG_SERIAL.println(F("-> RESCUE MODE : Stored configuration won't be loaded."));
 #endif
   }
-  if (!SPIFFS.begin())
+  if (!LittleFS.begin())
   {
 #ifdef LOG_SERIAL
     LOG_SERIAL.println(F("/!\\   File System Mount Failed   /!\\"));
@@ -130,10 +134,10 @@ void setup()
   application1.init(skipExistingConfig);
 #endif
 #ifdef APPLICATION2_CLASS
-  application2.Init(skipExistingConfig);
+  application2.init(skipExistingConfig);
 #endif
 #ifdef APPLICATION3_CLASS
-  application3.Init(skipExistingConfig);
+  application3.init(skipExistingConfig);
 #endif
 
 #ifdef LOG_SERIAL

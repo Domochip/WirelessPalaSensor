@@ -69,6 +69,8 @@ void WifiMan::refreshWiFi()
 
 #ifdef LOG_SERIAL
     LOG_SERIAL.print(F(" AP mode("));
+    LOG_SERIAL.print(_apSsid);
+    LOG_SERIAL.print(F(" - "));
     LOG_SERIAL.print(WiFi.softAPIP());
     LOG_SERIAL.print(F(") "));
 #endif
@@ -250,7 +252,12 @@ bool WifiMan::appInit(bool reInit = false)
     //build "unique" AP name (DEFAULT_AP_SSID + 4 last digit of ChipId)
     _apSsid[0] = 0;
     strcpy(_apSsid, DEFAULT_AP_SSID);
-    uint16 id = ESP.getChipId() & 0xFFFF;
+#ifdef ESP8266
+    uint16_t id = ESP.getChipId() & 0xFFFF;
+#else
+    uint16_t id = (uint32_t)(ESP.getEfuseMac() << 40 >> 40);
+#endif
+
     byte endOfSsid = strlen(_apSsid);
     byte num = (id & 0xF000) / 0x1000;
     _apSsid[endOfSsid] = num + ((num <= 9) ? 0x30 : 0x37);
