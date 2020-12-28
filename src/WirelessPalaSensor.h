@@ -109,6 +109,9 @@ private:
   float _stoveDelta = 0.0;
   float _pushedTemperature = 0.0;
 
+  WiFiClient _wifiClient;
+  WiFiClientSecure _wifiClientSecure;
+
   void setDualDigiPot(float temperature);
   void setDualDigiPot(int resistance);
   void setDualDigiPot(unsigned int dp50kPosition, unsigned int dp5kPosition);
