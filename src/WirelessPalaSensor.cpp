@@ -71,156 +71,152 @@ void WebPalaSensor::timerTick()
     _owTemperature /= 10;
   }
 
-  //read values from CBox and HomeAutomation can be done if WiFi is connected
-  if (WiFi.isConnected())
+  //if HomeAutomation protocol is HTTP and WiFi is connected
+  if (_ha.protocol == HA_PROTO_HTTP && WiFi.isConnected())
   {
-    //if HomeAutomation protocol is HTTP
-    if (_ha.protocol == HA_PROTO_HTTP)
-    {
 
-      //if Jeedom type in http config
-      if (_ha.http.type == HA_HTTP_JEEDOM)
-      {
-        HTTPClient http;
-
-        //set timeOut
-        http.setTimeout(5000);
-
-        //try to get house automation sensor value -----------------
-        String completeURI = String(F("http")) + (_ha.http.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/core/api/jeeApi.php?apikey=") + _ha.http.jeedom.apiKey + F("&type=cmd&id=") + _ha.http.temperatureId;
-        if (!_ha.http.tls)
-          http.begin(_wifiClient, completeURI);
-        else
-        {
-          if (Utils::isFingerPrintEmpty(_ha.http.fingerPrint))
-            _wifiClientSecure.setInsecure();
-          else
-            _wifiClientSecure.setFingerprint(_ha.http.fingerPrint);
-          http.begin(_wifiClientSecure, completeURI);
-        }
-        //send request
-        _homeAutomationRequestResult = http.GET();
-        //if we get successfull HTTP answer
-        if (_homeAutomationRequestResult == 200)
-        {
-          WiFiClient *stream = http.getStreamPtr();
-
-          //get the answer content
-          char payload[6];
-          int nb = stream->readBytes(payload, sizeof(payload) - 1);
-          payload[nb] = 0;
-
-          if (nb)
-          {
-            //convert
-            _homeAutomationTemperature = atof(payload);
-            //round it to tenth
-            _homeAutomationTemperature *= 10;
-            _homeAutomationTemperature = round(_homeAutomationTemperature);
-            _homeAutomationTemperature /= 10;
-          }
-        }
-        http.end();
-      }
-
-      //if Fibaro type in http config
-      if (_ha.http.type == HA_HTTP_FIBARO)
-      {
-        HTTPClient http;
-
-        //set timeOut
-        http.setTimeout(5000);
-
-        //try to get house automation sensor value -----------------
-        String completeURI = String(F("http")) + (_ha.http.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/api/devices?id=") + _ha.http.temperatureId;
-        //String completeURI = String(F("http")) + (_ha.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/devices.json");
-        if (!_ha.http.tls)
-          http.begin(_wifiClient, completeURI);
-        else
-        {
-          if (Utils::isFingerPrintEmpty(_ha.http.fingerPrint))
-            _wifiClientSecure.setInsecure();
-          else
-            _wifiClientSecure.setFingerprint(_ha.http.fingerPrint);
-          http.begin(_wifiClientSecure, completeURI);
-        }
-
-        //Pass authentication if specified in configuration
-        if (_ha.http.fibaro.username[0])
-          http.setAuthorization(_ha.http.fibaro.username, _ha.http.fibaro.password);
-
-        //send request
-        _homeAutomationRequestResult = http.GET();
-
-        //if we get successfull HTTP answer
-        if (_homeAutomationRequestResult == 200)
-        {
-          WiFiClient *stream = http.getStreamPtr();
-
-          while (http.connected() && stream->find("\"value\""))
-          {
-            //go to first next double quote (or return false if a comma appears first)
-            if (stream->findUntil("\"", ","))
-            {
-              char payload[60];
-              //read value (read until next doublequote)
-              int nb = stream->readBytesUntil('"', payload, sizeof(payload) - 1);
-              payload[nb] = 0;
-              if (nb)
-              {
-                //convert
-                _homeAutomationTemperature = atof(payload);
-                //round it to tenth
-                _homeAutomationTemperature *= 10;
-                _homeAutomationTemperature = round(_homeAutomationTemperature);
-                _homeAutomationTemperature /= 10;
-              }
-            }
-          }
-        }
-        http.end();
-      }
-    }
-
-    //if ConnectionBox protocol is HTTP
-    if (_connectionBox.protocol == CBOX_PROTO_HTTP)
+    //if Jeedom type in http config
+    if (_ha.http.type == HA_HTTP_JEEDOM)
     {
       HTTPClient http;
 
       //set timeOut
       http.setTimeout(5000);
 
-      //try to get current stove temperature info ----------------------
-      http.begin(_wifiClient, String(F("http://")) + IPAddress(_connectionBox.cboxhttp.ip).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
-
+      //try to get house automation sensor value -----------------
+      String completeURI = String(F("http")) + (_ha.http.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/core/api/jeeApi.php?apikey=") + _ha.http.jeedom.apiKey + F("&type=cmd&id=") + _ha.http.temperatureId;
+      if (!_ha.http.tls)
+        http.begin(_wifiClient, completeURI);
+      else
+      {
+        if (Utils::isFingerPrintEmpty(_ha.http.fingerPrint))
+          _wifiClientSecure.setInsecure();
+        else
+          _wifiClientSecure.setFingerprint(_ha.http.fingerPrint);
+        http.begin(_wifiClientSecure, completeURI);
+      }
       //send request
-      _stoveRequestResult = http.GET();
+      _homeAutomationRequestResult = http.GET();
       //if we get successfull HTTP answer
-      if (_stoveRequestResult == 200)
+      if (_homeAutomationRequestResult == 200)
       {
         WiFiClient *stream = http.getStreamPtr();
 
-        //if we found T1 in answer
-        if (stream->find("\"T1\""))
-        {
-          char payload[8];
-          //read until the comma into payload variable
-          int nb = stream->readBytesUntil(',', payload, sizeof(payload) - 1);
-          payload[nb] = 0; //end payload char[]
-          //if we readed some bytes
-          if (nb)
-          {
-            //look for start position of T1 value
-            byte posTRW = 0;
-            while ((payload[posTRW] == ' ' || payload[posTRW] == ':' || payload[posTRW] == '\t') && posTRW < nb)
-              posTRW++;
+        //get the answer content
+        char payload[6];
+        int nb = stream->readBytes(payload, sizeof(payload) - 1);
+        payload[nb] = 0;
 
-            _stoveTemperature = atof(payload + posTRW); //convert
+        if (nb)
+        {
+          //convert
+          _homeAutomationTemperature = atof(payload);
+          //round it to tenth
+          _homeAutomationTemperature *= 10;
+          _homeAutomationTemperature = round(_homeAutomationTemperature);
+          _homeAutomationTemperature /= 10;
+        }
+      }
+      http.end();
+    }
+
+    //if Fibaro type in http config
+    if (_ha.http.type == HA_HTTP_FIBARO)
+    {
+      HTTPClient http;
+
+      //set timeOut
+      http.setTimeout(5000);
+
+      //try to get house automation sensor value -----------------
+      String completeURI = String(F("http")) + (_ha.http.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/api/devices?id=") + _ha.http.temperatureId;
+      //String completeURI = String(F("http")) + (_ha.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/devices.json");
+      if (!_ha.http.tls)
+        http.begin(_wifiClient, completeURI);
+      else
+      {
+        if (Utils::isFingerPrintEmpty(_ha.http.fingerPrint))
+          _wifiClientSecure.setInsecure();
+        else
+          _wifiClientSecure.setFingerprint(_ha.http.fingerPrint);
+        http.begin(_wifiClientSecure, completeURI);
+      }
+
+      //Pass authentication if specified in configuration
+      if (_ha.http.fibaro.username[0])
+        http.setAuthorization(_ha.http.fibaro.username, _ha.http.fibaro.password);
+
+      //send request
+      _homeAutomationRequestResult = http.GET();
+
+      //if we get successfull HTTP answer
+      if (_homeAutomationRequestResult == 200)
+      {
+        WiFiClient *stream = http.getStreamPtr();
+
+        while (http.connected() && stream->find("\"value\""))
+        {
+          //go to first next double quote (or return false if a comma appears first)
+          if (stream->findUntil("\"", ","))
+          {
+            char payload[60];
+            //read value (read until next doublequote)
+            int nb = stream->readBytesUntil('"', payload, sizeof(payload) - 1);
+            payload[nb] = 0;
+            if (nb)
+            {
+              //convert
+              _homeAutomationTemperature = atof(payload);
+              //round it to tenth
+              _homeAutomationTemperature *= 10;
+              _homeAutomationTemperature = round(_homeAutomationTemperature);
+              _homeAutomationTemperature /= 10;
+            }
           }
         }
       }
       http.end();
     }
+  }
+
+  //if ConnectionBox protocol is HTTP and WiFi is connected
+  if (_connectionBox.protocol == CBOX_PROTO_HTTP && WiFi.isConnected())
+  {
+    HTTPClient http;
+
+    //set timeOut
+    http.setTimeout(5000);
+
+    //try to get current stove temperature info ----------------------
+    http.begin(_wifiClient, String(F("http://")) + IPAddress(_connectionBox.cboxhttp.ip).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
+
+    //send request
+    _stoveRequestResult = http.GET();
+    //if we get successfull HTTP answer
+    if (_stoveRequestResult == 200)
+    {
+      WiFiClient *stream = http.getStreamPtr();
+
+      //if we found T1 in answer
+      if (stream->find("\"T1\""))
+      {
+        char payload[8];
+        //read until the comma into payload variable
+        int nb = stream->readBytesUntil(',', payload, sizeof(payload) - 1);
+        payload[nb] = 0; //end payload char[]
+        //if we readed some bytes
+        if (nb)
+        {
+          //look for start position of T1 value
+          byte posTRW = 0;
+          while ((payload[posTRW] == ' ' || payload[posTRW] == ':' || payload[posTRW] == '\t') && posTRW < nb)
+            posTRW++;
+
+          _stoveTemperature = atof(payload + posTRW); //convert
+        }
+      }
+    }
+    http.end();
   }
 
   //select temperature source
