@@ -74,47 +74,6 @@ void WebPalaSensor::timerTick()
   //read values from CBox and HomeAutomation can be done if WiFi is connected
   if (WiFi.isConnected())
   {
-
-    //if ConnectionBox protocol is HTTP
-    if (_connectionBox.protocol == CBOX_PROTO_HTTP)
-    {
-      HTTPClient http;
-
-      //set timeOut
-      http.setTimeout(5000);
-
-      //try to get current stove temperature info ----------------------
-      http.begin(_wifiClient, String(F("http://")) + IPAddress(_connectionBox.cboxhttp.ip).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
-
-      //send request
-      _stoveRequestResult = http.GET();
-      //if we get successfull HTTP answer
-      if (_stoveRequestResult == 200)
-      {
-        WiFiClient *stream = http.getStreamPtr();
-
-        //if we found T1 in answer
-        if (stream->find("\"T1\""))
-        {
-          char payload[8];
-          //read until the comma into payload variable
-          int nb = stream->readBytesUntil(',', payload, sizeof(payload) - 1);
-          payload[nb] = 0; //end payload char[]
-          //if we readed some bytes
-          if (nb)
-          {
-            //look for start position of T1 value
-            byte posTRW = 0;
-            while ((payload[posTRW] == ' ' || payload[posTRW] == ':' || payload[posTRW] == '\t') && posTRW < nb)
-              posTRW++;
-
-            _stoveTemperature = atof(payload + posTRW); //convert
-          }
-        }
-      }
-      http.end();
-    }
-
     //if HomeAutomation protocol is HTTP
     if (_ha.protocol == HA_PROTO_HTTP)
     {
@@ -221,6 +180,46 @@ void WebPalaSensor::timerTick()
         }
         http.end();
       }
+    }
+
+    //if ConnectionBox protocol is HTTP
+    if (_connectionBox.protocol == CBOX_PROTO_HTTP)
+    {
+      HTTPClient http;
+
+      //set timeOut
+      http.setTimeout(5000);
+
+      //try to get current stove temperature info ----------------------
+      http.begin(_wifiClient, String(F("http://")) + IPAddress(_connectionBox.cboxhttp.ip).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
+
+      //send request
+      _stoveRequestResult = http.GET();
+      //if we get successfull HTTP answer
+      if (_stoveRequestResult == 200)
+      {
+        WiFiClient *stream = http.getStreamPtr();
+
+        //if we found T1 in answer
+        if (stream->find("\"T1\""))
+        {
+          char payload[8];
+          //read until the comma into payload variable
+          int nb = stream->readBytesUntil(',', payload, sizeof(payload) - 1);
+          payload[nb] = 0; //end payload char[]
+          //if we readed some bytes
+          if (nb)
+          {
+            //look for start position of T1 value
+            byte posTRW = 0;
+            while ((payload[posTRW] == ' ' || payload[posTRW] == ':' || payload[posTRW] == '\t') && posTRW < nb)
+              posTRW++;
+
+            _stoveTemperature = atof(payload + posTRW); //convert
+          }
+        }
+      }
+      http.end();
     }
   }
 
