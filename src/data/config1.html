@@ -23,68 +23,98 @@
 <h3 class="content-subhead">Home Automation</h3>
 
 <div class="pure-control-group">
-    <label for="hae">Type</label>
-    <select id='hae' name='hae'>
-        <option value="0">None</option>
-        <option value="1">Jeedom</option>
-        <option value="2">Fibaro</option>
+    <label for="haproto">Type</label>
+    <select id='haproto' name='haproto'>
+        <option value="0">Disabled</option>
+        <option value="1">HTTP</option>
+        <option value="2">MQTT</option>
     </select>
 </div>
 
-<div id='ha' style='display:none'>
+
+<div id='hae' style='display:none'>
+
     <div class="pure-control-group">
-        <label for="hatls">SSL/TLS</label>
-        <input type='checkbox' id='hatls' name='hatls'>
-    </div>
-    <div class="pure-control-group">
-        <label for="hah">Hostname</label>
-        <input type='text' id='hah' name='hah' maxlength='64' pattern='[A-Za-z0-9-.]+' size='50' title='DNS name or IP of the Jeedom server'>
+        <label for="hahost">Hostname</label>
+        <input type='text' id='hahost' name='hahost' maxlength='64' pattern='[A-Za-z0-9-.]+' size='50' placeholder="IP or DNS Name">
         <span class="pure-form-message-inline">(Hostname should match with certificate name if SSL/TLS is enabled)</span>
     </div>
 
-    <div id='j' style='display:none'>
+    <div id='hahe'>
 
         <div class="pure-control-group">
-            <label for="ja">ApiKey</label>
-            <input type='password' id='ja' name='ja' maxlength='48' pattern='[A-Za-z0-9-.]+' size=50 title='APIKey from Jeedom configuration webpage'>
+            <label for="hahtype">Type</label>
+            <select id='hahtype' name='hahtype'>
+                <option value="0">Jeedom Virtual</option>
+                <option value="1">Fibaro</option>
+            </select>
+        </div>
+
+        <div class="pure-control-group">
+            <label for="hahtls">SSL/TLS</label>
+            <input type='checkbox' id='hahtls' name='hahtls'>
+        </div>
+        <div id='hahtlse'>
+            <div class="pure-control-group">
+                <label for="hahfp">TLS FingerPrint</label>
+                <input type='text' id='hahfp' name='hahfp' maxlength='59' pattern='^([0-9A-Fa-f]{2}[ :-]*){19}([0-9A-Fa-f]{2})$' size='65'>
+                <span class="pure-form-message-inline">(separators are : &lt;none&gt;,&lt;space&gt;,:,-)</span>
+            </div>
+        </div>
+
+        <div id='hah0'>
+            <div class="pure-control-group">
+                <label for="hahjak">ApiKey</label>
+                <input type='password' id='hahjak' name='hahjak' maxlength='48' pattern='[A-Za-z0-9-.]+' size=50 title='APIKey from Jeedom configuration webpage'>
+            </div>
+        </div>
+
+        <div id='hah1'>
+            <div class="pure-control-group">
+                <label for="hahfuser">Username</label>
+                <input type='text' id='hahfuser' name='hahfuser' maxlength='64'>
+            </div>
+            <div class="pure-control-group">
+                <label for="hahfpass">Password</label>
+                <input type='password' id='hahfpass' name='hahfpass' maxlength='64'>
+            </div>
+        </div>
+
+        <div class="pure-control-group">
+            <label for="hahtempid">Temperature Id</label>
+            <input type='number' id='hahtempid' name='hahtempid' min='0' max='65535'>
+            <span class="pure-form-message-inline">(Command Or Device Id)</span>
         </div>
     </div>
 
-    <div id='fib' style='display:none'>
-    
-        <div class="pure-control-group">
-            <label for="fu">Username</label>
-            <input type='text' id='fu' name='fu' maxlength='64'>
-        </div>
-        <div class="pure-control-group">
-            <label for="fp">Password</label>
-            <input type='password' id='fp' name='fp' maxlength='64'>
-        </div>
-    </div>
-    <div class="pure-control-group">
-        <label for="hatid">Temperature Id</label>
-        <input type='number' id='hatid' name='hatid' min='0' max='65535'>
-        <span class="pure-form-message-inline">(Command Or Device Id)</span>
-    </div>
-    <div id='hatlse'>
-        <div class="pure-control-group">
-            <label for="hafp">TLS FingerPrint</label>
-            <input type='text' id='hafp' name='hafp' maxlength='59' pattern='^([0-9A-Fa-f]{2}[ :-]*){19}([0-9A-Fa-f]{2})$' size='65'>
-            <span class="pure-form-message-inline">(separators are : &lt;none&gt;,&lt;space&gt;,:,-)</span>
-        </div>
+    <div id='hame'>
+
     </div>
 </div>
 
 <h3 class="content-subhead">Palazzetti</h3>
 
 <div class="pure-control-group">
-    <label for="cbe" class="pure-checkbox">Palazzetti ConnectionBox</label>
-    <input type='checkbox' id='cbe' name='cbe'>
+    <label for="cbproto">Type</label>
+    <select id='cbproto' name='cbproto'>
+        <option value="0">Disabled</option>
+        <option value="1">ConnectionBox</option>
+        <option value="2">MQTT</option>
+    </select>
 </div>
-<div id='cb' style='display:none'>
-    <div class="pure-control-group">
-        <label for="cbi">ConnectionBox IP</label>
-        <input type='text' id='cbi' name='cbi' pattern='((^|\.)((25[0-5])|(2[0-4]\d)|(1\d\d)|([1-9]?\d))){4}$'>
+
+<div id='cbe' style='display:none'>
+
+    <div id='cbhe'>
+
+        <div class="pure-control-group">
+            <label for="cbhip">ConnectionBox IP</label>
+            <input type='text' id='cbhip' name='cbhip' pattern='((^|\.)((25[0-5])|(2[0-4]\d)|(1\d\d)|([1-9]?\d))){4}$'>
+        </div>
+    </div>
+
+    <div id='cbme'>
+
     </div>
 </div>
 
@@ -106,32 +136,62 @@
         load($("#content1"),"/calib.html");
     });
 
-    $(qsp+"#hae").addEventListener('change',function (){
-        switch($(qsp+"#hae").value){
+    $(qsp+"#haproto").addEventListener('change',function(){
+        switch($(qsp+"#haproto").value){
             case "0":
-                $(qsp+"#ha").style.display='none';
+                $(qsp+"#hae").style.display='none';
                 break;
             case "1":
-                $(qsp+"#fib").style.display='none';
-                $(qsp+"#j").style.display='';
-                $(qsp+"#ha").style.display='';
+                $(qsp+"#hae").style.display='';
+                $(qsp+"#hahe").style.display='';
+                $(qsp+"#hame").style.display='none';
                 break;
             case "2":
-                $(qsp+"#j").style.display='none';
-                $(qsp+"#fib").style.display='';
-                $(qsp+"#ha").style.display='';
+                $(qsp+"#hae").style.display='';
+                $(qsp+"#hahe").style.display='none';
+                $(qsp+"#hame").style.display='';
                 break;
         }
     });
 
-    $(qsp+"#hatls").addEventListener('change',function (){
-        if($(qsp+"#hatls").checked) $(qsp+"#hatlse").style.display='';
-        else $(qsp+"#hatlse").style.display='none';
+    $(qsp+"#hahtype").addEventListener('change',function(){
+        switch($(qsp+"#hahtype").value){
+            case "0":
+                $(qsp+"#hah0").style.display='';
+                $(qsp+"#hah1").style.display='none';
+                break;
+            case "1":
+                $(qsp+"#hah0").style.display='none';
+                $(qsp+"#hah1").style.display='';
+                break;
+        }
     });
 
-    $(qsp+"#cbe").addEventListener('change',function (){
-        if($(qsp+"#cbe").checked) $(qsp+"#cb").style.display='';
-        else $(qsp+"#cb").style.display='none';
+    $(qsp+"#hahtls").addEventListener('change',function(){
+        if($(qsp+"#hahtls").checked){
+            $(qsp+"#hahtlse").style.display='';
+        }
+        else{
+            $(qsp+"#hahtlse").style.display='none';
+        }
+    });
+
+    $(qsp+"#cbproto").addEventListener('change',function(){
+        switch($(qsp+"#cbproto").value){
+            case "0":
+                $(qsp+"#cbe").style.display='none';
+                break;
+            case "1":
+                $(qsp+"#cbe").style.display='';
+                $(qsp+"#cbhe").style.display='';
+                $(qsp+"#hame").style.display='none';
+                break;
+            case "2":
+                $(qsp+"#cbe").style.display='';
+                $(qsp+"#cbhe").style.display='none';
+                $(qsp+"#cbme").style.display='';
+                break;
+        }
     });
 
     $(qsp+"#f").addEventListener('submit',function(event){

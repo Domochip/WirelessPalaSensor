@@ -20,43 +20,71 @@ const char appDataPredefPassword[] PROGMEM = "ewcXoCt4HHjZUvY1";
 class WebPalaSensor : public Application
 {
 private:
+  // -------------------- DigiPots Classes--------------------
   typedef struct
   {
-    float rWTotal = 240.0; //TODO
+    float rWTotal = 0;
     double steinhartHartCoeffs[3] = {0, 0, 0};
-    float rBW5KStep = 19.0;   //TODO
-    float rBW50KStep = 190.0; //TODO
-    byte dp50kStepSize = 1;   //TODO
-    byte dp5kOffset = 10;     //TODO
+    float rBW5KStep = 0;
+    float rBW50KStep = 0;
+    byte dp50kStepSize = 0;
+    byte dp5kOffset = 0;
   } DigiPotsNTC;
 
-  typedef struct
-  {
-    char apiKey[48 + 1] = {0};
-  } Jeedom;
+  // -------------------- HomeAutomation Classes --------------------
+
+#define HA_HTTP_JEEDOM 0
+#define HA_HTTP_FIBARO 1
 
   typedef struct
   {
-    char username[64 + 1] = {0};
-    char password[64 + 1] = {0};
-  } Fibaro;
-
-  typedef struct
-  {
-    byte enabled = 0; //0 : no HA; 1 : Jeedom; 2 : Fibaro
+    byte type = HA_HTTP_JEEDOM;
     bool tls = false;
     byte fingerPrint[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    char hostname[64 + 1] = {0};
+    //Ids of light indicator in Home Automation
     int temperatureId = 0;
-    Jeedom jeedom;
-    Fibaro fibaro;
-  } HomeAutomation;
+
+    struct
+    {
+      char apiKey[48 + 1] = {0};
+    } jeedom;
+
+    struct
+    {
+      char username[64 + 1] = {0};
+      char password[64 + 1] = {0};
+    } fibaro;
+  } HTTP;
+
+#define HA_PROTO_DISABLED 0
+#define HA_PROTO_HTTP 1
+#define HA_PROTO_MQTT 2
 
   typedef struct
   {
-    bool enabled = false;
+    byte protocol = HA_PROTO_DISABLED;
+    char hostname[64 + 1] = {0};
+    HTTP http;
+  } HomeAutomation;
+
+  // -------------------- ConnectionBox Classes --------------------
+
+  typedef struct
+  {
     uint32_t ip = 0;
+  } CBoxHTTP;
+
+#define CBOX_PROTO_DISABLED 0
+#define CBOX_PROTO_HTTP 1
+#define CBOX_PROTO_MQTT 2
+
+  typedef struct
+  {
+    bool protocol = CBOX_PROTO_DISABLED;
+    CBoxHTTP cboxhttp;
   } ConnectionBox;
+
+  // --------------------
 
   DigiPotsNTC _digipotsNTC;
   HomeAutomation _ha;

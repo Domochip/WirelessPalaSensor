@@ -71,136 +71,88 @@ void WebPalaSensor::timerTick()
     _owTemperature /= 10;
   }
 
-  //if ConnectionBox option enabled in config and WiFi connected
-  if (_connectionBox.enabled && WiFi.isConnected())
+  //read values from CBox and HomeAutomation can be done if WiFi is connected
+  if (WiFi.isConnected())
   {
-    WiFiClient client;
-    HTTPClient http;
 
-    //set timeOut
-    http.setTimeout(5000);
-
-    //try to get current stove temperature info ----------------------
-    http.begin(client, String(F("http://")) + IPAddress(_connectionBox.ip).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
-
-    //send request
-    _stoveRequestResult = http.GET();
-    //if we get successfull HTTP answer
-    if (_stoveRequestResult == 200)
+    //if ConnectionBox protocol is HTTP
+    if (_connectionBox.protocol == CBOX_PROTO_HTTP)
     {
-      WiFiClient *stream = http.getStreamPtr();
+      WiFiClient client;
+      HTTPClient http;
 
-      //if we found T1 in answer
-      if (stream->find("\"T1\""))
+      //set timeOut
+      http.setTimeout(5000);
+
+      //try to get current stove temperature info ----------------------
+      http.begin(client, String(F("http://")) + IPAddress(_connectionBox.cboxhttp.ip).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
+
+      //send request
+      _stoveRequestResult = http.GET();
+      //if we get successfull HTTP answer
+      if (_stoveRequestResult == 200)
       {
-        char payload[8];
-        //read until the comma into payload variable
-        int nb = stream->readBytesUntil(',', payload, sizeof(payload) - 1);
-        payload[nb] = 0; //end payload char[]
-        //if we readed some bytes
-        if (nb)
-        {
-          //look for start position of T1 value
-          byte posTRW = 0;
-          while ((payload[posTRW] == ' ' || payload[posTRW] == ':' || payload[posTRW] == '\t') && posTRW < nb)
-            posTRW++;
+        WiFiClient *stream = http.getStreamPtr();
 
-          _stoveTemperature = atof(payload + posTRW); //convert
+        //if we found T1 in answer
+        if (stream->find("\"T1\""))
+        {
+          char payload[8];
+          //read until the comma into payload variable
+          int nb = stream->readBytesUntil(',', payload, sizeof(payload) - 1);
+          payload[nb] = 0; //end payload char[]
+          //if we readed some bytes
+          if (nb)
+          {
+            //look for start position of T1 value
+            byte posTRW = 0;
+            while ((payload[posTRW] == ' ' || payload[posTRW] == ':' || payload[posTRW] == '\t') && posTRW < nb)
+              posTRW++;
+
+            _stoveTemperature = atof(payload + posTRW); //convert
+          }
         }
       }
+      http.end();
     }
-    http.end();
-  }
 
-  //if Jeedom option enabled in config and WiFi connected
-  if (_ha.enabled == 1 && WiFi.isConnected())
-  {
-    WiFiClient client;
-    WiFiClientSecure clientSecure;
-
-    HTTPClient http;
-
-    //set timeOut
-    http.setTimeout(5000);
-
-    //try to get house automation sensor value -----------------
-    String completeURI = String(F("http")) + (_ha.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/core/api/jeeApi.php?apikey=") + _ha.jeedom.apiKey + F("&type=cmd&id=") + _ha.temperatureId;
-    if (!_ha.tls)
-      http.begin(client, completeURI);
-    else
+    //if HomeAutomation protocol is HTTP
+    if (_ha.protocol == HA_PROTO_HTTP)
     {
-      char fpStr[41];
-      clientSecure.setFingerprint(Utils::fingerPrintA2S(fpStr, _ha.fingerPrint));
-      http.begin(clientSecure, completeURI);
-    }
-    //send request
-    _homeAutomationRequestResult = http.GET();
-    //if we get successfull HTTP answer
-    if (_homeAutomationRequestResult == 200)
-    {
-      WiFiClient *stream = http.getStreamPtr();
 
-      //get the answer content
-      char payload[6];
-      int nb = stream->readBytes(payload, sizeof(payload) - 1);
-      payload[nb] = 0;
-
-      if (nb)
+      //if Jeedom type in http config
+      if (_ha.http.type == HA_HTTP_JEEDOM)
       {
-        //convert
-        _homeAutomationTemperature = atof(payload);
-        //round it to tenth
-        _homeAutomationTemperature *= 10;
-        _homeAutomationTemperature = round(_homeAutomationTemperature);
-        _homeAutomationTemperature /= 10;
-      }
-    }
-    http.end();
-  }
+        WiFiClient client;
+        WiFiClientSecure clientSecure;
 
-  //if Fibaro option enabled in config and WiFi connected
-  if (_ha.enabled == 2 && WiFi.isConnected())
-  {
-    WiFiClient client;
-    WiFiClientSecure clientSecure;
-    HTTPClient http;
+        HTTPClient http;
 
-    //set timeOut
-    http.setTimeout(5000);
+        //set timeOut
+        http.setTimeout(5000);
 
-    //try to get house automation sensor value -----------------
-    String completeURI = String(F("http")) + (_ha.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/api/devices?id=") + _ha.temperatureId;
-    //String completeURI = String(F("http")) + (_ha.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/devices.json");
-    if (!_ha.tls)
-      http.begin(client, completeURI);
-    else
-    {
-      char fpStr[41];
-      clientSecure.setFingerprint(Utils::fingerPrintA2S(fpStr, _ha.fingerPrint));
-      http.begin(clientSecure, completeURI);
-    }
-
-    //Pass authentication if specified in configuration
-    if (_ha.fibaro.username[0])
-      http.setAuthorization(_ha.fibaro.username, _ha.fibaro.password);
-
-    //send request
-    _homeAutomationRequestResult = http.GET();
-
-    //if we get successfull HTTP answer
-    if (_homeAutomationRequestResult == 200)
-    {
-      WiFiClient *stream = http.getStreamPtr();
-
-      while (http.connected() && stream->find("\"value\""))
-      {
-        //go to first next double quote (or return false if a comma appears first)
-        if (stream->findUntil("\"", ","))
+        //try to get house automation sensor value -----------------
+        String completeURI = String(F("http")) + (_ha.http.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/core/api/jeeApi.php?apikey=") + _ha.http.jeedom.apiKey + F("&type=cmd&id=") + _ha.http.temperatureId;
+        if (!_ha.http.tls)
+          http.begin(client, completeURI);
+        else
         {
-          char payload[60];
-          //read value (read until next doublequote)
-          int nb = stream->readBytesUntil('"', payload, sizeof(payload) - 1);
+          char fpStr[41];
+          clientSecure.setFingerprint(Utils::fingerPrintA2S(fpStr, _ha.http.fingerPrint));
+          http.begin(clientSecure, completeURI);
+        }
+        //send request
+        _homeAutomationRequestResult = http.GET();
+        //if we get successfull HTTP answer
+        if (_homeAutomationRequestResult == 200)
+        {
+          WiFiClient *stream = http.getStreamPtr();
+
+          //get the answer content
+          char payload[6];
+          int nb = stream->readBytes(payload, sizeof(payload) - 1);
           payload[nb] = 0;
+
           if (nb)
           {
             //convert
@@ -211,13 +163,71 @@ void WebPalaSensor::timerTick()
             _homeAutomationTemperature /= 10;
           }
         }
+        http.end();
+      }
+
+      //if Fibaro type in http config
+      if (_ha.http.type == HA_HTTP_FIBARO)
+      {
+        WiFiClient client;
+        WiFiClientSecure clientSecure;
+        HTTPClient http;
+
+        //set timeOut
+        http.setTimeout(5000);
+
+        //try to get house automation sensor value -----------------
+        String completeURI = String(F("http")) + (_ha.http.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/api/devices?id=") + _ha.http.temperatureId;
+        //String completeURI = String(F("http")) + (_ha.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/devices.json");
+        if (!_ha.http.tls)
+          http.begin(client, completeURI);
+        else
+        {
+          char fpStr[41];
+          clientSecure.setFingerprint(Utils::fingerPrintA2S(fpStr, _ha.http.fingerPrint));
+          http.begin(clientSecure, completeURI);
+        }
+
+        //Pass authentication if specified in configuration
+        if (_ha.http.fibaro.username[0])
+          http.setAuthorization(_ha.http.fibaro.username, _ha.http.fibaro.password);
+
+        //send request
+        _homeAutomationRequestResult = http.GET();
+
+        //if we get successfull HTTP answer
+        if (_homeAutomationRequestResult == 200)
+        {
+          WiFiClient *stream = http.getStreamPtr();
+
+          while (http.connected() && stream->find("\"value\""))
+          {
+            //go to first next double quote (or return false if a comma appears first)
+            if (stream->findUntil("\"", ","))
+            {
+              char payload[60];
+              //read value (read until next doublequote)
+              int nb = stream->readBytesUntil('"', payload, sizeof(payload) - 1);
+              payload[nb] = 0;
+              if (nb)
+              {
+                //convert
+                _homeAutomationTemperature = atof(payload);
+                //round it to tenth
+                _homeAutomationTemperature *= 10;
+                _homeAutomationTemperature = round(_homeAutomationTemperature);
+                _homeAutomationTemperature /= 10;
+              }
+            }
+          }
+        }
+        http.end();
       }
     }
-    http.end();
   }
 
   //select temperature source
-  if (_ha.enabled)
+  if (_ha.protocol != HA_PROTO_DISABLED)
   {
     //if we got an HA temperature
     if (_homeAutomationTemperature > 0.1)
@@ -244,8 +254,8 @@ void WebPalaSensor::timerTick()
   else
     temperatureToDisplay = _owTemperature; //HA not enable
 
-  //if connectionBox is enabled
-  if (_connectionBox.enabled)
+  //if connectionBox is enabled, make delta adjustment calculation
+  if (_connectionBox.protocol != CBOX_PROTO_DISABLED)
   {
 
     //if _stoveTemperature is correct so failed counter reset
@@ -276,22 +286,24 @@ void WebPalaSensor::setConfigDefaultValues()
   _digipotsNTC.steinhartHartCoeffs[0] = 0.001067860568;
   _digipotsNTC.steinhartHartCoeffs[1] = 0.0002269969431;
   _digipotsNTC.steinhartHartCoeffs[2] = 0.0000002641627999;
-  _digipotsNTC.rBW5KStep = 19.0; //TODO
+  _digipotsNTC.rBW5KStep = 19.0;
   _digipotsNTC.rBW50KStep = 190.0;
   _digipotsNTC.dp50kStepSize = 1;
-  _digipotsNTC.dp5kOffset = 10; //TODO
+  _digipotsNTC.dp5kOffset = 10;
 
-  _ha.enabled = 0;
-  _ha.tls = true;
-  memset(_ha.fingerPrint, 0, 20);
+  _ha.protocol = HA_PROTO_DISABLED;
   _ha.hostname[0] = 0;
-  _ha.temperatureId = 0;
-  _ha.jeedom.apiKey[0] = 0;
-  _ha.fibaro.username[0] = 0;
-  _ha.fibaro.password[0] = 0;
 
-  _connectionBox.enabled = false;
-  _connectionBox.ip = 0;
+  _ha.http.type = HA_HTTP_JEEDOM;
+  _ha.http.tls = false;
+  memset(_ha.http.fingerPrint, 0, 20);
+  _ha.http.temperatureId = 0;
+  _ha.http.jeedom.apiKey[0] = 0;
+  _ha.http.fibaro.username[0] = 0;
+  _ha.http.fibaro.password[0] = 0;
+
+  _connectionBox.protocol = CBOX_PROTO_DISABLED;
+  _connectionBox.cboxhttp.ip = 0;
 };
 //------------------------------------------
 //Parse JSON object into configuration properties
@@ -304,29 +316,34 @@ void WebPalaSensor::parseConfigJSON(DynamicJsonDocument &doc)
   if (!doc[F("shc")].isNull())
     _digipotsNTC.steinhartHartCoeffs[2] = doc[F("shc")];
 
-  if (!doc[F("hae")].isNull())
-    _ha.enabled = doc[F("hae")];
-  if (!doc[F("hatls")].isNull())
-    _ha.tls = doc[F("hatls")];
-  if (!doc[F("hah")].isNull())
-    strlcpy(_ha.hostname, doc["hah"], sizeof(_ha.hostname));
-  if (!doc[F("hatid")].isNull())
-    _ha.temperatureId = doc[F("hatid")];
-  if (!doc["hafp"].isNull())
-    Utils::fingerPrintS2A(_ha.fingerPrint, doc["hafp"]);
+  //Parse Home Automation config
+  if (!doc[F("haproto")].isNull())
+    _ha.protocol = doc[F("haproto")];
+  if (!doc[F("hahost")].isNull())
+    strlcpy(_ha.hostname, doc["hahost"], sizeof(_ha.hostname));
 
-  if (!doc["ja"].isNull())
-    strlcpy(_ha.jeedom.apiKey, doc["ja"], sizeof(_ha.jeedom.apiKey));
+  if (!doc[F("hahtype")].isNull())
+    _ha.http.type = doc[F("hahtype")];
+  if (!doc[F("hahtls")].isNull())
+    _ha.http.tls = doc[F("hahtls")];
+  if (!doc[F("hahfp")].isNull())
+    Utils::fingerPrintS2A(_ha.http.fingerPrint, doc[F("hahfp")]);
+  if (!doc[F("hahtempid")].isNull())
+    _ha.http.temperatureId = doc[F("hahtempid")];
 
-  if (!doc["fu"].isNull())
-    strlcpy(_ha.fibaro.username, doc["fu"], sizeof(_ha.fibaro.username));
-  if (!doc["fp"].isNull())
-    strlcpy(_ha.fibaro.password, doc["fp"], sizeof(_ha.fibaro.password));
+  if (!doc[F("hahjak")].isNull())
+    strlcpy(_ha.http.jeedom.apiKey, doc[F("hahjak")], sizeof(_ha.http.jeedom.apiKey));
 
-  if (!doc[F("cbe")].isNull())
-    _connectionBox.enabled = doc[F("cbe")];
-  if (!doc[F("cbi")].isNull())
-    _connectionBox.ip = doc[F("cbi")];
+  if (!doc[F("hahfuser")].isNull())
+    strlcpy(_ha.http.fibaro.username, doc[F("hahfuser")], sizeof(_ha.http.fibaro.username));
+  if (!doc[F("hahfpass")].isNull())
+    strlcpy(_ha.http.fibaro.password, doc[F("hahfpass")], sizeof(_ha.http.fibaro.password));
+
+  if (!doc[F("cbproto")].isNull())
+    _connectionBox.protocol = doc[F("cbproto")];
+
+  if (!doc[F("cbhip")].isNull())
+    _connectionBox.cboxhttp.ip = doc[F("cbhip")];
 };
 //------------------------------------------
 //Parse HTTP POST parameters in request into configuration properties
@@ -341,63 +358,83 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
   if (request->hasParam(F("shc"), true))
     _digipotsNTC.steinhartHartCoeffs[2] = request->getParam(F("shc"), true)->value().toFloat();
 
-  if (request->hasParam(F("hae"), true))
-    _ha.enabled = request->getParam(F("hae"), true)->value().toInt();
-  //if an home Automation system is enabled then get common param
-  if (_ha.enabled)
+  //Parse HA protocol
+  if (request->hasParam(F("haproto"), true))
+    _ha.protocol = request->getParam(F("haproto"), true)->value().toInt();
+  //if an home Automation protocol has been selected then get common param
+  if (_ha.protocol != HA_PROTO_DISABLED)
   {
-    if (request->hasParam(F("hatls"), true))
-      _ha.tls = (request->getParam(F("hatls"), true)->value() == F("on"));
-    else
-      _ha.tls = false;
-    if (request->hasParam(F("hah"), true) && request->getParam(F("hah"), true)->value().length() < sizeof(_ha.hostname))
-      strcpy(_ha.hostname, request->getParam(F("hah"), true)->value().c_str());
-    if (request->hasParam(F("hatid"), true))
-      _ha.temperatureId = request->getParam(F("hatid"), true)->value().toInt();
-    if (request->hasParam(F("hafp"), true))
-      Utils::fingerPrintS2A(_ha.fingerPrint, request->getParam(F("hafp"), true)->value().c_str());
+    if (request->hasParam(F("hahost"), true) && request->getParam(F("hahost"), true)->value().length() < sizeof(_ha.hostname))
+      strcpy(_ha.hostname, request->getParam(F("hahost"), true)->value().c_str());
   }
 
   //Now get specific param
-  switch (_ha.enabled)
+  switch (_ha.protocol)
   {
-  case 1: //Jeedom
-    char tempApiKey[48 + 1];
-    //put apiKey into temporary one for predefpassword
-    if (request->hasParam(F("ja"), true) && request->getParam(F("ja"), true)->value().length() < sizeof(tempApiKey))
-      strcpy(tempApiKey, request->getParam(F("ja"), true)->value().c_str());
-    //check for previous apiKey (there is a predefined special password that mean to keep already saved one)
-    if (strcmp_P(tempApiKey, appDataPredefPassword))
-      strcpy(_ha.jeedom.apiKey, tempApiKey);
-    if (!_ha.hostname[0] || !_ha.jeedom.apiKey[0])
-      _ha.enabled = 0;
-    break;
-  case 2: //Fibaro
-    char tempFibaroPassword[64 + 1];
-    if (request->hasParam(F("fu"), true) && request->getParam(F("fu"), true)->value().length() < sizeof(_ha.fibaro.username))
-      strcpy(_ha.fibaro.username, request->getParam(F("fu"), true)->value().c_str());
-    if (request->hasParam(F("fp"), true) && request->getParam(F("fp"), true)->value().length() < sizeof(_ha.fibaro.password))
-      strcpy(tempFibaroPassword, request->getParam(F("fp"), true)->value().c_str());
-    //check for previous fibaro password (there is a predefined special password that mean to keep already saved one)
-    if (strcmp_P(tempFibaroPassword, appDataPredefPassword))
-      strcpy(_ha.fibaro.password, tempFibaroPassword);
-    if (!_ha.hostname[0])
-      _ha.enabled = 0;
+  case HA_PROTO_HTTP:
+
+    if (request->hasParam(F("hahtype"), true))
+      _ha.http.type = request->getParam(F("hahtype"), true)->value().toInt();
+    if (request->hasParam(F("hahtls"), true))
+      _ha.http.tls = (request->getParam(F("hahtls"), true)->value() == F("on"));
+    else
+      _ha.http.tls = false;
+    if (request->hasParam(F("hahfp"), true))
+      Utils::fingerPrintS2A(_ha.http.fingerPrint, request->getParam(F("hahfp"), true)->value().c_str());
+    if (request->hasParam(F("hahtempid"), true))
+      _ha.http.temperatureId = request->getParam(F("hahtempid"), true)->value().toInt();
+
+    switch (_ha.http.type)
+    {
+    case HA_HTTP_JEEDOM:
+
+      char tempApiKey[48 + 1];
+      //put apiKey into temporary one for predefpassword
+      if (request->hasParam(F("hahjak"), true) && request->getParam(F("hahjak"), true)->value().length() < sizeof(tempApiKey))
+        strcpy(tempApiKey, request->getParam(F("hahjak"), true)->value().c_str());
+      //check for previous apiKey (there is a predefined special password that mean to keep already saved one)
+      if (strcmp_P(tempApiKey, appDataPredefPassword))
+        strcpy(_ha.http.jeedom.apiKey, tempApiKey);
+      if (!_ha.hostname[0] || !_ha.http.jeedom.apiKey[0])
+        _ha.protocol = HA_PROTO_DISABLED;
+      break;
+    case HA_HTTP_FIBARO:
+
+      if (request->hasParam(F("hahfuser"), true) && request->getParam(F("hahfuser"), true)->value().length() < sizeof(_ha.http.fibaro.username))
+        strcpy(_ha.http.fibaro.username, request->getParam(F("hahfuser"), true)->value().c_str());
+
+      char tempFibaroPassword[64 + 1];
+      //put Fibaropassword into temporary one for predefpassword
+      if (request->hasParam(F("hahfpass"), true) && request->getParam(F("hahfpass"), true)->value().length() < sizeof(_ha.http.fibaro.password))
+        strcpy(tempFibaroPassword, request->getParam(F("hahfpass"), true)->value().c_str());
+      //check for previous fibaro password (there is a predefined special password that mean to keep already saved one)
+      if (strcmp_P(tempFibaroPassword, appDataPredefPassword))
+        strcpy(_ha.http.fibaro.password, tempFibaroPassword);
+      if (!_ha.hostname[0])
+        _ha.protocol = 0;
+      break;
+    }
     break;
   }
 
-  if (request->hasParam(F("cbe"), true))
-    _connectionBox.enabled = (request->getParam(F("cbe"), true)->value() == F("on"));
-  else
-    _connectionBox.enabled = false;
+  //Parse CBox protocol
+  if (request->hasParam(F("cbproto"), true))
+    _connectionBox.protocol = request->getParam(F("cbproto"), true)->value().toInt();
 
-  if (request->hasParam(F("cbi"), true))
+  //Now get specific param
+  switch (_connectionBox.protocol)
   {
-    IPAddress ipParser;
-    if (ipParser.fromString(request->getParam(F("cbi"), true)->value()))
-      _connectionBox.ip = static_cast<uint32_t>(ipParser);
-    else
-      _connectionBox.ip = 0;
+  case CBOX_PROTO_HTTP:
+
+    if (request->hasParam(F("cbhip"), true))
+    {
+      IPAddress ipParser;
+      if (ipParser.fromString(request->getParam(F("cbhip"), true)->value()))
+        _connectionBox.cboxhttp.ip = static_cast<uint32_t>(ipParser);
+      else
+        _connectionBox.cboxhttp.ip = 0;
+    }
+    break;
   }
 
   return true;
@@ -414,35 +451,39 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
   gc = gc + F(",\"shb\":") + String(_digipotsNTC.steinhartHartCoeffs[1], 16);
   gc = gc + F(",\"shc\":") + String(_digipotsNTC.steinhartHartCoeffs[2], 16);
 
-  gc = gc + F(",\"hae\":") + _ha.enabled;
-  gc = gc + F(",\"hatls\":") + _ha.tls;
-  gc = gc + F(",\"hah\":\"") + _ha.hostname + '"';
-  gc = gc + F(",\"hatid\":") + _ha.temperatureId;
-  gc = gc + F(",\"hafp\":\"") + Utils::fingerPrintA2S(fpStr, _ha.fingerPrint, ':') + '"';
-  if (forSaveFile)
-  {
-    if (_ha.enabled == 1)
-      gc = gc + F(",\"ja\":\"") + _ha.jeedom.apiKey + '"';
-  }
-  else
-    //Jeedom apiKey: there is a predefined special password (mean to keep already saved one)
-    gc = gc + F(",\"ja\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"';
+  gc = gc + F(",\"haproto\":") + _ha.protocol;
+  gc = gc + F(",\"hahost\":\"") + _ha.hostname + '"';
 
-  gc = gc + F(",\"fu\":\"") + _ha.fibaro.username + '"';
-  if (forSaveFile)
+  //if for WebPage or protocol selected is HTTP
+  if (!forSaveFile || _ha.protocol == HA_PROTO_HTTP)
   {
-    if (_ha.enabled == 2)
-      gc = gc + F(",\"fp\":\"") + _ha.fibaro.password + '"';
-  }
-  else
-    //Fibaro password : there is a predefined special password (mean to keep already saved one)
-    gc = gc + F(",\"fp\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"';
+    gc = gc + F(",\"hahtype\":") + _ha.http.type;
+    gc = gc + F(",\"hahtls\":") + _ha.http.tls;
+    gc = gc + F(",\"hahfp\":\"") + Utils::fingerPrintA2S(fpStr, _ha.http.fingerPrint, forSaveFile ? 0 : ':') + '"';
+    gc = gc + F(",\"hahtempid\":") + _ha.http.temperatureId;
 
-  gc = gc + F(",\"cbe\":") + _connectionBox.enabled;
-  if (forSaveFile)
-    gc = gc + F(",\"cbi\":") + _connectionBox.ip;
-  else if (_connectionBox.ip)
-    gc = gc + F(",\"cbi\":\"") + IPAddress(_connectionBox.ip).toString() + '"';
+    if (forSaveFile)
+      gc = gc + F(",\"hahjak\":\"") + _ha.http.jeedom.apiKey + '"';
+    else
+      gc = gc + F(",\"hahjak\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"'; //predefined special password (mean to keep already saved one)
+
+    gc = gc + F(",\"hahfuser\":\"") + _ha.http.fibaro.username + '"';
+    if (forSaveFile)
+      gc = gc + F(",\"hahfpass\":\"") + _ha.http.fibaro.password + '"';
+    else
+      gc = gc + F(",\"hahfpass\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"'; //predefined special password (mean to keep already saved one)
+  }
+
+  gc = gc + F(",\"cbproto\":") + _connectionBox.protocol;
+
+  //if for WebPage or protocol selected is HTTP
+  if (!forSaveFile || _connectionBox.protocol == HA_PROTO_HTTP)
+  {
+    if (forSaveFile)
+      gc = gc + F(",\"cbhip\":") + _connectionBox.cboxhttp.ip;
+    else if (_connectionBox.cboxhttp.ip)
+      gc = gc + F(",\"cbhip\":\"") + IPAddress(_connectionBox.cboxhttp.ip).toString() + '"';
+  }
 
   gc += '}';
 
@@ -455,7 +496,7 @@ String WebPalaSensor::generateStatusJSON()
   String gs('{');
 
   //Home Automation infos
-  if (_ha.enabled)
+  if (_ha.protocol != HA_PROTO_DISABLED)
   {
     gs = gs + F("\"lhar\":") + _homeAutomationRequestResult;
     gs = gs + F(",\"lhat\":") + _homeAutomationTemperature;
@@ -465,7 +506,7 @@ String WebPalaSensor::generateStatusJSON()
     gs = gs + F("\"lhar\":\"NA\",\"lhat\":\"NA\",\"hafc\":\"NA\"");
 
   //stove(ConnectionBox) infos
-  if (_connectionBox.enabled)
+  if (_connectionBox.protocol != CBOX_PROTO_DISABLED)
   {
     gs = gs + F(",\"lcr\":") + _stoveRequestResult;
     gs = gs + F(",\"lct\":") + _stoveTemperature;
