@@ -717,7 +717,6 @@ String WebPalaSensor::generateStatusJSON()
     gs = gs + F(",\"cbs1\":\"Disabled\"");
     break;
   case CBOX_PROTO_HTTP:
-    gs = gs + F("Last ConnectionBox HTTP Result : ") + _stoveRequestResult;
     gs = gs + F(",\"cbs1\":\"Last ConnectionBox HTTP Result : ") + _stoveRequestResult + '"';
     gs = gs + F(",\"cbs2\":\"Last ConnectionBox Temperature : ") + _stoveTemperature + '"';
     break;
