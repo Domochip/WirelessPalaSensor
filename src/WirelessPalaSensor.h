@@ -3,6 +3,7 @@
 
 #include "Main.h"
 #include "base\Utils.h"
+#include "base\MQTTMan.h"
 #include "base\Application.h"
 
 const char appDataPredefPassword[] PROGMEM = "ewcXoCt4HHjZUvY1";
@@ -114,13 +115,22 @@ private:
   float _stoveDelta = 0.0;
   float _pushedTemperature = 0.0;
 
+  float _lastMqttHATemperature = 0.0;
+  unsigned long _lastMqttHATemperatureMillis = 0;
+  float _lastMqttStoveTemperature = 0.0;
+  unsigned long _lastMqttStoveTemperatureMillis = 0;
+
   WiFiClient _wifiClient;
   WiFiClientSecure _wifiClientSecure;
+
+  MQTTMan _mqttMan;
 
   void setDualDigiPot(float temperature);
   void setDualDigiPot(int resistance);
   void setDualDigiPot(unsigned int dp50kPosition, unsigned int dp5kPosition);
   void timerTick();
+  void mqttConnectedCallback(MQTTMan *mqttMan, bool firstConnection);
+  void mqttCallback(char *topic, uint8_t *payload, unsigned int length);
 
   void setConfigDefaultValues();
   void parseConfigJSON(DynamicJsonDocument &doc);

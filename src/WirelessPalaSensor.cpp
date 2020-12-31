@@ -179,6 +179,17 @@ void WebPalaSensor::timerTick()
     }
   }
 
+  //if HomeAutomation protocol is MQTT
+  if (_ha.protocol == HA_PROTO_MQTT)
+  {
+    //if mqtt received value is still valid (not too old)
+    if (_lastMqttHATemperatureMillis + (1000 * (unsigned long)_refreshPeriod) >= millis())
+    {
+      //then use it
+      _homeAutomationTemperature = _lastMqttHATemperature;
+    }
+  }
+
   //if ConnectionBox protocol is HTTP and WiFi is connected
   if (_ha.cboxProtocol == CBOX_PROTO_HTTP && WiFi.isConnected())
   {
@@ -217,6 +228,17 @@ void WebPalaSensor::timerTick()
       }
     }
     http.end();
+  }
+
+  //if ConnectionBox protocol is MQTT
+  if (_ha.cboxProtocol == CBOX_PROTO_MQTT)
+  {
+    //if mqtt received value is still valid (not too old)
+    if (_lastMqttStoveTemperatureMillis + (1000 * (unsigned long)_refreshPeriod) >= millis())
+    {
+      //then use it
+      _stoveTemperature = _lastMqttStoveTemperature;
+    }
   }
 
   //select temperature source
@@ -269,6 +291,62 @@ void WebPalaSensor::timerTick()
   setDualDigiPot(temperatureToDisplay + _stoveDelta);
 
   _pushedTemperature = temperatureToDisplay + _stoveDelta;
+}
+
+//------------------------------------------
+// Connect then Subscribe to MQTT
+void WebPalaSensor::mqttConnectedCallback(MQTTMan *mqttMan, bool firstConnection)
+{
+
+  //Subscribe to needed topic
+  //if Home Automation is configured for MQTT
+  if (_ha.protocol == HA_PROTO_MQTT)
+  {
+    mqttMan->subscribe(_ha.mqtt.temperatureTopic);
+  }
+
+  //if Connection Box/PalaControl is configured for MQTT
+  if (_ha.cboxProtocol == CBOX_PROTO_MQTT)
+  {
+    mqttMan->subscribe(_ha.mqtt.cboxT1Topic);
+  }
+}
+
+//------------------------------------------
+//Callback used when an MQTT message arrived
+void WebPalaSensor::mqttCallback(char *topic, uint8_t *payload, unsigned int length)
+{
+  //if Home Automation is configured for MQTT, topic match and payload length < 7
+  if (_ha.protocol == HA_PROTO_MQTT && !strcmp(topic, _ha.mqtt.temperatureTopic) && length < 7)
+  {
+    _lastMqttHATemperatureMillis = millis();
+
+    //make payload a string
+    char strHomeAutomationTemperature[7];
+    memcpy(strHomeAutomationTemperature, payload, length);
+    strHomeAutomationTemperature[length] = 0;
+
+    //convert
+    _lastMqttHATemperature = atof(strHomeAutomationTemperature);
+    //round it to tenth
+    _lastMqttHATemperature *= 10;
+    _lastMqttHATemperature = round(_lastMqttHATemperature);
+    _lastMqttHATemperature /= 10;
+  }
+
+  //if Home Automation is configured for MQTT, topic match and payload length < 6
+  if (_ha.cboxProtocol == CBOX_PROTO_MQTT && !strcmp(topic, _ha.mqtt.cboxT1Topic) && length < 6)
+  {
+    _lastMqttStoveTemperatureMillis = millis();
+
+    //make payload a string
+    char strStoveTemperature[6];
+    memcpy(strStoveTemperature, payload, length);
+    strStoveTemperature[length] = 0;
+
+    //convert
+    _lastMqttStoveTemperature = atof(strStoveTemperature);
+  }
 }
 
 //------------------------------------------
@@ -618,6 +696,27 @@ bool WebPalaSensor::appInit(bool reInit)
   //stop Ticker
   _refreshTicker.detach();
 
+  //Stop MQTT
+  _mqttMan.disconnect();
+
+  //if MQTT used so configure it
+  if (_ha.protocol == HA_PROTO_MQTT || _ha.cboxProtocol == CBOX_PROTO_MQTT)
+  {
+    //prepare will topic
+    // String willTopic = _ha.mqtt.baseTopic;
+    // MQTTMan::prepareTopic(willTopic);
+    // willTopic += F("connected");
+
+    //setup MQTT
+    _mqttMan.setClient(_wifiClient).setServer(_ha.mqtt.hostname, _ha.mqtt.port);
+    // _mqttMan.setConnectedAndWillTopic(willTopic.c_str());
+    _mqttMan.setConnectedCallback(std::bind(&WebPalaSensor::mqttConnectedCallback, this, std::placeholders::_1, std::placeholders::_2));
+    _mqttMan.setCallback(std::bind(&WebPalaSensor::mqttCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+    //Connect
+    _mqttMan.connect(_ha.mqtt.username, _ha.mqtt.password);
+  }
+
   if (reInit)
   {
     //reset run variables to initial values
@@ -767,6 +866,9 @@ void WebPalaSensor::appInitWebServer(AsyncWebServer &server, bool &shouldReboot,
 //Run for timer
 void WebPalaSensor::appRun()
 {
+  if (_ha.protocol == HA_PROTO_MQTT || _ha.cboxProtocol == CBOX_PROTO_MQTT)
+    _mqttMan.loop();
+
   if (_needTick)
   {
     //disable needTick
