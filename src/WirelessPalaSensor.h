@@ -79,9 +79,9 @@ private:
 
   typedef struct
   {
-    byte protocol = HA_PROTO_DISABLED;
-    char hostname[64 + 1] = {0};
+    byte maxFailedRequest = 0; //number of failed requests to HA before failover to local temperature sensor
 
+    byte protocol = HA_PROTO_DISABLED;
     byte cboxProtocol = CBOX_PROTO_DISABLED;
 
     HTTP http;
@@ -90,6 +90,7 @@ private:
 
   // --------------------
 
+  uint8_t _refreshPeriod;
   DigiPotsNTC _digipotsNTC;
   HomeAutomation _ha;
 

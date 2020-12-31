@@ -24,9 +24,6 @@
 //Enable status webpage EventSource
 #define ENABLE_STATUS_EVENTSOURCE 0
 
-//Time between request to home automation in seconds
-#define REFRESH_PERIOD 30
-
 //Pin 12, 13 and 14 are used by DigiPot Bus
 //Choose Pins used for DigiPot Select
 #define MCP4151_5k_SSPIN D2

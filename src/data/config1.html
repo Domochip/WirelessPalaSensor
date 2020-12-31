@@ -2,6 +2,12 @@
 <form class="pure-form pure-form-aligned" id='f'>
     <fieldset>
 
+<div class="pure-control-group">
+    <label for="rp">Refresh Period</label>
+    <input type='number' id='rp' name='rp' min='0' max='65535'>
+    <span class="pure-form-message-inline">seconds</span>
+</div>
+
 <h3 class="content-subhead">Calibration</h3>
 <div class="pure-control-group">
     <label>Calibrator</label>
@@ -23,7 +29,7 @@
 <h3 class="content-subhead">Home Automation</h3>
 
 <div class="pure-control-group">
-    <label for="haproto">Type</label>
+    <label for="haproto">Protocol</label>
     <select id='haproto' name='haproto'>
         <option value="0">Disabled</option>
         <option value="1">HTTP</option>
@@ -35,9 +41,9 @@
 <div id='hae' style='display:none'>
 
     <div class="pure-control-group">
-        <label for="hahost">Hostname</label>
-        <input type='text' id='hahost' name='hahost' maxlength='64' pattern='[A-Za-z0-9-.]+' size='50' placeholder="IP or DNS Name">
-        <span class="pure-form-message-inline">(Hostname should match with certificate name if SSL/TLS is enabled)</span>
+        <label for="hamfr">Max Failed Request</label>
+        <input type='number' id='hamfr' name='hamfr' min='0' max='255'>
+        <span class="pure-form-message-inline">before failover to local sensor</span>
     </div>
 
     <div id='hahe'>
@@ -95,7 +101,7 @@
 <h3 class="content-subhead">Palazzetti</h3>
 
 <div class="pure-control-group">
-    <label for="cbproto">Type</label>
+    <label for="cbproto">Protocol</label>
     <select id='cbproto' name='cbproto'>
         <option value="0">Disabled</option>
         <option value="1">ConnectionBox</option>
@@ -184,7 +190,7 @@
             case "1":
                 $(qsp+"#cbe").style.display='';
                 $(qsp+"#cbhe").style.display='';
-                $(qsp+"#hame").style.display='none';
+                $(qsp+"#cbme").style.display='none';
                 break;
             case "2":
                 $(qsp+"#cbe").style.display='';

@@ -232,14 +232,14 @@ void WebPalaSensor::timerTick()
     else
     {
       //else if failed count is good and previousTemperature is good too
-      if (_homeAutomationFailedCount < 11 && previousTemperatureToDisplay > 0.1)
+      if (_homeAutomationFailedCount <= _ha.maxFailedRequest && previousTemperatureToDisplay > 0.1)
       {
         _homeAutomationFailedCount++;
         _homeAutomationTemperatureUsed = true;
         _homeAutomationTemperature = previousTemperatureToDisplay;
         temperatureToDisplay = previousTemperatureToDisplay;
       }
-      //otherwise fail back to oneWire
+      //otherwise failover to oneWire
       else
         temperatureToDisplay = _owTemperature;
     }
@@ -254,11 +254,11 @@ void WebPalaSensor::timerTick()
     //if _stoveTemperature is correct so failed counter reset
     if (_stoveTemperature > 0.1)
       _stoveRequestFailedCount = 0;
-    else if (_stoveRequestFailedCount < 6)
+    else if (_stoveRequestFailedCount <= _ha.maxFailedRequest)
       _stoveRequestFailedCount++; //else increment failed counter
 
-    //if failed counter reached 5 then reset calculated delta
-    if (_stoveRequestFailedCount >= 5)
+    //if failed counter went over maxFailedRequest then reset calculated delta
+    if (_stoveRequestFailedCount > _ha.maxFailedRequest)
       _stoveDelta = 0;
     //if stoveTemp is ok and previousTemperatureToDisplay also so adjust delta
     if (_stoveTemperature > 0.1 && previousTemperatureToDisplay > 0.1)
@@ -275,6 +275,8 @@ void WebPalaSensor::timerTick()
 //Used to initialize configuration properties to default values
 void WebPalaSensor::setConfigDefaultValues()
 {
+  _refreshPeriod = 30;
+
   _digipotsNTC.rWTotal = 240.0;
   _digipotsNTC.steinhartHartCoeffs[0] = 0.001067860568;
   _digipotsNTC.steinhartHartCoeffs[1] = 0.0002269969431;
@@ -284,6 +286,7 @@ void WebPalaSensor::setConfigDefaultValues()
   _digipotsNTC.dp50kStepSize = 1;
   _digipotsNTC.dp5kOffset = 10;
 
+  _ha.maxFailedRequest = 10;
   _ha.protocol = HA_PROTO_DISABLED;
   _ha.hostname[0] = 0;
 
@@ -302,6 +305,9 @@ void WebPalaSensor::setConfigDefaultValues()
 //Parse JSON object into configuration properties
 void WebPalaSensor::parseConfigJSON(DynamicJsonDocument &doc)
 {
+  if (!doc[F("rp")].isNull())
+    _refreshPeriod = doc[F("rp")];
+
   if (!doc[F("sha")].isNull())
     _digipotsNTC.steinhartHartCoeffs[0] = doc[F("sha")];
   if (!doc[F("shb")].isNull())
@@ -310,10 +316,10 @@ void WebPalaSensor::parseConfigJSON(DynamicJsonDocument &doc)
     _digipotsNTC.steinhartHartCoeffs[2] = doc[F("shc")];
 
   //Parse Home Automation config
+  if (!doc[F("hamfr")].isNull())
+    _ha.maxFailedRequest = doc[F("hamfr")];
   if (!doc[F("haproto")].isNull())
     _ha.protocol = doc[F("haproto")];
-  if (!doc[F("hahost")].isNull())
-    strlcpy(_ha.hostname, doc["hahost"], sizeof(_ha.hostname));
 
   if (!doc[F("hahtype")].isNull())
     _ha.http.type = doc[F("hahtype")];
@@ -342,6 +348,9 @@ void WebPalaSensor::parseConfigJSON(DynamicJsonDocument &doc)
 //Parse HTTP POST parameters in request into configuration properties
 bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
 {
+  if (request->hasParam(F("rp"), true))
+    _refreshPeriod = request->getParam(F("rp"), true)->value().toInt();
+
   //Find Steinhart-Hart coeff then convert to double
   //AND handle scientific notation
   if (request->hasParam(F("sha"), true))
@@ -350,6 +359,9 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
     _digipotsNTC.steinhartHartCoeffs[1] = request->getParam(F("shb"), true)->value().toFloat();
   if (request->hasParam(F("shc"), true))
     _digipotsNTC.steinhartHartCoeffs[2] = request->getParam(F("shc"), true)->value().toFloat();
+
+  if (request->hasParam(F("hamfr"), true))
+    _ha.maxFailedRequest = request->getParam(F("hamfr"), true)->value().toInt();
 
   //Parse HA protocol
   if (request->hasParam(F("haproto"), true))
@@ -440,12 +452,14 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
 
   char fpStr[60];
 
-  gc = gc + F("\"sha\":") + String(_digipotsNTC.steinhartHartCoeffs[0], 16);
+  gc = gc + F("\"rp\":") + _refreshPeriod;
+
+  gc = gc + F(",\"sha\":") + String(_digipotsNTC.steinhartHartCoeffs[0], 16);
   gc = gc + F(",\"shb\":") + String(_digipotsNTC.steinhartHartCoeffs[1], 16);
   gc = gc + F(",\"shc\":") + String(_digipotsNTC.steinhartHartCoeffs[2], 16);
 
+  gc = gc + F(",\"hamfr\":") + _ha.maxFailedRequest;
   gc = gc + F(",\"haproto\":") + _ha.protocol;
-  gc = gc + F(",\"hahost\":\"") + _ha.hostname + '"';
 
   //if for WebPage or protocol selected is HTTP
   if (!forSaveFile || _ha.protocol == HA_PROTO_HTTP)
@@ -469,8 +483,8 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
 
   gc = gc + F(",\"cbproto\":") + _ha.cboxProtocol;
 
-  //if for WebPage or protocol selected is HTTP
-  if (!forSaveFile || _ha.cboxProtocol == HA_PROTO_HTTP)
+  //if for WebPage or CBox protocol selected is HTTP
+  if (!forSaveFile || _ha.cboxProtocol == CBOX_PROTO_HTTP)
   {
     if (forSaveFile)
       gc = gc + F(",\"cbhip\":") + _ha.http.cboxIp;
@@ -544,7 +558,7 @@ bool WebPalaSensor::appInit(bool reInit)
   timerTick();
 
   //then next will be done by refreshTicker
-  _refreshTicker.attach_scheduled(REFRESH_PERIOD, [this]() { this->_needTick = true; });
+  _refreshTicker.attach_scheduled(_refreshPeriod, [this]() { this->_needTick = true; });
 
   return _ds18b20.getReady();
 };
