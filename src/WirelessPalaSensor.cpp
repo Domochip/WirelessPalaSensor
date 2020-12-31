@@ -180,7 +180,7 @@ void WebPalaSensor::timerTick()
   }
 
   //if ConnectionBox protocol is HTTP and WiFi is connected
-  if (_connectionBox.protocol == CBOX_PROTO_HTTP && WiFi.isConnected())
+  if (_ha.cboxProtocol == CBOX_PROTO_HTTP && WiFi.isConnected())
   {
     HTTPClient http;
 
@@ -188,7 +188,7 @@ void WebPalaSensor::timerTick()
     http.setTimeout(5000);
 
     //try to get current stove temperature info ----------------------
-    http.begin(_wifiClient, String(F("http://")) + IPAddress(_connectionBox.cboxhttp.ip).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
+    http.begin(_wifiClient, String(F("http://")) + IPAddress(_ha.http.cboxIp).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
 
     //send request
     _stoveRequestResult = http.GET();
@@ -248,7 +248,7 @@ void WebPalaSensor::timerTick()
     temperatureToDisplay = _owTemperature; //HA not enable
 
   //if connectionBox is enabled, make delta adjustment calculation
-  if (_connectionBox.protocol != CBOX_PROTO_DISABLED)
+  if (_ha.cboxProtocol != CBOX_PROTO_DISABLED)
   {
 
     //if _stoveTemperature is correct so failed counter reset
@@ -295,8 +295,8 @@ void WebPalaSensor::setConfigDefaultValues()
   _ha.http.fibaro.username[0] = 0;
   _ha.http.fibaro.password[0] = 0;
 
-  _connectionBox.protocol = CBOX_PROTO_DISABLED;
-  _connectionBox.cboxhttp.ip = 0;
+  _ha.cboxProtocol = CBOX_PROTO_DISABLED;
+  _ha.http.cboxIp = 0;
 };
 //------------------------------------------
 //Parse JSON object into configuration properties
@@ -333,10 +333,10 @@ void WebPalaSensor::parseConfigJSON(DynamicJsonDocument &doc)
     strlcpy(_ha.http.fibaro.password, doc[F("hahfpass")], sizeof(_ha.http.fibaro.password));
 
   if (!doc[F("cbproto")].isNull())
-    _connectionBox.protocol = doc[F("cbproto")];
+    _ha.cboxProtocol = doc[F("cbproto")];
 
   if (!doc[F("cbhip")].isNull())
-    _connectionBox.cboxhttp.ip = doc[F("cbhip")];
+    _ha.http.cboxIp = doc[F("cbhip")];
 };
 //------------------------------------------
 //Parse HTTP POST parameters in request into configuration properties
@@ -412,10 +412,10 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
 
   //Parse CBox protocol
   if (request->hasParam(F("cbproto"), true))
-    _connectionBox.protocol = request->getParam(F("cbproto"), true)->value().toInt();
+    _ha.cboxProtocol = request->getParam(F("cbproto"), true)->value().toInt();
 
   //Now get specific param
-  switch (_connectionBox.protocol)
+  switch (_ha.cboxProtocol)
   {
   case CBOX_PROTO_HTTP:
 
@@ -423,9 +423,9 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
     {
       IPAddress ipParser;
       if (ipParser.fromString(request->getParam(F("cbhip"), true)->value()))
-        _connectionBox.cboxhttp.ip = static_cast<uint32_t>(ipParser);
+        _ha.http.cboxIp = static_cast<uint32_t>(ipParser);
       else
-        _connectionBox.cboxhttp.ip = 0;
+        _ha.http.cboxIp = 0;
     }
     break;
   }
@@ -467,15 +467,15 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
       gc = gc + F(",\"hahfpass\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"'; //predefined special password (mean to keep already saved one)
   }
 
-  gc = gc + F(",\"cbproto\":") + _connectionBox.protocol;
+  gc = gc + F(",\"cbproto\":") + _ha.cboxProtocol;
 
   //if for WebPage or protocol selected is HTTP
-  if (!forSaveFile || _connectionBox.protocol == HA_PROTO_HTTP)
+  if (!forSaveFile || _ha.cboxProtocol == HA_PROTO_HTTP)
   {
     if (forSaveFile)
-      gc = gc + F(",\"cbhip\":") + _connectionBox.cboxhttp.ip;
-    else if (_connectionBox.cboxhttp.ip)
-      gc = gc + F(",\"cbhip\":\"") + IPAddress(_connectionBox.cboxhttp.ip).toString() + '"';
+      gc = gc + F(",\"cbhip\":") + _ha.http.cboxIp;
+    else if (_ha.http.cboxIp)
+      gc = gc + F(",\"cbhip\":\"") + IPAddress(_ha.http.cboxIp).toString() + '"';
   }
 
   gc += '}';
@@ -499,7 +499,7 @@ String WebPalaSensor::generateStatusJSON()
     gs = gs + F("\"lhar\":\"NA\",\"lhat\":\"NA\",\"hafc\":\"NA\"");
 
   //stove(ConnectionBox) infos
-  if (_connectionBox.protocol != CBOX_PROTO_DISABLED)
+  if (_ha.cboxProtocol != CBOX_PROTO_DISABLED)
   {
     gs = gs + F(",\"lcr\":") + _stoveRequestResult;
     gs = gs + F(",\"lct\":") + _stoveTemperature;

@@ -54,25 +54,24 @@ private:
       char username[64 + 1] = {0};
       char password[64 + 1] = {0};
     } fibaro;
+
+    uint32_t cboxIp = 0;
   } HTTP;
+
+  typedef struct
+  {
+    uint32_t port = 1883;
+    char username[128 + 1] = {0};
+    char password[150 + 1] = {0};
+    
+    char temperatureTopic[64 + 1] = {0};
+
+    char cboxT1Topic[64 + 1] = {0};
+  } MQTT;
 
 #define HA_PROTO_DISABLED 0
 #define HA_PROTO_HTTP 1
 #define HA_PROTO_MQTT 2
-
-  typedef struct
-  {
-    byte protocol = HA_PROTO_DISABLED;
-    char hostname[64 + 1] = {0};
-    HTTP http;
-  } HomeAutomation;
-
-  // -------------------- ConnectionBox Classes --------------------
-
-  typedef struct
-  {
-    uint32_t ip = 0;
-  } CBoxHTTP;
 
 #define CBOX_PROTO_DISABLED 0
 #define CBOX_PROTO_HTTP 1
@@ -80,15 +79,19 @@ private:
 
   typedef struct
   {
-    bool protocol = CBOX_PROTO_DISABLED;
-    CBoxHTTP cboxhttp;
-  } ConnectionBox;
+    byte protocol = HA_PROTO_DISABLED;
+    char hostname[64 + 1] = {0};
+
+    byte cboxProtocol = CBOX_PROTO_DISABLED;
+
+    HTTP http;
+    MQTT mqtt;
+  } HomeAutomation;
 
   // --------------------
 
   DigiPotsNTC _digipotsNTC;
   HomeAutomation _ha;
-  ConnectionBox _connectionBox;
 
   SingleDS18B20 _ds18b20;
   McpDigitalPot _mcp4151_5k;
