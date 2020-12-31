@@ -39,9 +39,9 @@ private:
   typedef struct
   {
     byte type = HA_HTTP_JEEDOM;
+    char hostname[64 + 1] = {0};
     bool tls = false;
     byte fingerPrint[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    //Ids of light indicator in Home Automation
     int temperatureId = 0;
 
     struct
@@ -60,10 +60,11 @@ private:
 
   typedef struct
   {
-    uint32_t port = 1883;
+    char hostname[64 + 1] = {0};
+    uint32_t port = 0;
     char username[128 + 1] = {0};
     char password[150 + 1] = {0};
-    
+
     char temperatureTopic[64 + 1] = {0};
 
     char cboxT1Topic[64 + 1] = {0};

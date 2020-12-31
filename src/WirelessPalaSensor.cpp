@@ -84,7 +84,7 @@ void WebPalaSensor::timerTick()
       http.setTimeout(5000);
 
       //try to get house automation sensor value -----------------
-      String completeURI = String(F("http")) + (_ha.http.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/core/api/jeeApi.php?apikey=") + _ha.http.jeedom.apiKey + F("&type=cmd&id=") + _ha.http.temperatureId;
+      String completeURI = String(F("http")) + (_ha.http.tls ? F("s") : F("")) + F("://") + _ha.http.hostname + F("/core/api/jeeApi.php?apikey=") + _ha.http.jeedom.apiKey + F("&type=cmd&id=") + _ha.http.temperatureId;
       if (!_ha.http.tls)
         http.begin(_wifiClient, completeURI);
       else
@@ -129,7 +129,7 @@ void WebPalaSensor::timerTick()
       http.setTimeout(5000);
 
       //try to get house automation sensor value -----------------
-      String completeURI = String(F("http")) + (_ha.http.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/api/devices?id=") + _ha.http.temperatureId;
+      String completeURI = String(F("http")) + (_ha.http.tls ? F("s") : F("")) + F("://") + _ha.http.hostname + F("/api/devices?id=") + _ha.http.temperatureId;
       //String completeURI = String(F("http")) + (_ha.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/devices.json");
       if (!_ha.http.tls)
         http.begin(_wifiClient, completeURI);
@@ -288,18 +288,24 @@ void WebPalaSensor::setConfigDefaultValues()
 
   _ha.maxFailedRequest = 10;
   _ha.protocol = HA_PROTO_DISABLED;
-  _ha.hostname[0] = 0;
+  _ha.cboxProtocol = CBOX_PROTO_DISABLED;
 
   _ha.http.type = HA_HTTP_JEEDOM;
+  _ha.http.hostname[0] = 0;
   _ha.http.tls = false;
   memset(_ha.http.fingerPrint, 0, 20);
   _ha.http.temperatureId = 0;
   _ha.http.jeedom.apiKey[0] = 0;
   _ha.http.fibaro.username[0] = 0;
   _ha.http.fibaro.password[0] = 0;
-
-  _ha.cboxProtocol = CBOX_PROTO_DISABLED;
   _ha.http.cboxIp = 0;
+
+  _ha.mqtt.hostname[0] = 0;
+  _ha.mqtt.port = 1883;
+  _ha.mqtt.username[0] = 0;
+  _ha.mqtt.password[0] = 0;
+  _ha.mqtt.temperatureTopic[0] = 0;
+  _ha.mqtt.cboxT1Topic[0] = 0;
 };
 //------------------------------------------
 //Parse JSON object into configuration properties
@@ -323,6 +329,8 @@ void WebPalaSensor::parseConfigJSON(DynamicJsonDocument &doc)
 
   if (!doc[F("hahtype")].isNull())
     _ha.http.type = doc[F("hahtype")];
+  if (!doc[F("hahhost")].isNull())
+    strlcpy(_ha.http.hostname, doc["hahhost"], sizeof(_ha.http.hostname));
   if (!doc[F("hahtls")].isNull())
     _ha.http.tls = doc[F("hahtls")];
   if (!doc[F("hahfp")].isNull())
@@ -338,11 +346,26 @@ void WebPalaSensor::parseConfigJSON(DynamicJsonDocument &doc)
   if (!doc[F("hahfpass")].isNull())
     strlcpy(_ha.http.fibaro.password, doc[F("hahfpass")], sizeof(_ha.http.fibaro.password));
 
+  if (!doc[F("hamtemptopic")].isNull())
+    strlcpy(_ha.mqtt.temperatureTopic, doc[F("hamtemptopic")], sizeof(_ha.mqtt.temperatureTopic));
+
   if (!doc[F("cbproto")].isNull())
     _ha.cboxProtocol = doc[F("cbproto")];
 
   if (!doc[F("cbhip")].isNull())
     _ha.http.cboxIp = doc[F("cbhip")];
+
+  if (!doc[F("cbmt1topic")].isNull())
+    strlcpy(_ha.mqtt.cboxT1Topic, doc[F("cbmt1topic")], sizeof(_ha.mqtt.cboxT1Topic));
+
+  if (!doc[F("hamhost")].isNull())
+    strlcpy(_ha.mqtt.hostname, doc["hamhost"], sizeof(_ha.mqtt.hostname));
+  if (!doc[F("hamport")].isNull())
+    _ha.mqtt.port = doc[F("hamport")];
+  if (!doc[F("hamu")].isNull())
+    strlcpy(_ha.mqtt.username, doc[F("hamu")], sizeof(_ha.mqtt.username));
+  if (!doc[F("hamp")].isNull())
+    strlcpy(_ha.mqtt.password, doc[F("hamp")], sizeof(_ha.mqtt.password));
 };
 //------------------------------------------
 //Parse HTTP POST parameters in request into configuration properties
@@ -363,15 +386,24 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
   if (request->hasParam(F("hamfr"), true))
     _ha.maxFailedRequest = request->getParam(F("hamfr"), true)->value().toInt();
 
+  //Parse common MQTT param
+  if (request->hasParam(F("hamhost"), true) && request->getParam(F("hamhost"), true)->value().length() < sizeof(_ha.mqtt.hostname))
+    strcpy(_ha.mqtt.hostname, request->getParam(F("hamhost"), true)->value().c_str());
+  if (request->hasParam(F("hamport"), true))
+    _ha.mqtt.port = request->getParam(F("hamport"), true)->value().toInt();
+  if (request->hasParam(F("hamu"), true) && request->getParam(F("hamu"), true)->value().length() < sizeof(_ha.mqtt.username))
+    strcpy(_ha.mqtt.username, request->getParam(F("hamu"), true)->value().c_str());
+  char tempPassword[64 + 1] = {0};
+  //put MQTT password into temporary one for predefpassword
+  if (request->hasParam(F("hamp"), true) && request->getParam(F("hamp"), true)->value().length() < sizeof(tempPassword))
+    strcpy(tempPassword, request->getParam(F("hamp"), true)->value().c_str());
+  //check for previous password (there is a predefined special password that mean to keep already saved one)
+  if (strcmp_P(tempPassword, appDataPredefPassword))
+    strcpy(_ha.mqtt.password, tempPassword);
+
   //Parse HA protocol
   if (request->hasParam(F("haproto"), true))
     _ha.protocol = request->getParam(F("haproto"), true)->value().toInt();
-  //if an home Automation protocol has been selected then get common param
-  if (_ha.protocol != HA_PROTO_DISABLED)
-  {
-    if (request->hasParam(F("hahost"), true) && request->getParam(F("hahost"), true)->value().length() < sizeof(_ha.hostname))
-      strcpy(_ha.hostname, request->getParam(F("hahost"), true)->value().c_str());
-  }
 
   //Now get specific param
   switch (_ha.protocol)
@@ -380,6 +412,8 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
 
     if (request->hasParam(F("hahtype"), true))
       _ha.http.type = request->getParam(F("hahtype"), true)->value().toInt();
+    if (request->hasParam(F("hahhost"), true) && request->getParam(F("hahhost"), true)->value().length() < sizeof(_ha.http.hostname))
+      strcpy(_ha.http.hostname, request->getParam(F("hahhost"), true)->value().c_str());
     if (request->hasParam(F("hahtls"), true))
       _ha.http.tls = (request->getParam(F("hahtls"), true)->value() == F("on"));
     else
@@ -400,7 +434,7 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
       //check for previous apiKey (there is a predefined special password that mean to keep already saved one)
       if (strcmp_P(tempApiKey, appDataPredefPassword))
         strcpy(_ha.http.jeedom.apiKey, tempApiKey);
-      if (!_ha.hostname[0] || !_ha.http.jeedom.apiKey[0])
+      if (!_ha.http.hostname[0] || !_ha.http.jeedom.apiKey[0])
         _ha.protocol = HA_PROTO_DISABLED;
       break;
     case HA_HTTP_FIBARO:
@@ -415,10 +449,19 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
       //check for previous fibaro password (there is a predefined special password that mean to keep already saved one)
       if (strcmp_P(tempFibaroPassword, appDataPredefPassword))
         strcpy(_ha.http.fibaro.password, tempFibaroPassword);
-      if (!_ha.hostname[0])
+      if (!_ha.http.hostname[0])
         _ha.protocol = 0;
       break;
     }
+    break;
+
+  case HA_PROTO_MQTT:
+
+    if (request->hasParam(F("hamtemptopic"), true) && request->getParam(F("hamtemptopic"), true)->value().length() < sizeof(_ha.mqtt.temperatureTopic))
+      strcpy(_ha.mqtt.temperatureTopic, request->getParam(F("hamtemptopic"), true)->value().c_str());
+
+    if (!_ha.mqtt.hostname[0] || !_ha.mqtt.temperatureTopic[0])
+      _ha.protocol = HA_PROTO_DISABLED;
     break;
   }
 
@@ -437,8 +480,20 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
       if (ipParser.fromString(request->getParam(F("cbhip"), true)->value()))
         _ha.http.cboxIp = static_cast<uint32_t>(ipParser);
       else
+      {
         _ha.http.cboxIp = 0;
+        _ha.cboxProtocol = CBOX_PROTO_DISABLED;
+      }
     }
+    break;
+
+  case CBOX_PROTO_MQTT:
+
+    if (request->hasParam(F("cbmt1topic"), true) && request->getParam(F("cbmt1topic"), true)->value().length() < sizeof(_ha.mqtt.cboxT1Topic))
+      strcpy(_ha.mqtt.cboxT1Topic, request->getParam(F("cbmt1topic"), true)->value().c_str());
+
+    if (!_ha.mqtt.hostname[0] || !_ha.mqtt.cboxT1Topic[0])
+      _ha.cboxProtocol = CBOX_PROTO_DISABLED;
     break;
   }
 
@@ -465,6 +520,7 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
   if (!forSaveFile || _ha.protocol == HA_PROTO_HTTP)
   {
     gc = gc + F(",\"hahtype\":") + _ha.http.type;
+    gc = gc + F(",\"hahhost\":\"") + _ha.http.hostname + '"';
     gc = gc + F(",\"hahtls\":") + _ha.http.tls;
     gc = gc + F(",\"hahfp\":\"") + Utils::fingerPrintA2S(fpStr, _ha.http.fingerPrint, forSaveFile ? 0 : ':') + '"';
     gc = gc + F(",\"hahtempid\":") + _ha.http.temperatureId;
@@ -481,6 +537,12 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
       gc = gc + F(",\"hahfpass\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"'; //predefined special password (mean to keep already saved one)
   }
 
+  //if for WebPage or protocol selected is MQTT
+  if (!forSaveFile || _ha.protocol == HA_PROTO_MQTT)
+  {
+    gc = gc + F(",\"hamtemptopic\":\"") + _ha.mqtt.temperatureTopic + '"';
+  }
+
   gc = gc + F(",\"cbproto\":") + _ha.cboxProtocol;
 
   //if for WebPage or CBox protocol selected is HTTP
@@ -490,6 +552,23 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
       gc = gc + F(",\"cbhip\":") + _ha.http.cboxIp;
     else if (_ha.http.cboxIp)
       gc = gc + F(",\"cbhip\":\"") + IPAddress(_ha.http.cboxIp).toString() + '"';
+  }
+
+  //if for WebPage or CBox protocol selected is MQTT
+  if (!forSaveFile || _ha.cboxProtocol == CBOX_PROTO_MQTT)
+  {
+    gc = gc + F(",\"cbmt1topic\":\"") + _ha.mqtt.cboxT1Topic + '"';
+  }
+
+  if (!forSaveFile || _ha.protocol == HA_PROTO_MQTT || _ha.cboxProtocol == CBOX_PROTO_MQTT)
+  {
+    gc = gc + F(",\"hamhost\":\"") + _ha.mqtt.hostname + '"';
+    gc = gc + F(",\"hamport\":") + _ha.mqtt.port;
+    gc = gc + F(",\"hamu\":\"") + _ha.mqtt.username + '"';
+    if (forSaveFile)
+      gc = gc + F(",\"hamp\":\"") + _ha.mqtt.password + '"';
+    else
+      gc = gc + F(",\"hamp\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"'; //predefined special password (mean to keep already saved one)
   }
 
   gc += '}';
