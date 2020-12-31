@@ -660,17 +660,17 @@ String WebPalaSensor::generateStatusJSON()
   String gs('{');
 
   //Home Automation infos
-  gs = gs + F("\"has1\":\"");
   switch (_ha.protocol)
   {
   case HA_PROTO_DISABLED:
-    gs = gs + F("Disabled");
+    gs = gs + F("\"has1\":\"Disabled\"");
     break;
   case HA_PROTO_HTTP:
-    gs = gs + F("Last Home Automation HTTP Result : ") + _homeAutomationRequestResult;
+    gs = gs + F("\"has1\":\"Last Home Automation HTTP Result : ") + _homeAutomationRequestResult + '"';
+    gs = gs + F(",\"has2\":\"Last Home Automation Temperature : ") + _homeAutomationTemperature + '"';
     break;
   case HA_PROTO_MQTT:
-    gs = gs + F("MQTT Connection State : ");
+    gs = gs + F("\"has1\":\"MQTT Connection State : ");
     switch (_mqttMan.state())
     {
     case MQTT_CONNECTION_TIMEOUT:
@@ -701,27 +701,28 @@ String WebPalaSensor::generateStatusJSON()
       gs = gs + F("Connection Unauthorized");
       break;
     }
+    gs = gs + F("\",\"has2\":\"Last Home Automation Temperature : ") + _lastMqttHATemperature;
+    if (_lastMqttHATemperatureMillis + (1000 * (unsigned long)_refreshPeriod) < millis())
+      gs = gs + F(" (") + ((millis() - _lastMqttHATemperatureMillis) / 1000) + F(" seconds ago)");
+    gs += '"';
     break;
   }
-  gs += '"';
-
-  if (_ha.protocol != HA_PROTO_DISABLED)
-    gs = gs + F(",\"has2\":\"Last Home Automation Temperature : ") + _homeAutomationTemperature + '"';
 
   gs = gs + F(",\"hafc\":") + _homeAutomationFailedCount;
 
   //stove(ConnectionBox) infos
-  gs = gs + F(",\"cbs1\":\"");
   switch (_ha.cboxProtocol)
   {
   case CBOX_PROTO_DISABLED:
-    gs = gs + F("Disabled");
+    gs = gs + F(",\"cbs1\":\"Disabled\"");
     break;
   case CBOX_PROTO_HTTP:
     gs = gs + F("Last ConnectionBox HTTP Result : ") + _stoveRequestResult;
+    gs = gs + F(",\"cbs1\":\"Last ConnectionBox HTTP Result : ") + _stoveRequestResult + '"';
+    gs = gs + F(",\"cbs2\":\"Last ConnectionBox Temperature : ") + _stoveTemperature + '"';
     break;
   case CBOX_PROTO_MQTT:
-    gs = gs + F("MQTT Connection State : ");
+    gs = gs + F(",\"cbs1\":\"MQTT Connection State : ");
     switch (_mqttMan.state())
     {
     case MQTT_CONNECTION_TIMEOUT:
@@ -752,12 +753,12 @@ String WebPalaSensor::generateStatusJSON()
       gs = gs + F("Connection Unauthorized");
       break;
     }
+    gs = gs + F("\",\"cbs2\":\"Last ConnectionBox Temperature : ") + _lastMqttStoveTemperature;
+    if (_lastMqttStoveTemperatureMillis + (1000 * (unsigned long)_refreshPeriod) < millis())
+      gs = gs + F(" (") + ((millis() - _lastMqttStoveTemperatureMillis) / 1000) + F(" seconds ago)");
+    gs += '"';
     break;
   }
-  gs += '"';
-
-  if (_ha.cboxProtocol != CBOX_PROTO_DISABLED)
-    gs = gs + F(",\"cbs2\":\"Last ConnectionBox Temperature : ") + _stoveTemperature + '"';
 
   gs = gs + F(",\"cbfc\":") + _stoveRequestFailedCount;
 
