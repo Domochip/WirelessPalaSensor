@@ -78,6 +78,9 @@ void WebPalaSensor::timerTick()
     //if Jeedom type in http config
     if (_ha.http.type == HA_HTTP_JEEDOM)
     {
+      WiFiClient client;
+      WiFiClientSecure clientSecure;
+
       HTTPClient http;
 
       //set timeOut
@@ -86,14 +89,14 @@ void WebPalaSensor::timerTick()
       //try to get house automation sensor value -----------------
       String completeURI = String(F("http")) + (_ha.http.tls ? F("s") : F("")) + F("://") + _ha.http.hostname + F("/core/api/jeeApi.php?apikey=") + _ha.http.jeedom.apiKey + F("&type=cmd&id=") + _ha.http.temperatureId;
       if (!_ha.http.tls)
-        http.begin(_wifiClient, completeURI);
+        http.begin(client, completeURI);
       else
       {
         if (Utils::isFingerPrintEmpty(_ha.http.fingerPrint))
-          _wifiClientSecure.setInsecure();
+          clientSecure.setInsecure();
         else
-          _wifiClientSecure.setFingerprint(_ha.http.fingerPrint);
-        http.begin(_wifiClientSecure, completeURI);
+          clientSecure.setFingerprint(_ha.http.fingerPrint);
+        http.begin(clientSecure, completeURI);
       }
       //send request
       _homeAutomationRequestResult = http.GET();
@@ -123,6 +126,9 @@ void WebPalaSensor::timerTick()
     //if Fibaro type in http config
     if (_ha.http.type == HA_HTTP_FIBARO)
     {
+      WiFiClient client;
+      WiFiClientSecure clientSecure;
+
       HTTPClient http;
 
       //set timeOut
@@ -132,14 +138,14 @@ void WebPalaSensor::timerTick()
       String completeURI = String(F("http")) + (_ha.http.tls ? F("s") : F("")) + F("://") + _ha.http.hostname + F("/api/devices?id=") + _ha.http.temperatureId;
       //String completeURI = String(F("http")) + (_ha.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/devices.json");
       if (!_ha.http.tls)
-        http.begin(_wifiClient, completeURI);
+        http.begin(client, completeURI);
       else
       {
         if (Utils::isFingerPrintEmpty(_ha.http.fingerPrint))
-          _wifiClientSecure.setInsecure();
+          clientSecure.setInsecure();
         else
-          _wifiClientSecure.setFingerprint(_ha.http.fingerPrint);
-        http.begin(_wifiClientSecure, completeURI);
+          clientSecure.setFingerprint(_ha.http.fingerPrint);
+        http.begin(clientSecure, completeURI);
       }
 
       //Pass authentication if specified in configuration
@@ -193,13 +199,15 @@ void WebPalaSensor::timerTick()
   //if ConnectionBox protocol is HTTP and WiFi is connected
   if (_ha.cboxProtocol == CBOX_PROTO_HTTP && WiFi.isConnected())
   {
+    WiFiClient client;
+
     HTTPClient http;
 
     //set timeOut
     http.setTimeout(5000);
 
     //try to get current stove temperature info ----------------------
-    http.begin(_wifiClient, String(F("http://")) + IPAddress(_ha.http.cboxIp).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
+    http.begin(client, String(F("http://")) + IPAddress(_ha.http.cboxIp).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
 
     //send request
     _stoveRequestResult = http.GET();
@@ -812,6 +820,9 @@ bool WebPalaSensor::appInit(bool reInit)
     _homeAutomationTemperatureUsed = false;
     _stoveDelta = 0.0;
     _pushedTemperature = 0.0;
+
+    _lastMqttHATemperatureMillis = millis();
+    _lastMqttStoveTemperatureMillis = millis();
   }
 
   //first call

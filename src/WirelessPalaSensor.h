@@ -121,8 +121,7 @@ private:
   unsigned long _lastMqttStoveTemperatureMillis = 0;
 
   WiFiClient _wifiClient;
-  WiFiClientSecure _wifiClientSecure;
-
+  
   MQTTMan _mqttMan;
 
   void setDualDigiPot(float temperature);
