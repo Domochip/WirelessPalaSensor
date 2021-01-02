@@ -157,6 +157,22 @@
         <label for="hamp">Password</label>
         <input type='password' id='hamp' name='hamp' maxlength='64' placeholder="optional">
     </div>
+    <div class="pure-control-group">
+        <label for="hambt">Base Topic</label>
+        <input type='text' id='hambt' name='hambt' maxlength='64'>
+        <span id="hambti" name="hambti" class="infotip">?</span>
+    </div>
+
+    <div class="pure-control-group" id="hambtidiv" name="hambtidiv" style="display:none;">
+        <label></label>
+        <div class="infotipdiv">
+            Base Topic placeholders : <br>
+            <b>$sn$</b> : Serial Number of this device<br>
+            <b>$mac$</b> : WiFi MAC address of this device<br>
+            <b>$model$</b> : Model of this device<br>
+            Ex : DomoChip/<b>$sn$</b> or <b>$model$</b>/<b>$mac$</b>
+        </div>
+    </div>
 </div>
         <div class="pure-controls">
             <input type='submit' value='Save' class="pure-button pure-button-primary" disabled>
@@ -241,6 +257,10 @@
                 break;
         }
         isMQTTSelected();
+    });
+
+    $(qsp+"#hambti").addEventListener('click',function(){
+        $(qsp+"#hambtidiv").style.display=($(qsp+"#hambtidiv").style.display==''?'none':'');
     });
 
     $(qsp+"#f").addEventListener('submit',function(event){

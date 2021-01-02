@@ -65,6 +65,7 @@ private:
     uint32_t port = 0;
     char username[128 + 1] = {0};
     char password[150 + 1] = {0};
+    char baseTopic[64 + 1] = {0};
 
     char temperatureTopic[64 + 1] = {0};
 

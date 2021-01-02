@@ -390,6 +390,7 @@ void WebPalaSensor::setConfigDefaultValues()
   _ha.mqtt.port = 1883;
   _ha.mqtt.username[0] = 0;
   _ha.mqtt.password[0] = 0;
+  _ha.mqtt.baseTopic[0] = 0;
   _ha.mqtt.temperatureTopic[0] = 0;
   _ha.mqtt.cboxT1Topic[0] = 0;
 };
@@ -452,6 +453,8 @@ void WebPalaSensor::parseConfigJSON(DynamicJsonDocument &doc)
     strlcpy(_ha.mqtt.username, doc[F("hamu")], sizeof(_ha.mqtt.username));
   if (!doc[F("hamp")].isNull())
     strlcpy(_ha.mqtt.password, doc[F("hamp")], sizeof(_ha.mqtt.password));
+  if (!doc[F("hambt")].isNull())
+    strlcpy(_ha.mqtt.baseTopic, doc[F("hambt")], sizeof(_ha.mqtt.baseTopic));
 };
 //------------------------------------------
 //Parse HTTP POST parameters in request into configuration properties
@@ -486,6 +489,8 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
   //check for previous password (there is a predefined special password that mean to keep already saved one)
   if (strcmp_P(tempPassword, appDataPredefPassword))
     strcpy(_ha.mqtt.password, tempPassword);
+  if (request->hasParam(F("hambt"), true) && request->getParam(F("hambt"), true)->value().length() < sizeof(_ha.mqtt.baseTopic))
+    strcpy(_ha.mqtt.baseTopic, request->getParam(F("hambt"), true)->value().c_str());
 
   //Parse HA protocol
   if (request->hasParam(F("haproto"), true))
@@ -546,7 +551,7 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
     if (request->hasParam(F("hamtemptopic"), true) && request->getParam(F("hamtemptopic"), true)->value().length() < sizeof(_ha.mqtt.temperatureTopic))
       strcpy(_ha.mqtt.temperatureTopic, request->getParam(F("hamtemptopic"), true)->value().c_str());
 
-    if (!_ha.mqtt.hostname[0] || !_ha.mqtt.temperatureTopic[0])
+    if (!_ha.mqtt.hostname[0] || !_ha.mqtt.baseTopic[0] || !_ha.mqtt.temperatureTopic[0])
       _ha.protocol = HA_PROTO_DISABLED;
     break;
   }
@@ -578,7 +583,7 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
     if (request->hasParam(F("cbmt1topic"), true) && request->getParam(F("cbmt1topic"), true)->value().length() < sizeof(_ha.mqtt.cboxT1Topic))
       strcpy(_ha.mqtt.cboxT1Topic, request->getParam(F("cbmt1topic"), true)->value().c_str());
 
-    if (!_ha.mqtt.hostname[0] || !_ha.mqtt.cboxT1Topic[0])
+    if (!_ha.mqtt.hostname[0] || !_ha.mqtt.baseTopic[0] || !_ha.mqtt.cboxT1Topic[0])
       _ha.cboxProtocol = CBOX_PROTO_DISABLED;
     break;
   }
@@ -655,6 +660,7 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
       gc = gc + F(",\"hamp\":\"") + _ha.mqtt.password + '"';
     else
       gc = gc + F(",\"hamp\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"'; //predefined special password (mean to keep already saved one)
+    gc = gc + F(",\"hambt\":\"") + _ha.mqtt.baseTopic + '"';
   }
 
   gc += '}';
@@ -793,13 +799,13 @@ bool WebPalaSensor::appInit(bool reInit)
   if (_ha.protocol == HA_PROTO_MQTT || _ha.cboxProtocol == CBOX_PROTO_MQTT)
   {
     //prepare will topic
-    // String willTopic = _ha.mqtt.baseTopic;
-    // MQTTMan::prepareTopic(willTopic);
-    // willTopic += F("connected");
+    String willTopic = _ha.mqtt.baseTopic;
+    MQTTMan::prepareTopic(willTopic);
+    willTopic += F("connected");
 
     //setup MQTT
     _mqttMan.setClient(_wifiClient).setServer(_ha.mqtt.hostname, _ha.mqtt.port);
-    // _mqttMan.setConnectedAndWillTopic(willTopic.c_str());
+    _mqttMan.setConnectedAndWillTopic(willTopic.c_str());
     _mqttMan.setConnectedCallback(std::bind(&WebPalaSensor::mqttConnectedCallback, this, std::placeholders::_1, std::placeholders::_2));
     _mqttMan.setCallback(std::bind(&WebPalaSensor::mqttCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
