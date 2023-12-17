@@ -1,7 +1,9 @@
 <div id="applicationName" style="display: none;">WirelessPalaSensor</div>
 <div id="shortApplicationName" style="display: none;">WPalaSensor</div>
 
-<h2 class="content-subhead">PalaSensor<span id="l"><h6 style="display:inline"><b> Loading...</b></h6></span></h2>
+<h2 class="content-subhead">PalaSensor<span id="l">
+        <h6 style="display:inline"><b> Loading...</b></h6>
+    </span></h2>
 <span id="has1"></span><br>
 <span id="has2"></span><br>
 <br>
@@ -16,15 +18,15 @@ Pushed Temperature <span id="pt"></span> (pos : <span id="p50"></span>/<span id=
     //QuerySelector Prefix is added by load function to know into what element queySelector need to look for
     //var qsp = '#contentX ';
 
-    getJSON("/gs"+qsp[8],
-        function(GS){
-            for(k in GS){
-                if((e = $(qsp+'#' + k)) != undefined) e.innerHTML = GS[k];
+    getJSON("/gs" + qsp[8],
+        function (GS) {
+            for (k in GS) {
+                if ((e = $(qsp + '#' + k)) != undefined) e.innerHTML = GS[k];
             }
-            fadeOut($(qsp+"#l"));
+            fadeOut($(qsp + "#l"));
         },
-        function(){
-            $(qsp+"#l").innerHTML='<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
+        function () {
+            $(qsp + "#l").innerHTML = '<h4 style="display:inline;color:red;"><b> Failed</b></h4>';
         }
     );
 </script>

@@ -5,10 +5,10 @@
 //-----------------------------------------------------------------------
 void WebPalaSensor::setDualDigiPot(float temperature)
 {
-  //convert temperature from Celsius to Kevin degrees
+  // convert temperature from Celsius to Kevin degrees
   float temperatureK = temperature + 273.15;
 
-  //calculate and return resistance value based on provided temperature
+  // calculate and return resistance value based on provided temperature
   double x = (1 / _digipotsNTC.steinhartHartCoeffs[2]) * (_digipotsNTC.steinhartHartCoeffs[0] - (1 / temperatureK));
   double y = sqrt(pow(_digipotsNTC.steinhartHartCoeffs[1] / (3 * _digipotsNTC.steinhartHartCoeffs[2]), 3) + pow(x / 2, 2));
   setDualDigiPot((int)(exp(pow(y - (x / 2), 1.0F / 3) - pow(y + (x / 2), 1.0F / 3))));
@@ -20,7 +20,7 @@ void WebPalaSensor::setDualDigiPot(int resistance)
 {
   float adjustedResistance = resistance - _digipotsNTC.rWTotal - (_digipotsNTC.rBW5KStep * _digipotsNTC.dp5kOffset);
 
-  //DigiPot positions calculation
+  // DigiPot positions calculation
   int digiPot50k_position = floor((adjustedResistance) / (_digipotsNTC.rBW50KStep * _digipotsNTC.dp50kStepSize)) * _digipotsNTC.dp50kStepSize;
   int digiPot5k_position = round((adjustedResistance - (digiPot50k_position * _digipotsNTC.rBW50KStep)) / _digipotsNTC.rBW5KStep);
   setDualDigiPot(digiPot50k_position, digiPot5k_position + _digipotsNTC.dp5kOffset);
@@ -28,7 +28,7 @@ void WebPalaSensor::setDualDigiPot(int resistance)
 
 void WebPalaSensor::setDualDigiPot(unsigned int dp50kPosition, unsigned int dp5kPosition)
 {
-  //Set DigiPot position
+  // Set DigiPot position
   if (_mcp4151_50k.getPosition(0) != dp50kPosition)
     _mcp4151_50k.setPosition(0, dp50kPosition);
   if (_mcp4151_5k.getPosition(0) != dp5kPosition)
@@ -56,26 +56,26 @@ void WebPalaSensor::timerTick()
   _homeAutomationTemperature = 0.0;
   _homeAutomationTemperatureUsed = false;
 
-  //LOG
+  // LOG
   LOG_SERIAL.println(F("TimerTick"));
 
-  //read temperature from the local sensor
+  // read temperature from the local sensor
   _owTemperature = _ds18b20.readTemp();
   if (_owTemperature == 12.3456F)
-    _owTemperature = 20.0; //if reading of local sensor failed so push 20°C
+    _owTemperature = 20.0; // if reading of local sensor failed so push 20°C
   else
   {
-    //round it to tenth
+    // round it to tenth
     _owTemperature *= 10;
     _owTemperature = round(_owTemperature);
     _owTemperature /= 10;
   }
 
-  //if HomeAutomation protocol is HTTP and WiFi is connected
+  // if HomeAutomation protocol is HTTP and WiFi is connected
   if (_ha.protocol == HA_PROTO_HTTP && WiFi.isConnected())
   {
 
-    //if Jeedom type in http config
+    // if Jeedom type in http config
     if (_ha.http.type == HA_HTTP_JEEDOM)
     {
       WiFiClient client;
@@ -83,10 +83,10 @@ void WebPalaSensor::timerTick()
 
       HTTPClient http;
 
-      //set timeOut
+      // set timeOut
       http.setTimeout(5000);
 
-      //try to get house automation sensor value -----------------
+      // try to get house automation sensor value -----------------
       String completeURI = String(F("http")) + (_ha.http.tls ? F("s") : F("")) + F("://") + _ha.http.hostname + F("/core/api/jeeApi.php?apikey=") + _ha.http.jeedom.apiKey + F("&type=cmd&id=") + _ha.http.temperatureId;
       if (!_ha.http.tls)
         http.begin(client, completeURI);
@@ -98,23 +98,23 @@ void WebPalaSensor::timerTick()
           clientSecure.setFingerprint(_ha.http.fingerPrint);
         http.begin(clientSecure, completeURI);
       }
-      //send request
+      // send request
       _homeAutomationRequestResult = http.GET();
-      //if we get successfull HTTP answer
+      // if we get successfull HTTP answer
       if (_homeAutomationRequestResult == 200)
       {
         WiFiClient *stream = http.getStreamPtr();
 
-        //get the answer content
+        // get the answer content
         char payload[6];
         int nb = stream->readBytes(payload, sizeof(payload) - 1);
         payload[nb] = 0;
 
         if (nb)
         {
-          //convert
+          // convert
           _homeAutomationTemperature = atof(payload);
-          //round it to tenth
+          // round it to tenth
           _homeAutomationTemperature *= 10;
           _homeAutomationTemperature = round(_homeAutomationTemperature);
           _homeAutomationTemperature /= 10;
@@ -123,7 +123,7 @@ void WebPalaSensor::timerTick()
       http.end();
     }
 
-    //if Fibaro type in http config
+    // if Fibaro type in http config
     if (_ha.http.type == HA_HTTP_FIBARO)
     {
       WiFiClient client;
@@ -131,12 +131,12 @@ void WebPalaSensor::timerTick()
 
       HTTPClient http;
 
-      //set timeOut
+      // set timeOut
       http.setTimeout(5000);
 
-      //try to get house automation sensor value -----------------
+      // try to get house automation sensor value -----------------
       String completeURI = String(F("http")) + (_ha.http.tls ? F("s") : F("")) + F("://") + _ha.http.hostname + F("/api/devices?id=") + _ha.http.temperatureId;
-      //String completeURI = String(F("http")) + (_ha.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/devices.json");
+      // String completeURI = String(F("http")) + (_ha.tls ? F("s") : F("")) + F("://") + _ha.hostname + F("/devices.json");
       if (!_ha.http.tls)
         http.begin(client, completeURI);
       else
@@ -148,32 +148,32 @@ void WebPalaSensor::timerTick()
         http.begin(clientSecure, completeURI);
       }
 
-      //Pass authentication if specified in configuration
+      // Pass authentication if specified in configuration
       if (_ha.http.fibaro.username[0])
         http.setAuthorization(_ha.http.fibaro.username, _ha.http.fibaro.password);
 
-      //send request
+      // send request
       _homeAutomationRequestResult = http.GET();
 
-      //if we get successfull HTTP answer
+      // if we get successfull HTTP answer
       if (_homeAutomationRequestResult == 200)
       {
         WiFiClient *stream = http.getStreamPtr();
 
         while (http.connected() && stream->find("\"value\""))
         {
-          //go to first next double quote (or return false if a comma appears first)
+          // go to first next double quote (or return false if a comma appears first)
           if (stream->findUntil("\"", ","))
           {
             char payload[60];
-            //read value (read until next doublequote)
+            // read value (read until next doublequote)
             int nb = stream->readBytesUntil('"', payload, sizeof(payload) - 1);
             payload[nb] = 0;
             if (nb)
             {
-              //convert
+              // convert
               _homeAutomationTemperature = atof(payload);
-              //round it to tenth
+              // round it to tenth
               _homeAutomationTemperature *= 10;
               _homeAutomationTemperature = round(_homeAutomationTemperature);
               _homeAutomationTemperature /= 10;
@@ -185,74 +185,74 @@ void WebPalaSensor::timerTick()
     }
   }
 
-  //if HomeAutomation protocol is MQTT
+  // if HomeAutomation protocol is MQTT
   if (_ha.protocol == HA_PROTO_MQTT)
   {
-    //if mqtt received value is still valid (not too old)
+    // if mqtt received value is still valid (not too old)
     if (_lastMqttHATemperatureMillis + (1000 * (unsigned long)_refreshPeriod) >= millis())
     {
-      //then use it
+      // then use it
       _homeAutomationTemperature = _lastMqttHATemperature;
     }
   }
 
-  //if ConnectionBox protocol is HTTP and WiFi is connected
+  // if ConnectionBox protocol is HTTP and WiFi is connected
   if (_ha.cboxProtocol == CBOX_PROTO_HTTP && WiFi.isConnected())
   {
     WiFiClient client;
 
     HTTPClient http;
 
-    //set timeOut
+    // set timeOut
     http.setTimeout(5000);
 
-    //try to get current stove temperature info ----------------------
+    // try to get current stove temperature info ----------------------
     http.begin(client, String(F("http://")) + IPAddress(_ha.http.cboxIp).toString() + F("/cgi-bin/sendmsg.lua?cmd=GET%20TMPS"));
 
-    //send request
+    // send request
     _stoveRequestResult = http.GET();
-    //if we get successfull HTTP answer
+    // if we get successfull HTTP answer
     if (_stoveRequestResult == 200)
     {
       WiFiClient *stream = http.getStreamPtr();
 
-      //if we found T1 in answer
+      // if we found T1 in answer
       if (stream->find("\"T1\""))
       {
         char payload[8];
-        //read until the comma into payload variable
+        // read until the comma into payload variable
         int nb = stream->readBytesUntil(',', payload, sizeof(payload) - 1);
-        payload[nb] = 0; //end payload char[]
-        //if we readed some bytes
+        payload[nb] = 0; // end payload char[]
+        // if we readed some bytes
         if (nb)
         {
-          //look for start position of T1 value
+          // look for start position of T1 value
           byte posTRW = 0;
           while ((payload[posTRW] == ' ' || payload[posTRW] == ':' || payload[posTRW] == '\t') && posTRW < nb)
             posTRW++;
 
-          _stoveTemperature = atof(payload + posTRW); //convert
+          _stoveTemperature = atof(payload + posTRW); // convert
         }
       }
     }
     http.end();
   }
 
-  //if ConnectionBox protocol is MQTT
+  // if ConnectionBox protocol is MQTT
   if (_ha.cboxProtocol == CBOX_PROTO_MQTT)
   {
-    //if mqtt received value is still valid (not too old)
+    // if mqtt received value is still valid (not too old)
     if (_lastMqttStoveTemperatureMillis + (1000 * (unsigned long)_refreshPeriod) >= millis())
     {
-      //then use it
+      // then use it
       _stoveTemperature = _lastMqttStoveTemperature;
     }
   }
 
-  //select temperature source
+  // select temperature source
   if (_ha.protocol != HA_PROTO_DISABLED)
   {
-    //if we got an HA temperature
+    // if we got an HA temperature
     if (_homeAutomationTemperature > 0.1)
     {
       _homeAutomationFailedCount = 0;
@@ -261,7 +261,7 @@ void WebPalaSensor::timerTick()
     }
     else
     {
-      //else if failed count is good and previousTemperature is good too
+      // else if failed count is good and previousTemperature is good too
       if (_homeAutomationFailedCount <= _ha.maxFailedRequest && previousTemperatureToDisplay > 0.1)
       {
         _homeAutomationFailedCount++;
@@ -269,33 +269,33 @@ void WebPalaSensor::timerTick()
         _homeAutomationTemperature = previousTemperatureToDisplay;
         temperatureToDisplay = previousTemperatureToDisplay;
       }
-      //otherwise failover to oneWire
+      // otherwise failover to oneWire
       else
         temperatureToDisplay = _owTemperature;
     }
   }
   else
-    temperatureToDisplay = _owTemperature; //HA not enable
+    temperatureToDisplay = _owTemperature; // HA not enable
 
-  //if connectionBox is enabled, make delta adjustment calculation
+  // if connectionBox is enabled, make delta adjustment calculation
   if (_ha.cboxProtocol != CBOX_PROTO_DISABLED)
   {
 
-    //if _stoveTemperature is correct so failed counter reset
+    // if _stoveTemperature is correct so failed counter reset
     if (_stoveTemperature > 0.1)
       _stoveRequestFailedCount = 0;
     else if (_stoveRequestFailedCount <= _ha.maxFailedRequest)
-      _stoveRequestFailedCount++; //else increment failed counter
+      _stoveRequestFailedCount++; // else increment failed counter
 
-    //if failed counter went over maxFailedRequest then reset calculated delta
+    // if failed counter went over maxFailedRequest then reset calculated delta
     if (_stoveRequestFailedCount > _ha.maxFailedRequest)
       _stoveDelta = 0;
-    //if stoveTemp is ok and previousTemperatureToDisplay also so adjust delta
+    // if stoveTemp is ok and previousTemperatureToDisplay also so adjust delta
     if (_stoveTemperature > 0.1 && previousTemperatureToDisplay > 0.1)
       _stoveDelta += (previousTemperatureToDisplay - _stoveTemperature) / 2.5F;
   }
 
-  //Set DigiPot position according to resistance calculated from temperature to display with delta
+  // Set DigiPot position according to resistance calculated from temperature to display with delta
   setDualDigiPot(temperatureToDisplay + _stoveDelta);
 
   _pushedTemperature = temperatureToDisplay + _stoveDelta;
@@ -306,14 +306,14 @@ void WebPalaSensor::timerTick()
 void WebPalaSensor::mqttConnectedCallback(MQTTMan *mqttMan, bool firstConnection)
 {
 
-  //Subscribe to needed topic
-  //if Home Automation is configured for MQTT
+  // Subscribe to needed topic
+  // if Home Automation is configured for MQTT
   if (_ha.protocol == HA_PROTO_MQTT)
   {
     mqttMan->subscribe(_ha.mqtt.temperatureTopic);
   }
 
-  //if Connection Box/PalaControl is configured for MQTT
+  // if Connection Box/PalaControl is configured for MQTT
   if (_ha.cboxProtocol == CBOX_PROTO_MQTT)
   {
     mqttMan->subscribe(_ha.mqtt.cboxT1Topic);
@@ -321,44 +321,44 @@ void WebPalaSensor::mqttConnectedCallback(MQTTMan *mqttMan, bool firstConnection
 }
 
 //------------------------------------------
-//Callback used when an MQTT message arrived
+// Callback used when an MQTT message arrived
 void WebPalaSensor::mqttCallback(char *topic, uint8_t *payload, unsigned int length)
 {
-  //if Home Automation is configured for MQTT, topic match and payload length < 7
+  // if Home Automation is configured for MQTT, topic match and payload length < 7
   if (_ha.protocol == HA_PROTO_MQTT && !strcmp(topic, _ha.mqtt.temperatureTopic) && length < 7)
   {
     _lastMqttHATemperatureMillis = millis();
 
-    //make payload a string
+    // make payload a string
     char strHomeAutomationTemperature[7];
     memcpy(strHomeAutomationTemperature, payload, length);
     strHomeAutomationTemperature[length] = 0;
 
-    //convert
+    // convert
     _lastMqttHATemperature = atof(strHomeAutomationTemperature);
-    //round it to tenth
+    // round it to tenth
     _lastMqttHATemperature *= 10;
     _lastMqttHATemperature = round(_lastMqttHATemperature);
     _lastMqttHATemperature /= 10;
   }
 
-  //if Home Automation is configured for MQTT, topic match and payload length < 6
+  // if Home Automation is configured for MQTT, topic match and payload length < 6
   if (_ha.cboxProtocol == CBOX_PROTO_MQTT && !strcmp(topic, _ha.mqtt.cboxT1Topic) && length < 6)
   {
     _lastMqttStoveTemperatureMillis = millis();
 
-    //make payload a string
+    // make payload a string
     char strStoveTemperature[6];
     memcpy(strStoveTemperature, payload, length);
     strStoveTemperature[length] = 0;
 
-    //convert
+    // convert
     _lastMqttStoveTemperature = atof(strStoveTemperature);
   }
 }
 
 //------------------------------------------
-//Used to initialize configuration properties to default values
+// Used to initialize configuration properties to default values
 void WebPalaSensor::setConfigDefaultValues()
 {
   _refreshPeriod = 30;
@@ -393,9 +393,10 @@ void WebPalaSensor::setConfigDefaultValues()
   _ha.mqtt.baseTopic[0] = 0;
   _ha.mqtt.temperatureTopic[0] = 0;
   _ha.mqtt.cboxT1Topic[0] = 0;
-};
+}
+
 //------------------------------------------
-//Parse JSON object into configuration properties
+// Parse JSON object into configuration properties
 void WebPalaSensor::parseConfigJSON(DynamicJsonDocument &doc)
 {
   if (!doc[F("rp")].isNull())
@@ -408,7 +409,7 @@ void WebPalaSensor::parseConfigJSON(DynamicJsonDocument &doc)
   if (!doc[F("shc")].isNull())
     _digipotsNTC.steinhartHartCoeffs[2] = doc[F("shc")];
 
-  //Parse Home Automation config
+  // Parse Home Automation config
   if (!doc[F("hamfr")].isNull())
     _ha.maxFailedRequest = doc[F("hamfr")];
   if (!doc[F("haproto")].isNull())
@@ -455,16 +456,17 @@ void WebPalaSensor::parseConfigJSON(DynamicJsonDocument &doc)
     strlcpy(_ha.mqtt.password, doc[F("hamp")], sizeof(_ha.mqtt.password));
   if (!doc[F("hambt")].isNull())
     strlcpy(_ha.mqtt.baseTopic, doc[F("hambt")], sizeof(_ha.mqtt.baseTopic));
-};
+}
+
 //------------------------------------------
-//Parse HTTP POST parameters in request into configuration properties
+// Parse HTTP POST parameters in request into configuration properties
 bool WebPalaSensor::parseConfigWebRequest(ESP8266WebServer &server)
 {
   if (server.hasArg(F("rp")))
     _refreshPeriod = server.arg(F("rp")).toInt();
 
-  //Find Steinhart-Hart coeff then convert to double
-  //AND handle scientific notation
+  // Find Steinhart-Hart coeff then convert to double
+  // AND handle scientific notation
   if (server.hasArg(F("sha")))
     _digipotsNTC.steinhartHartCoeffs[0] = server.arg(F("sha")).toFloat();
   if (server.hasArg(F("shb")))
@@ -475,7 +477,7 @@ bool WebPalaSensor::parseConfigWebRequest(ESP8266WebServer &server)
   if (server.hasArg(F("hamfr")))
     _ha.maxFailedRequest = server.arg(F("hamfr")).toInt();
 
-  //Parse common MQTT param
+  // Parse common MQTT param
   if (server.hasArg(F("hamhost")) && server.arg(F("hamhost")).length() < sizeof(_ha.mqtt.hostname))
     strcpy(_ha.mqtt.hostname, server.arg(F("hamhost")).c_str());
   if (server.hasArg(F("hamport")))
@@ -483,20 +485,20 @@ bool WebPalaSensor::parseConfigWebRequest(ESP8266WebServer &server)
   if (server.hasArg(F("hamu")) && server.arg(F("hamu")).length() < sizeof(_ha.mqtt.username))
     strcpy(_ha.mqtt.username, server.arg(F("hamu")).c_str());
   char tempPassword[64 + 1] = {0};
-  //put MQTT password into temporary one for predefpassword
+  // put MQTT password into temporary one for predefpassword
   if (server.hasArg(F("hamp")) && server.arg(F("hamp")).length() < sizeof(tempPassword))
     strcpy(tempPassword, server.arg(F("hamp")).c_str());
-  //check for previous password (there is a predefined special password that mean to keep already saved one)
+  // check for previous password (there is a predefined special password that mean to keep already saved one)
   if (strcmp_P(tempPassword, appDataPredefPassword))
     strcpy(_ha.mqtt.password, tempPassword);
   if (server.hasArg(F("hambt")) && server.arg(F("hambt")).length() < sizeof(_ha.mqtt.baseTopic))
     strcpy(_ha.mqtt.baseTopic, server.arg(F("hambt")).c_str());
 
-  //Parse HA protocol
+  // Parse HA protocol
   if (server.hasArg(F("haproto")))
     _ha.protocol = server.arg(F("haproto")).toInt();
 
-  //Now get specific param
+  // Now get specific param
   switch (_ha.protocol)
   {
   case HA_PROTO_HTTP:
@@ -519,10 +521,10 @@ bool WebPalaSensor::parseConfigWebRequest(ESP8266WebServer &server)
     case HA_HTTP_JEEDOM:
 
       char tempApiKey[48 + 1];
-      //put apiKey into temporary one for predefpassword
+      // put apiKey into temporary one for predefpassword
       if (server.hasArg(F("hahjak")) && server.arg(F("hahjak")).length() < sizeof(tempApiKey))
         strcpy(tempApiKey, server.arg(F("hahjak")).c_str());
-      //check for previous apiKey (there is a predefined special password that mean to keep already saved one)
+      // check for previous apiKey (there is a predefined special password that mean to keep already saved one)
       if (strcmp_P(tempApiKey, appDataPredefPassword))
         strcpy(_ha.http.jeedom.apiKey, tempApiKey);
       if (!_ha.http.hostname[0] || !_ha.http.jeedom.apiKey[0])
@@ -534,10 +536,10 @@ bool WebPalaSensor::parseConfigWebRequest(ESP8266WebServer &server)
         strcpy(_ha.http.fibaro.username, server.arg(F("hahfuser")).c_str());
 
       char tempFibaroPassword[64 + 1];
-      //put Fibaropassword into temporary one for predefpassword
+      // put Fibaropassword into temporary one for predefpassword
       if (server.hasArg(F("hahfpass")) && server.arg(F("hahfpass")).length() < sizeof(_ha.http.fibaro.password))
         strcpy(tempFibaroPassword, server.arg(F("hahfpass")).c_str());
-      //check for previous fibaro password (there is a predefined special password that mean to keep already saved one)
+      // check for previous fibaro password (there is a predefined special password that mean to keep already saved one)
       if (strcmp_P(tempFibaroPassword, appDataPredefPassword))
         strcpy(_ha.http.fibaro.password, tempFibaroPassword);
       if (!_ha.http.hostname[0])
@@ -556,11 +558,11 @@ bool WebPalaSensor::parseConfigWebRequest(ESP8266WebServer &server)
     break;
   }
 
-  //Parse CBox protocol
+  // Parse CBox protocol
   if (server.hasArg(F("cbproto")))
     _ha.cboxProtocol = server.arg(F("cbproto")).toInt();
 
-  //Now get specific param
+  // Now get specific param
   switch (_ha.cboxProtocol)
   {
   case CBOX_PROTO_HTTP:
@@ -589,9 +591,10 @@ bool WebPalaSensor::parseConfigWebRequest(ESP8266WebServer &server)
   }
 
   return true;
-};
+}
+
 //------------------------------------------
-//Generate JSON from configuration properties
+// Generate JSON from configuration properties
 String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
 {
   String gc('{');
@@ -607,7 +610,7 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
   gc = gc + F(",\"hamfr\":") + _ha.maxFailedRequest;
   gc = gc + F(",\"haproto\":") + _ha.protocol;
 
-  //if for WebPage or protocol selected is HTTP
+  // if for WebPage or protocol selected is HTTP
   if (!forSaveFile || _ha.protocol == HA_PROTO_HTTP)
   {
     gc = gc + F(",\"hahtype\":") + _ha.http.type;
@@ -619,16 +622,16 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
     if (forSaveFile)
       gc = gc + F(",\"hahjak\":\"") + _ha.http.jeedom.apiKey + '"';
     else
-      gc = gc + F(",\"hahjak\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"'; //predefined special password (mean to keep already saved one)
+      gc = gc + F(",\"hahjak\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"'; // predefined special password (mean to keep already saved one)
 
     gc = gc + F(",\"hahfuser\":\"") + _ha.http.fibaro.username + '"';
     if (forSaveFile)
       gc = gc + F(",\"hahfpass\":\"") + _ha.http.fibaro.password + '"';
     else
-      gc = gc + F(",\"hahfpass\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"'; //predefined special password (mean to keep already saved one)
+      gc = gc + F(",\"hahfpass\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"'; // predefined special password (mean to keep already saved one)
   }
 
-  //if for WebPage or protocol selected is MQTT
+  // if for WebPage or protocol selected is MQTT
   if (!forSaveFile || _ha.protocol == HA_PROTO_MQTT)
   {
     gc = gc + F(",\"hamtemptopic\":\"") + _ha.mqtt.temperatureTopic + '"';
@@ -636,7 +639,7 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
 
   gc = gc + F(",\"cbproto\":") + _ha.cboxProtocol;
 
-  //if for WebPage or CBox protocol selected is HTTP
+  // if for WebPage or CBox protocol selected is HTTP
   if (!forSaveFile || _ha.cboxProtocol == CBOX_PROTO_HTTP)
   {
     if (forSaveFile)
@@ -645,7 +648,7 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
       gc = gc + F(",\"cbhip\":\"") + IPAddress(_ha.http.cboxIp).toString() + '"';
   }
 
-  //if for WebPage or CBox protocol selected is MQTT
+  // if for WebPage or CBox protocol selected is MQTT
   if (!forSaveFile || _ha.cboxProtocol == CBOX_PROTO_MQTT)
   {
     gc = gc + F(",\"cbmt1topic\":\"") + _ha.mqtt.cboxT1Topic + '"';
@@ -659,21 +662,22 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
     if (forSaveFile)
       gc = gc + F(",\"hamp\":\"") + _ha.mqtt.password + '"';
     else
-      gc = gc + F(",\"hamp\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"'; //predefined special password (mean to keep already saved one)
+      gc = gc + F(",\"hamp\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"'; // predefined special password (mean to keep already saved one)
     gc = gc + F(",\"hambt\":\"") + _ha.mqtt.baseTopic + '"';
   }
 
   gc += '}';
 
   return gc;
-};
+}
+
 //------------------------------------------
-//Generate JSON of application status
+// Generate JSON of application status
 String WebPalaSensor::generateStatusJSON()
 {
   String gs('{');
 
-  //Home Automation infos
+  // Home Automation infos
   switch (_ha.protocol)
   {
   case HA_PROTO_DISABLED:
@@ -724,7 +728,7 @@ String WebPalaSensor::generateStatusJSON()
 
   gs = gs + F(",\"hafc\":") + _homeAutomationFailedCount;
 
-  //stove(ConnectionBox) infos
+  // stove(ConnectionBox) infos
   switch (_ha.cboxProtocol)
   {
   case CBOX_PROTO_DISABLED:
@@ -784,38 +788,39 @@ String WebPalaSensor::generateStatusJSON()
   gs += '}';
 
   return gs;
-};
+}
+
 //------------------------------------------
-//code to execute during initialization and reinitialization of the app
+// code to execute during initialization and reinitialization of the app
 bool WebPalaSensor::appInit(bool reInit)
 {
-  //stop Ticker
+  // stop Ticker
   _refreshTicker.detach();
 
-  //Stop MQTT
+  // Stop MQTT
   _mqttMan.disconnect();
 
-  //if MQTT used so configure it
+  // if MQTT used so configure it
   if (_ha.protocol == HA_PROTO_MQTT || _ha.cboxProtocol == CBOX_PROTO_MQTT)
   {
-    //prepare will topic
+    // prepare will topic
     String willTopic = _ha.mqtt.baseTopic;
     MQTTMan::prepareTopic(willTopic);
     willTopic += F("connected");
 
-    //setup MQTT
+    // setup MQTT
     _mqttMan.setClient(_wifiClient).setServer(_ha.mqtt.hostname, _ha.mqtt.port);
     _mqttMan.setConnectedAndWillTopic(willTopic.c_str());
     _mqttMan.setConnectedCallback(std::bind(&WebPalaSensor::mqttConnectedCallback, this, std::placeholders::_1, std::placeholders::_2));
     _mqttMan.setCallback(std::bind(&WebPalaSensor::mqttCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-    //Connect
+    // Connect
     _mqttMan.connect(_ha.mqtt.username, _ha.mqtt.password);
   }
 
   if (reInit)
   {
-    //reset run variables to initial values
+    // reset run variables to initial values
     _homeAutomationRequestResult = 0;
     _homeAutomationTemperature = 0.0;
     _homeAutomationFailedCount = 0;
@@ -831,16 +836,18 @@ bool WebPalaSensor::appInit(bool reInit)
     _lastMqttStoveTemperatureMillis = millis();
   }
 
-  //first call
+  // first call
   timerTick();
 
-  //then next will be done by refreshTicker
-  _refreshTicker.attach_scheduled(_refreshPeriod, [this]() { this->_needTick = true; });
+  // then next will be done by refreshTicker
+  _refreshTicker.attach_scheduled(_refreshPeriod, [this]()
+                                  { this->_needTick = true; });
 
   return _ds18b20.getReady();
-};
+}
+
 //------------------------------------------
-//Return HTML Code to insert into Status Web page
+// Return HTML Code to insert into Status Web page
 const PROGMEM char *WebPalaSensor::getHTMLContent(WebPageForPlaceHolder wp)
 {
   switch (wp)
@@ -856,8 +863,9 @@ const PROGMEM char *WebPalaSensor::getHTMLContent(WebPageForPlaceHolder wp)
     break;
   };
   return nullptr;
-};
-//and his Size
+}
+
+// and his Size
 size_t WebPalaSensor::getHTMLContentSize(WebPageForPlaceHolder wp)
 {
   switch (wp)
@@ -873,18 +881,20 @@ size_t WebPalaSensor::getHTMLContentSize(WebPageForPlaceHolder wp)
     break;
   };
   return 0;
-};
+}
+
 //------------------------------------------
-//code to register web request answer to the web server
+// code to register web request answer to the web server
 void WebPalaSensor::appInitWebServer(ESP8266WebServer &server, bool &shouldReboot, bool &pauseApplication)
 {
-  server.on("/calib.html", HTTP_GET, [&server]() {
+  server.on("/calib.html", HTTP_GET, [&server]()
+            {
     server.sendHeader(F("Content-Encoding"), F("gzip"));
-    server.send_P(200, PSTR("text/html"), calibhtmlgz, sizeof(calibhtmlgz));
-  });
+    server.send_P(200, PSTR("text/html"), calibhtmlgz, sizeof(calibhtmlgz)); });
 
-  //GetDigiPot
-  server.on("/gdp", HTTP_GET, [this, &server]() {
+  // GetDigiPot
+  server.on("/gdp", HTTP_GET, [this, &server]()
+            {
     String dpJSON('{');
     dpJSON = dpJSON + F("\"r\":") + (_mcp4151_50k.getPosition(0) * _digipotsNTC.rBW50KStep + _mcp4151_5k.getPosition(0) * _digipotsNTC.rBW5KStep + _digipotsNTC.rWTotal);
 #if DEVELOPPER_MODE
@@ -894,11 +904,11 @@ void WebPalaSensor::appInitWebServer(ESP8266WebServer &server, bool &shouldReboo
     dpJSON += '}';
 
     server.sendHeader(F("Cache-Control"), F("no-cache"));
-    server.send(200, F("text/json"), dpJSON);
-  });
+    server.send(200, F("text/json"), dpJSON); });
 
-  //SetDigiPot
-  server.on("/sdp", HTTP_POST, [this, &server]() {
+  // SetDigiPot
+  server.on("/sdp", HTTP_POST, [this, &server]()
+            {
 
 #define TICK_TO_SKIP 20
     //look for temperature to apply
@@ -957,12 +967,11 @@ void WebPalaSensor::appInitWebServer(ESP8266WebServer &server, bool &shouldReboo
     }
 #endif
 
-    server.send(200);
-  });
-};
+    server.send(200); });
+}
 
 //------------------------------------------
-//Run for timer
+// Run for timer
 void WebPalaSensor::appRun()
 {
   if (_ha.protocol == HA_PROTO_MQTT || _ha.cboxProtocol == CBOX_PROTO_MQTT)
@@ -970,20 +979,20 @@ void WebPalaSensor::appRun()
 
   if (_needTick)
   {
-    //disable needTick
+    // disable needTick
     _needTick = false;
-    //then run
+    // then run
     timerTick();
   }
 }
 
 //------------------------------------------
-//Constructor
+// Constructor
 WebPalaSensor::WebPalaSensor(char appId, String appName) : Application(appId, appName), _ds18b20(ONEWIRE_BUS_PIN), _mcp4151_5k(MCP4151_5k_SSPIN), _mcp4151_50k(MCP4151_50k_SSPIN)
 {
-  //Init SPI for DigiPot
+  // Init SPI for DigiPot
   SPI.begin();
-  //Init DigiPots @20°C
+  // Init DigiPots @20°C
   _mcp4151_50k.setPosition(0, 61);
   _mcp4151_5k.setPosition(0, 5);
 }

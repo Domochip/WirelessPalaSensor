@@ -12,7 +12,7 @@ boolean SingleDS18B20::readScratchPad(byte addr[], byte data[])
 
   boolean crcScratchPadOK = false;
 
-  //read scratchpad (if 3 failures occurs, then return the error
+  // read scratchpad (if 3 failures occurs, then return the error
   for (byte i = 0; i < 3; i++)
   {
     // read scratchpad of the current device
@@ -26,7 +26,7 @@ boolean SingleDS18B20::readScratchPad(byte addr[], byte data[])
     if (crc8(data, 8) == data[8])
     {
       crcScratchPadOK = true;
-      i = 3; //end for loop
+      i = 3; // end for loop
     }
   }
 
@@ -40,9 +40,9 @@ void SingleDS18B20::writeScratchPad(byte addr[], byte th, byte tl, byte cfg)
   reset();
   select(addr);
   write(0x4E); // Write ScratchPad
-  write(th);   //Th 80°C
-  write(tl);   //Tl 0°C
-  write(cfg);  //Config
+  write(th);   // Th 80°C
+  write(tl);   // Tl 0°C
+  write(cfg);  // Config
 }
 //------------------------------------------
 // DS18X20 Copy ScratchPad command
@@ -51,7 +51,7 @@ void SingleDS18B20::copyScratchPad(byte addr[])
 
   reset();
   select(addr);
-  write(0x48); //Copy ScratchPad
+  write(0x48); // Copy ScratchPad
 }
 //------------------------------------------
 // DS18X20 Start Temperature conversion
@@ -67,13 +67,13 @@ void SingleDS18B20::startConvertT(byte addr[])
 SingleDS18B20::SingleDS18B20(uint8_t owPin) : OneWire(owPin)
 {
 
-  //find first temp sensor ----------
+  // find first temp sensor ----------
   reset_search();
 
   while (search(_owROMCode))
   {
 
-    //if ROM received is correct or not a Temperature sensor THEN continue to next device
+    // if ROM received is correct or not a Temperature sensor THEN continue to next device
     if ((crc8(_owROMCode, 7) == _owROMCode[7]) && (_owROMCode[0] == 0x10 || _owROMCode[0] == 0x22 || _owROMCode[0] == 0x28))
     {
       _tempSensorFound = true;
@@ -85,21 +85,21 @@ SingleDS18B20::SingleDS18B20(uint8_t owPin) : OneWire(owPin)
     return;
 
   _tempSensorFound = false;
-  //configure sensor ----------
+  // configure sensor ----------
   byte data[9];
 
-  //if scratchPad read failed then stop
+  // if scratchPad read failed then stop
   if (!readScratchPad(_owROMCode, data))
     return;
 
-  //if config is not correct
+  // if config is not correct
   if (data[2] != 0x50 || data[3] != 0x00 || data[4] != 0x5F)
   {
 
-    writeScratchPad(_owROMCode, 0x50, 0x00, 0x5F); //write ScratchPad with Th=80°C, Tl=0°C, Config 11bit resolution
+    writeScratchPad(_owROMCode, 0x50, 0x00, 0x5F); // write ScratchPad with Th=80°C, Tl=0°C, Config 11bit resolution
     if (!readScratchPad(_owROMCode, data))
-      return;                   //if scratchPad read failed then stop
-    copyScratchPad(_owROMCode); //so we finally can copy scratchpad to memory
+      return;                   // if scratchPad read failed then stop
+    copyScratchPad(_owROMCode); // so we finally can copy scratchpad to memory
   }
 
   _tempSensorFound = (readTemp() != 12.3456);
@@ -124,13 +124,13 @@ float SingleDS18B20::readTemp()
 
   startConvertT(_owROMCode);
 
-  //wait for conversion end (DS18B20 are powered)
+  // wait for conversion end (DS18B20 are powered)
   while (read_bit() == 0)
   {
     delay(10);
   }
 
-  //if read of scratchpad failed (implicit 3 times) then return special fake value
+  // if read of scratchpad failed (implicit 3 times) then return special fake value
   if (!readScratchPad(_owROMCode, data))
     return 12.3456;
 
@@ -140,7 +140,7 @@ float SingleDS18B20::readTemp()
   // even when compiled on a 32 bit processor.
   int16_t raw = (data[1] << 8) | data[0];
   if (_owROMCode[0] == 0x10)
-  {                 //type S temp Sensor
+  {                 // type S temp Sensor
     raw = raw << 3; // 9 bit resolution default
     if (data[7] == 0x10)
     {
