@@ -458,61 +458,61 @@ void WebPalaSensor::parseConfigJSON(DynamicJsonDocument &doc)
 };
 //------------------------------------------
 //Parse HTTP POST parameters in request into configuration properties
-bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
+bool WebPalaSensor::parseConfigWebRequest(ESP8266WebServer &server)
 {
-  if (request->hasParam(F("rp"), true))
-    _refreshPeriod = request->getParam(F("rp"), true)->value().toInt();
+  if (server.hasArg(F("rp")))
+    _refreshPeriod = server.arg(F("rp")).toInt();
 
   //Find Steinhart-Hart coeff then convert to double
   //AND handle scientific notation
-  if (request->hasParam(F("sha"), true))
-    _digipotsNTC.steinhartHartCoeffs[0] = request->getParam(F("sha"), true)->value().toFloat();
-  if (request->hasParam(F("shb"), true))
-    _digipotsNTC.steinhartHartCoeffs[1] = request->getParam(F("shb"), true)->value().toFloat();
-  if (request->hasParam(F("shc"), true))
-    _digipotsNTC.steinhartHartCoeffs[2] = request->getParam(F("shc"), true)->value().toFloat();
+  if (server.hasArg(F("sha")))
+    _digipotsNTC.steinhartHartCoeffs[0] = server.arg(F("sha")).toFloat();
+  if (server.hasArg(F("shb")))
+    _digipotsNTC.steinhartHartCoeffs[1] = server.arg(F("shb")).toFloat();
+  if (server.hasArg(F("shc")))
+    _digipotsNTC.steinhartHartCoeffs[2] = server.arg(F("shc")).toFloat();
 
-  if (request->hasParam(F("hamfr"), true))
-    _ha.maxFailedRequest = request->getParam(F("hamfr"), true)->value().toInt();
+  if (server.hasArg(F("hamfr")))
+    _ha.maxFailedRequest = server.arg(F("hamfr")).toInt();
 
   //Parse common MQTT param
-  if (request->hasParam(F("hamhost"), true) && request->getParam(F("hamhost"), true)->value().length() < sizeof(_ha.mqtt.hostname))
-    strcpy(_ha.mqtt.hostname, request->getParam(F("hamhost"), true)->value().c_str());
-  if (request->hasParam(F("hamport"), true))
-    _ha.mqtt.port = request->getParam(F("hamport"), true)->value().toInt();
-  if (request->hasParam(F("hamu"), true) && request->getParam(F("hamu"), true)->value().length() < sizeof(_ha.mqtt.username))
-    strcpy(_ha.mqtt.username, request->getParam(F("hamu"), true)->value().c_str());
+  if (server.hasArg(F("hamhost")) && server.arg(F("hamhost")).length() < sizeof(_ha.mqtt.hostname))
+    strcpy(_ha.mqtt.hostname, server.arg(F("hamhost")).c_str());
+  if (server.hasArg(F("hamport")))
+    _ha.mqtt.port = server.arg(F("hamport")).toInt();
+  if (server.hasArg(F("hamu")) && server.arg(F("hamu")).length() < sizeof(_ha.mqtt.username))
+    strcpy(_ha.mqtt.username, server.arg(F("hamu")).c_str());
   char tempPassword[64 + 1] = {0};
   //put MQTT password into temporary one for predefpassword
-  if (request->hasParam(F("hamp"), true) && request->getParam(F("hamp"), true)->value().length() < sizeof(tempPassword))
-    strcpy(tempPassword, request->getParam(F("hamp"), true)->value().c_str());
+  if (server.hasArg(F("hamp")) && server.arg(F("hamp")).length() < sizeof(tempPassword))
+    strcpy(tempPassword, server.arg(F("hamp")).c_str());
   //check for previous password (there is a predefined special password that mean to keep already saved one)
   if (strcmp_P(tempPassword, appDataPredefPassword))
     strcpy(_ha.mqtt.password, tempPassword);
-  if (request->hasParam(F("hambt"), true) && request->getParam(F("hambt"), true)->value().length() < sizeof(_ha.mqtt.baseTopic))
-    strcpy(_ha.mqtt.baseTopic, request->getParam(F("hambt"), true)->value().c_str());
+  if (server.hasArg(F("hambt")) && server.arg(F("hambt")).length() < sizeof(_ha.mqtt.baseTopic))
+    strcpy(_ha.mqtt.baseTopic, server.arg(F("hambt")).c_str());
 
   //Parse HA protocol
-  if (request->hasParam(F("haproto"), true))
-    _ha.protocol = request->getParam(F("haproto"), true)->value().toInt();
+  if (server.hasArg(F("haproto")))
+    _ha.protocol = server.arg(F("haproto")).toInt();
 
   //Now get specific param
   switch (_ha.protocol)
   {
   case HA_PROTO_HTTP:
 
-    if (request->hasParam(F("hahtype"), true))
-      _ha.http.type = request->getParam(F("hahtype"), true)->value().toInt();
-    if (request->hasParam(F("hahhost"), true) && request->getParam(F("hahhost"), true)->value().length() < sizeof(_ha.http.hostname))
-      strcpy(_ha.http.hostname, request->getParam(F("hahhost"), true)->value().c_str());
-    if (request->hasParam(F("hahtls"), true))
-      _ha.http.tls = (request->getParam(F("hahtls"), true)->value() == F("on"));
+    if (server.hasArg(F("hahtype")))
+      _ha.http.type = server.arg(F("hahtype")).toInt();
+    if (server.hasArg(F("hahhost")) && server.arg(F("hahhost")).length() < sizeof(_ha.http.hostname))
+      strcpy(_ha.http.hostname, server.arg(F("hahhost")).c_str());
+    if (server.hasArg(F("hahtls")))
+      _ha.http.tls = (server.arg(F("hahtls")) == F("on"));
     else
       _ha.http.tls = false;
-    if (request->hasParam(F("hahfp"), true))
-      Utils::fingerPrintS2A(_ha.http.fingerPrint, request->getParam(F("hahfp"), true)->value().c_str());
-    if (request->hasParam(F("hahtempid"), true))
-      _ha.http.temperatureId = request->getParam(F("hahtempid"), true)->value().toInt();
+    if (server.hasArg(F("hahfp")))
+      Utils::fingerPrintS2A(_ha.http.fingerPrint, server.arg(F("hahfp")).c_str());
+    if (server.hasArg(F("hahtempid")))
+      _ha.http.temperatureId = server.arg(F("hahtempid")).toInt();
 
     switch (_ha.http.type)
     {
@@ -520,8 +520,8 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
 
       char tempApiKey[48 + 1];
       //put apiKey into temporary one for predefpassword
-      if (request->hasParam(F("hahjak"), true) && request->getParam(F("hahjak"), true)->value().length() < sizeof(tempApiKey))
-        strcpy(tempApiKey, request->getParam(F("hahjak"), true)->value().c_str());
+      if (server.hasArg(F("hahjak")) && server.arg(F("hahjak")).length() < sizeof(tempApiKey))
+        strcpy(tempApiKey, server.arg(F("hahjak")).c_str());
       //check for previous apiKey (there is a predefined special password that mean to keep already saved one)
       if (strcmp_P(tempApiKey, appDataPredefPassword))
         strcpy(_ha.http.jeedom.apiKey, tempApiKey);
@@ -530,13 +530,13 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
       break;
     case HA_HTTP_FIBARO:
 
-      if (request->hasParam(F("hahfuser"), true) && request->getParam(F("hahfuser"), true)->value().length() < sizeof(_ha.http.fibaro.username))
-        strcpy(_ha.http.fibaro.username, request->getParam(F("hahfuser"), true)->value().c_str());
+      if (server.hasArg(F("hahfuser")) && server.arg(F("hahfuser")).length() < sizeof(_ha.http.fibaro.username))
+        strcpy(_ha.http.fibaro.username, server.arg(F("hahfuser")).c_str());
 
       char tempFibaroPassword[64 + 1];
       //put Fibaropassword into temporary one for predefpassword
-      if (request->hasParam(F("hahfpass"), true) && request->getParam(F("hahfpass"), true)->value().length() < sizeof(_ha.http.fibaro.password))
-        strcpy(tempFibaroPassword, request->getParam(F("hahfpass"), true)->value().c_str());
+      if (server.hasArg(F("hahfpass")) && server.arg(F("hahfpass")).length() < sizeof(_ha.http.fibaro.password))
+        strcpy(tempFibaroPassword, server.arg(F("hahfpass")).c_str());
       //check for previous fibaro password (there is a predefined special password that mean to keep already saved one)
       if (strcmp_P(tempFibaroPassword, appDataPredefPassword))
         strcpy(_ha.http.fibaro.password, tempFibaroPassword);
@@ -548,8 +548,8 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
 
   case HA_PROTO_MQTT:
 
-    if (request->hasParam(F("hamtemptopic"), true) && request->getParam(F("hamtemptopic"), true)->value().length() < sizeof(_ha.mqtt.temperatureTopic))
-      strcpy(_ha.mqtt.temperatureTopic, request->getParam(F("hamtemptopic"), true)->value().c_str());
+    if (server.hasArg(F("hamtemptopic")) && server.arg(F("hamtemptopic")).length() < sizeof(_ha.mqtt.temperatureTopic))
+      strcpy(_ha.mqtt.temperatureTopic, server.arg(F("hamtemptopic")).c_str());
 
     if (!_ha.mqtt.hostname[0] || !_ha.mqtt.baseTopic[0] || !_ha.mqtt.temperatureTopic[0])
       _ha.protocol = HA_PROTO_DISABLED;
@@ -557,18 +557,18 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
   }
 
   //Parse CBox protocol
-  if (request->hasParam(F("cbproto"), true))
-    _ha.cboxProtocol = request->getParam(F("cbproto"), true)->value().toInt();
+  if (server.hasArg(F("cbproto")))
+    _ha.cboxProtocol = server.arg(F("cbproto")).toInt();
 
   //Now get specific param
   switch (_ha.cboxProtocol)
   {
   case CBOX_PROTO_HTTP:
 
-    if (request->hasParam(F("cbhip"), true))
+    if (server.hasArg(F("cbhip")))
     {
       IPAddress ipParser;
-      if (ipParser.fromString(request->getParam(F("cbhip"), true)->value()))
+      if (ipParser.fromString(server.arg(F("cbhip"))))
         _ha.http.cboxIp = static_cast<uint32_t>(ipParser);
       else
       {
@@ -580,8 +580,8 @@ bool WebPalaSensor::parseConfigWebRequest(AsyncWebServerRequest *request)
 
   case CBOX_PROTO_MQTT:
 
-    if (request->hasParam(F("cbmt1topic"), true) && request->getParam(F("cbmt1topic"), true)->value().length() < sizeof(_ha.mqtt.cboxT1Topic))
-      strcpy(_ha.mqtt.cboxT1Topic, request->getParam(F("cbmt1topic"), true)->value().c_str());
+    if (server.hasArg(F("cbmt1topic")) && server.arg(F("cbmt1topic")).length() < sizeof(_ha.mqtt.cboxT1Topic))
+      strcpy(_ha.mqtt.cboxT1Topic, server.arg(F("cbmt1topic")).c_str());
 
     if (!_ha.mqtt.hostname[0] || !_ha.mqtt.baseTopic[0] || !_ha.mqtt.cboxT1Topic[0])
       _ha.cboxProtocol = CBOX_PROTO_DISABLED;
@@ -841,15 +841,15 @@ bool WebPalaSensor::appInit(bool reInit)
 };
 //------------------------------------------
 //Return HTML Code to insert into Status Web page
-const uint8_t *WebPalaSensor::getHTMLContent(WebPageForPlaceHolder wp)
+const PROGMEM char *WebPalaSensor::getHTMLContent(WebPageForPlaceHolder wp)
 {
   switch (wp)
   {
   case status:
-    return (const uint8_t *)status1htmlgz;
+    return status1htmlgz;
     break;
   case config:
-    return (const uint8_t *)config1htmlgz;
+    return config1htmlgz;
     break;
   default:
     return nullptr;
@@ -876,16 +876,15 @@ size_t WebPalaSensor::getHTMLContentSize(WebPageForPlaceHolder wp)
 };
 //------------------------------------------
 //code to register web request answer to the web server
-void WebPalaSensor::appInitWebServer(AsyncWebServer &server, bool &shouldReboot, bool &pauseApplication)
+void WebPalaSensor::appInitWebServer(ESP8266WebServer &server, bool &shouldReboot, bool &pauseApplication)
 {
-  server.on("/calib.html", HTTP_GET, [](AsyncWebServerRequest *request) {
-    AsyncWebServerResponse *response = request->beginResponse_P(200, F("text/html"), (const uint8_t *)calibhtmlgz, sizeof(calibhtmlgz));
-    response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
+  server.on("/calib.html", HTTP_GET, [&server]() {
+    server.sendHeader(F("Content-Encoding"), F("gzip"));
+    server.send_P(200, PSTR("text/html"), calibhtmlgz, sizeof(calibhtmlgz));
   });
 
   //GetDigiPot
-  server.on("/gdp", HTTP_GET, [this](AsyncWebServerRequest *request) {
+  server.on("/gdp", HTTP_GET, [this, &server]() {
     String dpJSON('{');
     dpJSON = dpJSON + F("\"r\":") + (_mcp4151_50k.getPosition(0) * _digipotsNTC.rBW50KStep + _mcp4151_5k.getPosition(0) * _digipotsNTC.rBW5KStep + _digipotsNTC.rWTotal);
 #if DEVELOPPER_MODE
@@ -894,24 +893,25 @@ void WebPalaSensor::appInitWebServer(AsyncWebServer &server, bool &shouldReboot,
 #endif
     dpJSON += '}';
 
-    request->send(200, F("text/json"), dpJSON);
+    server.sendHeader(F("Cache-Control"), F("no-cache"));
+    server.send(200, F("text/json"), dpJSON);
   });
 
   //SetDigiPot
-  server.on("/sdp", HTTP_POST, [this](AsyncWebServerRequest *request) {
+  server.on("/sdp", HTTP_POST, [this, &server]() {
 
 #define TICK_TO_SKIP 20
     //look for temperature to apply
-    if (request->hasParam(F("temperature"), true))
+    if (server.hasArg(F("temperature")))
     {
       //convert and set it
-      setDualDigiPot(request->getParam(F("temperature"), true)->value().toFloat());
+      setDualDigiPot(server.arg(F("temperature")).toFloat());
       //go for timer tick skipped (time to look a value on stove)
       _skipTick = TICK_TO_SKIP;
     }
 
     //look for increase of digipots
-    if (request->hasParam(F("up"), true))
+    if (server.hasArg(F("up")))
     {
       //go one step up
       setDualDigiPot((int)(_mcp4151_50k.getPosition(0) * _digipotsNTC.rBW50KStep + _mcp4151_5k.getPosition(0) * _digipotsNTC.rBW5KStep + _digipotsNTC.rWTotal + _digipotsNTC.rBW5KStep));
@@ -920,7 +920,7 @@ void WebPalaSensor::appInitWebServer(AsyncWebServer &server, bool &shouldReboot,
     }
 
     //look for decrease of digipots
-    if (request->hasParam(F("down"), true))
+    if (server.hasArg(F("down")))
     {
       //go one step down
       setDualDigiPot((int)(_mcp4151_50k.getPosition(0) * _digipotsNTC.rBW50KStep + _mcp4151_5k.getPosition(0) * _digipotsNTC.rBW5KStep + _digipotsNTC.rWTotal - _digipotsNTC.rBW5KStep));
@@ -930,34 +930,34 @@ void WebPalaSensor::appInitWebServer(AsyncWebServer &server, bool &shouldReboot,
 
 #if DEVELOPPER_MODE
     //look for 5k digipot requested position
-    if (request->hasParam(F("dp5k"), true))
+    if (server.hasArg(F("dp5k")))
     {
       //convert and set it
-      _mcp4151_5k.setPosition(0, request->getParam(F("dp5k"), true)->value().toInt());
+      _mcp4151_5k.setPosition(0, server.arg(F("dp5k")).toInt());
       //go for timer tick skipped (time to look a value on stove)
       _skipTick = TICK_TO_SKIP;
     }
 
     //look for 50k digipot requested position
-    if (request->hasParam(F("dp50k"), true))
+    if (server.hasArg(F("dp50k")))
     {
       //convert and set it
-      _mcp4151_50k.setPosition(0, request->getParam(F("dp50k"), true)->value().toInt());
+      _mcp4151_50k.setPosition(0, server.arg(F("dp50k")).toInt());
       //go for timer tick skipped (time to look a value on stove)
       _skipTick = TICK_TO_SKIP;
     }
 
     //look for resistance to apply
-    if (request->hasParam(F("resistance"), true))
+    if (server.hasArg(F("resistance")))
     {
       //convert resistance value and call right function
-      setDualDigiPot(0, request->getParam(F("resistance"), true)->value().toInt());
+      setDualDigiPot(0, server.arg(F("resistance")).toInt());
       //go for timer tick skipped (time to look a value on stove)
       _skipTick = TICK_TO_SKIP;
     }
 #endif
 
-    request->send(200);
+    server.send(200);
   });
 };
 
