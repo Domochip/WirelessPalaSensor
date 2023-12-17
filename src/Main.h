@@ -22,7 +22,9 @@
 #define DEFAULT_AP_PSK "PasswordPala"
 
 //Enable status webpage EventSource
-#define ENABLE_STATUS_EVENTSOURCE 0
+#define ENABLE_STATUS_EVTSRC 1
+#define STATUS_EVTSRC_MAX_CLIENTS 2
+#define ENABLE_STATUS_EVTSRC_KEEPALIVE 0
 
 //Pin 12, 13 and 14 are used by DigiPot Bus
 //Choose Pins used for DigiPot Select
