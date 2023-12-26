@@ -82,7 +82,7 @@ private:
 
   typedef struct
   {
-    byte maxFailedRequest = 0; //number of failed requests to HA before failover to local temperature sensor
+    byte maxFailedRequest = 0; // number of failed requests to HA before failover to local temperature sensor
 
     byte protocol = HA_PROTO_DISABLED;
     byte cboxProtocol = CBOX_PROTO_DISABLED;
@@ -104,7 +104,7 @@ private:
   bool _needTick = false;
   Ticker _refreshTicker;
   byte _skipTick = 0;
-  //Used in TimerTick for logic and calculation
+  // Used in TimerTick for logic and calculation
   int _homeAutomationRequestResult = 0;
   float _homeAutomationTemperature = 0.0;
   int _homeAutomationFailedCount = 0;
@@ -122,7 +122,7 @@ private:
   unsigned long _lastMqttStoveTemperatureMillis = 0;
 
   WiFiClient _wifiClient;
-  
+
   MQTTMan _mqttMan;
 
   void setDualDigiPot(float temperature);
@@ -134,13 +134,13 @@ private:
 
   void setConfigDefaultValues();
   void parseConfigJSON(DynamicJsonDocument &doc);
-  bool parseConfigWebRequest(AsyncWebServerRequest *request);
+  bool parseConfigWebRequest(ESP8266WebServer &server);
   String generateConfigJSON(bool forSaveFile);
   String generateStatusJSON();
   bool appInit(bool reInit);
-  const uint8_t *getHTMLContent(WebPageForPlaceHolder wp);
+  const PROGMEM char *getHTMLContent(WebPageForPlaceHolder wp);
   size_t getHTMLContentSize(WebPageForPlaceHolder wp);
-  void appInitWebServer(AsyncWebServer &server, bool &shouldReboot, bool &pauseApplication);
+  void appInitWebServer(ESP8266WebServer &server, bool &shouldReboot, bool &pauseApplication);
   void appRun();
 
 public:

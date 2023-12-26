@@ -1,7 +1,9 @@
-<span id="l"><h2><b>Loading...</b></h2></span>
+<span id="l">
+    <h2><b>Loading...</b></h2>
+</span>
 <form class="pure-form pure-form-aligned" id='f' style='display:none'>
     <fieldset>
-        
+
         <h2 class="content-subhead">Step 1 : Thermistor simulator calibration</h2>
 
         <div class="pure-control-group">
@@ -70,116 +72,116 @@
     //QuerySelector Prefix is added by load function to know into what element queySelector need to look for
     //var qsp = '#contentX ';
 
-    function getSteinhartHart(R1,T1,R2,T2,R3,T3){
-        T1=T1+273.15;T2=T2+273.15;T3=T3+273.15;
+    function getSteinhartHart(R1, T1, R2, T2, R3, T3) {
+        T1 = T1 + 273.15; T2 = T2 + 273.15; T3 = T3 + 273.15;
 
-        var L1=Math.log(R1);var L2=Math.log(R2);var L3=Math.log(R3);
+        var L1 = Math.log(R1); var L2 = Math.log(R2); var L3 = Math.log(R3);
 
-        var Y1=1/T1;var Y2=1/T2;var Y3=1/T3;
+        var Y1 = 1 / T1; var Y2 = 1 / T2; var Y3 = 1 / T3;
 
-        var Lambda2=(Y2-Y1)/(L2-L1);
-        var Lambda3=(Y3-Y1)/(L3-L1);
+        var Lambda2 = (Y2 - Y1) / (L2 - L1);
+        var Lambda3 = (Y3 - Y1) / (L3 - L1);
 
-        var C=((Lambda3-Lambda2) / (L3-L2)) / (L1+L2+L3);
-        var B=Lambda2-C*(L1*L1 + L1*L2 + L2*L2);
-        var A=Y1-(B+L1*L1*C)*L1;
-        return [A,B,C];
+        var C = ((Lambda3 - Lambda2) / (L3 - L2)) / (L1 + L2 + L3);
+        var B = Lambda2 - C * (L1 * L1 + L1 * L2 + L2 * L2);
+        var A = Y1 - (B + L1 * L1 * C) * L1;
+        return [A, B, C];
     }
 
-    $(qsp+"#f").addEventListener('submit',function(event){
-        $(qsp+"#r").innerHTML="Saving Configuration...";
-        post("/sc"+qsp[8],
-            new FormData($(qsp+"#f")),
-            function(){ 
-                $(qsp+"#f").style.display='none';
+    $(qsp + "#f").addEventListener('submit', function (event) {
+        $(qsp + "#r").innerHTML = "Saving Configuration...";
+        post("/sc" + qsp[8],
+            new FormData($(qsp + "#f")),
+            function () {
+                $(qsp + "#f").style.display = 'none';
 
-                $(qsp+'#r').innerHTML='<h3><b>Configuration saved <span style="color: green;">successfully</span>.</b></h3>This page will be reloaded in <span id="cd">5</span>sec.';
+                $(qsp + '#r').innerHTML = '<h3><b>Configuration saved <span style="color: green;">successfully</span>.</b></h3>This page will be reloaded in <span id="cd">5</span>sec.';
                 runScript('var count=4;var cdi=setInterval(function(){$("#cd").innerText=count;if(!count){clearInterval(cdi);location.reload();}count--;},1000);');
             },
-            function(){
-                $(qsp+'#r').innerHTML='<h3><b>Configuration <span style="color: red;">error</span>.</b></h3>';
+            function () {
+                $(qsp + '#r').innerHTML = '<h3><b>Configuration <span style="color: red;">error</span>.</b></h3>';
             }
         );
         event.preventDefault();
     });
 
-    $(qsp+"#set10").addEventListener('click',function(){
-        post("/sdp","temperature=10",function(){
-            getJSON("/gdp",function(data){$(qsp+"#R1").value=data.r})
+    $(qsp + "#set10").addEventListener('click', function () {
+        post("/sdp", "temperature=10", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R1").value = data.r })
         })
     })
 
-    $(qsp+"#set10d").addEventListener('click',function(){
-        post("/sdp","up=1",function(){
-            getJSON("/gdp",function(data){$(qsp+"#R1").value=data.r})
+    $(qsp + "#set10d").addEventListener('click', function () {
+        post("/sdp", "up=1", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R1").value = data.r })
         })
     })
 
-    $(qsp+"#set10u").addEventListener('click',function(){
-        post("/sdp","down=1",function(){
-            getJSON("/gdp",function(data){$(qsp+"#R1").value=data.r})
-        })
-    })
-    
-    $(qsp+"#set20").addEventListener('click',function(){
-        post("/sdp","temperature=20.0",function(){
-            getJSON("/gdp",function(data){$(qsp+"#R2").value=data.r})
+    $(qsp + "#set10u").addEventListener('click', function () {
+        post("/sdp", "down=1", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R1").value = data.r })
         })
     })
 
-    $(qsp+"#set20d").addEventListener('click',function(){
-        post("/sdp","up=1",function(){
-            getJSON("/gdp",function(data){$(qsp+"#R2").value=data.r})
+    $(qsp + "#set20").addEventListener('click', function () {
+        post("/sdp", "temperature=20.0", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R2").value = data.r })
         })
     })
 
-    $(qsp+"#set20u").addEventListener('click',function(){
-        post("/sdp","down=1",function(){
-            getJSON("/gdp",function(data){$(qsp+"#R2").value=data.r})
+    $(qsp + "#set20d").addEventListener('click', function () {
+        post("/sdp", "up=1", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R2").value = data.r })
         })
     })
 
-    $(qsp+"#set30").addEventListener('click',function(){
-        post("/sdp","temperature=30.0",function(){
-            getJSON("/gdp",function(data){$(qsp+"#R3").value=data.r})
+    $(qsp + "#set20u").addEventListener('click', function () {
+        post("/sdp", "down=1", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R2").value = data.r })
         })
     })
 
-    $(qsp+"#set30d").addEventListener('click',function(){
-        post("/sdp","up=1",function(){
-            getJSON("/gdp",function(data){$(qsp+"#R3").value=data.r})
+    $(qsp + "#set30").addEventListener('click', function () {
+        post("/sdp", "temperature=30.0", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R3").value = data.r })
         })
     })
 
-    $(qsp+"#set30u").addEventListener('click',function(){
-        post("/sdp","down=1",function(){
-            getJSON("/gdp",function(data){$(qsp+"#R3").value=data.r})
+    $(qsp + "#set30d").addEventListener('click', function () {
+        post("/sdp", "up=1", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R3").value = data.r })
         })
     })
 
-    $(qsp+"#calc").addEventListener('click',function(){
-        var coeffs=getSteinhartHart($(qsp+"#R1").value,10.0,$(qsp+"#R2").value,20.0,$(qsp+"#R3").value,30.0);
-        $(qsp+"#sha").value=Math.round(coeffs[0]*10000000000000000)/10000000000000000;
-        $(qsp+"#shb").value=Math.round(coeffs[1]*10000000000000000)/10000000000000000;
-        $(qsp+"#shc").value=Math.round(coeffs[2]*10000000000000000)/10000000000000000;
+    $(qsp + "#set30u").addEventListener('click', function () {
+        post("/sdp", "down=1", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R3").value = data.r })
+        })
     })
 
-    getJSON("/gc"+qsp[8],
-        function(GC){
-            for(k in GC){
-                if($(qsp+'#'+k)){
-                    if($(qsp+'#'+k).type!='checkbox') $(qsp+'#'+k).value=GC[k];
-                    else $(qsp+'#'+k).checked=GC[k];
+    $(qsp + "#calc").addEventListener('click', function () {
+        var coeffs = getSteinhartHart($(qsp + "#R1").value, 10.0, $(qsp + "#R2").value, 20.0, $(qsp + "#R3").value, 30.0);
+        $(qsp + "#sha").value = Math.round(coeffs[0] * 10000000000000000) / 10000000000000000;
+        $(qsp + "#shb").value = Math.round(coeffs[1] * 10000000000000000) / 10000000000000000;
+        $(qsp + "#shc").value = Math.round(coeffs[2] * 10000000000000000) / 10000000000000000;
+    })
 
-                    triggerEvent($(qsp+'#'+k),'change');
+    getJSON("/gc" + qsp[8],
+        function (GC) {
+            for (k in GC) {
+                if ($(qsp + '#' + k)) {
+                    if ($(qsp + '#' + k).type != 'checkbox') $(qsp + '#' + k).value = GC[k];
+                    else $(qsp + '#' + k).checked = GC[k];
+
+                    triggerEvent($(qsp + '#' + k), 'change');
                 }
             }
 
-            $(qsp+"#f").style.display='';
-            fadeOut($(qsp+"#l"));
+            $(qsp + "#f").style.display = '';
+            fadeOut($(qsp + "#l"));
         },
-        function(){
-            $(qsp+"#l").innerHTML='<h6 style="color:red;"><b> Failed</b></h6>';
+        function () {
+            $(qsp + "#l").innerHTML = '<h6 style="color:red;"><b> Failed</b></h6>';
         }
     );
 </script>

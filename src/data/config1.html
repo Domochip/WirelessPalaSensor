@@ -1,179 +1,187 @@
-<h2 class="content-subhead">Sensor Simulator<span id="l"><h6 style="display:inline"><b> Loading...</b></h6></span></h2>
+<h2 class="content-subhead">Sensor Simulator<span id="l">
+        <h6 style="display:inline"><b> Loading...</b></h6>
+    </span></h2>
 <form class="pure-form pure-form-aligned" id='f'>
     <fieldset>
 
-<div class="pure-control-group">
-    <label for="rp">Refresh Period</label>
-    <input type='number' id='rp' name='rp' min='0' max='65535'>
-    <span class="pure-form-message-inline">seconds</span>
-</div>
+        <div class="pure-control-group">
+            <label for="rp">Refresh Period</label>
+            <input type='number' id='rp' name='rp' min='0' max='65535'>
+            <span class="pure-form-message-inline">seconds</span>
+        </div>
 
-<h3 class="content-subhead">Calibration</h3>
-<div class="pure-control-group">
-    <label>Calibrator</label>
-    <a class="pure-button" id="calibButton" style="background: rgb(28, 184, 65);">Run</a>
-</div>
-<div class="pure-control-group">
-    <label for="sha">Coeff A</label>
-    <input type='number' id='sha' name='sha' step="0.0000000000000001" size=30>
-</div>
-<div class="pure-control-group">
-    <label for="shb">Coeff B</label>
-    <input type='number' id='shb' name='shb' step="0.0000000000000001" size=30>
-</div>
-<div class="pure-control-group">
-    <label for="shc">Coeff C</label>
-    <input type='number' id='shc' name='shc' step="0.0000000000000001" size=30>
-</div>
+        <h3 class="content-subhead">Calibration</h3>
+        <div class="pure-control-group">
+            <label>Calibrator</label>
+            <a class="pure-button" id="calibButton" style="background: rgb(28, 184, 65);">Run</a>
+        </div>
+        <div class="pure-control-group">
+            <label for="sha">Coeff A</label>
+            <input type='number' id='sha' name='sha' step="0.0000000000000001" size=30>
+        </div>
+        <div class="pure-control-group">
+            <label for="shb">Coeff B</label>
+            <input type='number' id='shb' name='shb' step="0.0000000000000001" size=30>
+        </div>
+        <div class="pure-control-group">
+            <label for="shc">Coeff C</label>
+            <input type='number' id='shc' name='shc' step="0.0000000000000001" size=30>
+        </div>
 
-<h3 class="content-subhead">Home Automation</h3>
-
-<div class="pure-control-group">
-    <label for="haproto">Protocol</label>
-    <select id='haproto' name='haproto'>
-        <option value="0">Disabled</option>
-        <option value="1">HTTP</option>
-        <option value="2">MQTT</option>
-    </select>
-</div>
-
-
-<div id='hae' style='display:none'>
-
-    <div class="pure-control-group">
-        <label for="hamfr">Max Failed Request</label>
-        <input type='number' id='hamfr' name='hamfr' min='0' max='255'>
-        <span class="pure-form-message-inline">before failover to local sensor</span>
-    </div>
-
-    <div id='hahe'>
+        <h3 class="content-subhead">Home Automation</h3>
 
         <div class="pure-control-group">
-            <label for="hahtype">Type</label>
-            <select id='hahtype' name='hahtype'>
-                <option value="0">Jeedom Virtual</option>
-                <option value="1">Fibaro</option>
+            <label for="haproto">Protocol</label>
+            <select id='haproto' name='haproto'>
+                <option value="0">Disabled</option>
+                <option value="1">HTTP</option>
+                <option value="2">MQTT</option>
             </select>
         </div>
 
-        <div class="pure-control-group">
-            <label for="hahhost">Hostname</label>
-            <input type='text' id='hahhost' name='hahhost' maxlength='64' pattern='[A-Za-z0-9-.]+' size='50' placeholder="IP or DNS Name">
-            <span class="pure-form-message-inline">(Hostname should match with certificate name if SSL/TLS is enabled)</span>
-        </div>
 
-        <div class="pure-control-group">
-            <label for="hahtls">SSL/TLS</label>
-            <input type='checkbox' id='hahtls' name='hahtls'>
-        </div>
-        <div id='hahtlse'>
+        <div id='hae' style='display:none'>
+
             <div class="pure-control-group">
-                <label for="hahfp">TLS FingerPrint</label>
-                <input type='text' id='hahfp' name='hahfp' maxlength='59' pattern='^([0-9A-Fa-f]{2}[ :-]*){19}([0-9A-Fa-f]{2})$' size='65'>
-                <span class="pure-form-message-inline">(separators are : &lt;none&gt;,&lt;space&gt;,:,-)</span>
+                <label for="hamfr">Max Failed Request</label>
+                <input type='number' id='hamfr' name='hamfr' min='0' max='255'>
+                <span class="pure-form-message-inline">before failover to local sensor</span>
+            </div>
+
+            <div id='hahe'>
+
+                <div class="pure-control-group">
+                    <label for="hahtype">Type</label>
+                    <select id='hahtype' name='hahtype'>
+                        <option value="0">Jeedom Virtual</option>
+                        <option value="1">Fibaro</option>
+                    </select>
+                </div>
+
+                <div class="pure-control-group">
+                    <label for="hahhost">Hostname</label>
+                    <input type='text' id='hahhost' name='hahhost' maxlength='64' pattern='[A-Za-z0-9-.]+' size='50'
+                        placeholder="IP or DNS Name">
+                    <span class="pure-form-message-inline">(Hostname should match with certificate name if SSL/TLS is
+                        enabled)</span>
+                </div>
+
+                <div class="pure-control-group">
+                    <label for="hahtls">SSL/TLS</label>
+                    <input type='checkbox' id='hahtls' name='hahtls'>
+                </div>
+                <div id='hahtlse'>
+                    <div class="pure-control-group">
+                        <label for="hahfp">TLS FingerPrint</label>
+                        <input type='text' id='hahfp' name='hahfp' maxlength='59'
+                            pattern='^([0-9A-Fa-f]{2}[ :-]*){19}([0-9A-Fa-f]{2})$' size='65'>
+                        <span class="pure-form-message-inline">(separators are : &lt;none&gt;,&lt;space&gt;,:,-)</span>
+                    </div>
+                </div>
+
+                <div id='hah0'>
+                    <div class="pure-control-group">
+                        <label for="hahjak">ApiKey</label>
+                        <input type='password' id='hahjak' name='hahjak' maxlength='48' pattern='[A-Za-z0-9-.]+' size=50
+                            title='APIKey from Jeedom configuration webpage'>
+                    </div>
+                </div>
+
+                <div id='hah1'>
+                    <div class="pure-control-group">
+                        <label for="hahfuser">Username</label>
+                        <input type='text' id='hahfuser' name='hahfuser' maxlength='64'>
+                    </div>
+                    <div class="pure-control-group">
+                        <label for="hahfpass">Password</label>
+                        <input type='password' id='hahfpass' name='hahfpass' maxlength='64'>
+                    </div>
+                </div>
+
+                <div class="pure-control-group">
+                    <label for="hahtempid">Temperature Id</label>
+                    <input type='number' id='hahtempid' name='hahtempid' min='0' max='65535'>
+                    <span class="pure-form-message-inline">(Command Or Device Id)</span>
+                </div>
+            </div>
+
+            <div id='hame'>
+
+                <div class="pure-control-group">
+                    <label for="hamtemptopic">Temperature Topic</label>
+                    <input type='text' id='hamtemptopic' name='hamtemptopic' maxlength='64'>
+                </div>
             </div>
         </div>
 
-        <div id='hah0'>
-            <div class="pure-control-group">
-                <label for="hahjak">ApiKey</label>
-                <input type='password' id='hahjak' name='hahjak' maxlength='48' pattern='[A-Za-z0-9-.]+' size=50 title='APIKey from Jeedom configuration webpage'>
+        <h3 class="content-subhead">Palazzetti / PalaControl</h3>
+
+        <div class="pure-control-group">
+            <label for="cbproto">Protocol</label>
+            <select id='cbproto' name='cbproto'>
+                <option value="0">Disabled</option>
+                <option value="1">ConnectionBox</option>
+                <option value="2">MQTT</option>
+            </select>
+        </div>
+
+        <div id='cbe' style='display:none'>
+
+            <div id='cbhe'>
+
+                <div class="pure-control-group">
+                    <label for="cbhip">ConnectionBox IP</label>
+                    <input type='text' id='cbhip' name='cbhip'
+                        pattern='((^|\.)((25[0-5])|(2[0-4]\d)|(1\d\d)|([1-9]?\d))){4}$'>
+                </div>
+            </div>
+
+            <div id='cbme'>
+
+                <div class="pure-control-group">
+                    <label for="cbmt1topic">Stove/T1 Topic</label>
+                    <input type='text' id='cbmt1topic' name='cbmt1topic' maxlength='64'>
+                </div>
             </div>
         </div>
 
-        <div id='hah1'>
+        <div id='mqtte' style='display:none'>
+            <h3 class="content-subhead">MQTT</h3>
+
             <div class="pure-control-group">
-                <label for="hahfuser">Username</label>
-                <input type='text' id='hahfuser' name='hahfuser' maxlength='64'>
+                <label for="hamhost">Hostname</label>
+                <input type='text' id='hamhost' name='hamhost' maxlength='64' pattern='[A-Za-z0-9-.]+' size='50'
+                    placeholder="IP or DNS Name">
             </div>
             <div class="pure-control-group">
-                <label for="hahfpass">Password</label>
-                <input type='password' id='hahfpass' name='hahfpass' maxlength='64'>
+                <label for="hamport">Port</label>
+                <input type='number' id='hamport' name='hamport' min='1' max='65535' placeholder="1883">
+            </div>
+            <div class="pure-control-group">
+                <label for="hamu">Username</label>
+                <input type='text' id='hamu' name='hamu' maxlength='64' placeholder="optional">
+            </div>
+            <div class="pure-control-group">
+                <label for="hamp">Password</label>
+                <input type='password' id='hamp' name='hamp' maxlength='64' placeholder="optional">
+            </div>
+            <div class="pure-control-group">
+                <label for="hambt">Base Topic</label>
+                <input type='text' id='hambt' name='hambt' maxlength='64'>
+                <span id="hambti" name="hambti" class="infotip">?</span>
+            </div>
+
+            <div class="pure-control-group" id="hambtidiv" name="hambtidiv" style="display:none;">
+                <label></label>
+                <div class="infotipdiv">
+                    Base Topic placeholders : <br>
+                    <b>$sn$</b> : Serial Number of this device<br>
+                    <b>$mac$</b> : WiFi MAC address of this device<br>
+                    <b>$model$</b> : Model of this device<br>
+                    Ex : DomoChip/<b>$sn$</b> or <b>$model$</b>/<b>$mac$</b>
+                </div>
             </div>
         </div>
-
-        <div class="pure-control-group">
-            <label for="hahtempid">Temperature Id</label>
-            <input type='number' id='hahtempid' name='hahtempid' min='0' max='65535'>
-            <span class="pure-form-message-inline">(Command Or Device Id)</span>
-        </div>
-    </div>
-
-    <div id='hame'>
-
-        <div class="pure-control-group">
-            <label for="hamtemptopic">Temperature Topic</label>
-            <input type='text' id='hamtemptopic' name='hamtemptopic' maxlength='64'>
-        </div>
-    </div>
-</div>
-
-<h3 class="content-subhead">Palazzetti / PalaControl</h3>
-
-<div class="pure-control-group">
-    <label for="cbproto">Protocol</label>
-    <select id='cbproto' name='cbproto'>
-        <option value="0">Disabled</option>
-        <option value="1">ConnectionBox</option>
-        <option value="2">MQTT</option>
-    </select>
-</div>
-
-<div id='cbe' style='display:none'>
-
-    <div id='cbhe'>
-
-        <div class="pure-control-group">
-            <label for="cbhip">ConnectionBox IP</label>
-            <input type='text' id='cbhip' name='cbhip' pattern='((^|\.)((25[0-5])|(2[0-4]\d)|(1\d\d)|([1-9]?\d))){4}$'>
-        </div>
-    </div>
-
-    <div id='cbme'>
-
-        <div class="pure-control-group">
-            <label for="cbmt1topic">Stove/T1 Topic</label>
-            <input type='text' id='cbmt1topic' name='cbmt1topic' maxlength='64'>
-        </div>
-    </div>
-</div>
-
-<div id='mqtte' style='display:none'>
-    <h3 class="content-subhead">MQTT</h3>
-
-    <div class="pure-control-group">
-        <label for="hamhost">Hostname</label>
-        <input type='text' id='hamhost' name='hamhost' maxlength='64' pattern='[A-Za-z0-9-.]+' size='50' placeholder="IP or DNS Name">
-    </div>
-    <div class="pure-control-group">
-        <label for="hamport">Port</label>
-        <input type='number' id='hamport' name='hamport' min='1' max='65535' placeholder="1883">
-    </div>
-    <div class="pure-control-group">
-        <label for="hamu">Username</label>
-        <input type='text' id='hamu' name='hamu' maxlength='64' placeholder="optional">
-    </div>
-    <div class="pure-control-group">
-        <label for="hamp">Password</label>
-        <input type='password' id='hamp' name='hamp' maxlength='64' placeholder="optional">
-    </div>
-    <div class="pure-control-group">
-        <label for="hambt">Base Topic</label>
-        <input type='text' id='hambt' name='hambt' maxlength='64'>
-        <span id="hambti" name="hambti" class="infotip">?</span>
-    </div>
-
-    <div class="pure-control-group" id="hambtidiv" name="hambtidiv" style="display:none;">
-        <label></label>
-        <div class="infotipdiv">
-            Base Topic placeholders : <br>
-            <b>$sn$</b> : Serial Number of this device<br>
-            <b>$mac$</b> : WiFi MAC address of this device<br>
-            <b>$model$</b> : Model of this device<br>
-            Ex : DomoChip/<b>$sn$</b> or <b>$model$</b>/<b>$mac$</b>
-        </div>
-    </div>
-</div>
         <div class="pure-controls">
             <input type='submit' value='Save' class="pure-button pure-button-primary" disabled>
         </div>
@@ -185,117 +193,117 @@
     //QuerySelector Prefix is added by load function to know into what element queySelector need to look for
     //var qsp = '#contentX ';
 
-    $(qsp+"#calibButton").addEventListener('click',function (evt){
+    $(qsp + "#calibButton").addEventListener('click', function (evt) {
         evt.preventDefault();
         emptyContents();
-        $("#mainHeader").textContent="Calibration";
-        load($("#content1"),"/calib.html");
+        $("#mainHeader").textContent = "Calibration";
+        load($("#content1"), "/calib.html");
     });
 
     function isMQTTSelected() {
-        if($(qsp+"#haproto").value == 2 || $(qsp+"#cbproto").value == 2){
-            $(qsp+"#mqtte").style.display='';
+        if ($(qsp + "#haproto").value == 2 || $(qsp + "#cbproto").value == 2) {
+            $(qsp + "#mqtte").style.display = '';
         }
-        else $(qsp+"#mqtte").style.display='none';
+        else $(qsp + "#mqtte").style.display = 'none';
     }
 
-    $(qsp+"#haproto").addEventListener('change',function(){
-        switch($(qsp+"#haproto").value){
+    $(qsp + "#haproto").addEventListener('change', function () {
+        switch ($(qsp + "#haproto").value) {
             case "0":
-                $(qsp+"#hae").style.display='none';
+                $(qsp + "#hae").style.display = 'none';
                 break;
             case "1":
-                $(qsp+"#hae").style.display='';
-                $(qsp+"#hahe").style.display='';
-                $(qsp+"#hame").style.display='none';
+                $(qsp + "#hae").style.display = '';
+                $(qsp + "#hahe").style.display = '';
+                $(qsp + "#hame").style.display = 'none';
                 break;
             case "2":
-                $(qsp+"#hae").style.display='';
-                $(qsp+"#hahe").style.display='none';
-                $(qsp+"#hame").style.display='';
+                $(qsp + "#hae").style.display = '';
+                $(qsp + "#hahe").style.display = 'none';
+                $(qsp + "#hame").style.display = '';
                 break;
         }
         isMQTTSelected();
     });
 
-    $(qsp+"#hahtype").addEventListener('change',function(){
-        switch($(qsp+"#hahtype").value){
+    $(qsp + "#hahtype").addEventListener('change', function () {
+        switch ($(qsp + "#hahtype").value) {
             case "0":
-                $(qsp+"#hah0").style.display='';
-                $(qsp+"#hah1").style.display='none';
+                $(qsp + "#hah0").style.display = '';
+                $(qsp + "#hah1").style.display = 'none';
                 break;
             case "1":
-                $(qsp+"#hah0").style.display='none';
-                $(qsp+"#hah1").style.display='';
+                $(qsp + "#hah0").style.display = 'none';
+                $(qsp + "#hah1").style.display = '';
                 break;
         }
     });
 
-    $(qsp+"#hahtls").addEventListener('change',function(){
-        if($(qsp+"#hahtls").checked){
-            $(qsp+"#hahtlse").style.display='';
+    $(qsp + "#hahtls").addEventListener('change', function () {
+        if ($(qsp + "#hahtls").checked) {
+            $(qsp + "#hahtlse").style.display = '';
         }
-        else{
-            $(qsp+"#hahtlse").style.display='none';
+        else {
+            $(qsp + "#hahtlse").style.display = 'none';
         }
     });
 
-    $(qsp+"#cbproto").addEventListener('change',function(){
-        switch($(qsp+"#cbproto").value){
+    $(qsp + "#cbproto").addEventListener('change', function () {
+        switch ($(qsp + "#cbproto").value) {
             case "0":
-                $(qsp+"#cbe").style.display='none';
+                $(qsp + "#cbe").style.display = 'none';
                 break;
             case "1":
-                $(qsp+"#cbe").style.display='';
-                $(qsp+"#cbhe").style.display='';
-                $(qsp+"#cbme").style.display='none';
+                $(qsp + "#cbe").style.display = '';
+                $(qsp + "#cbhe").style.display = '';
+                $(qsp + "#cbme").style.display = 'none';
                 break;
             case "2":
-                $(qsp+"#cbe").style.display='';
-                $(qsp+"#cbhe").style.display='none';
-                $(qsp+"#cbme").style.display='';
+                $(qsp + "#cbe").style.display = '';
+                $(qsp + "#cbhe").style.display = 'none';
+                $(qsp + "#cbme").style.display = '';
                 break;
         }
         isMQTTSelected();
     });
 
-    $(qsp+"#hambti").addEventListener('click',function(){
-        $(qsp+"#hambtidiv").style.display=($(qsp+"#hambtidiv").style.display==''?'none':'');
+    $(qsp + "#hambti").addEventListener('click', function () {
+        $(qsp + "#hambtidiv").style.display = ($(qsp + "#hambtidiv").style.display == '' ? 'none' : '');
     });
 
-    $(qsp+"#f").addEventListener('submit',function(event){
-        $(qsp+"#r").innerHTML="Saving Configuration...";
-        post("/sc"+qsp[8],
-            new FormData($(qsp+"#f")),
-            function(){ 
-                $(qsp+"#f").style.display='none';
+    $(qsp + "#f").addEventListener('submit', function (event) {
+        $(qsp + "#r").innerHTML = "Saving Configuration...";
+        post("/sc" + qsp[8],
+            new FormData($(qsp + "#f")),
+            function () {
+                $(qsp + "#f").style.display = 'none';
 
-                $(qsp+'#r').innerHTML='<h3><b>Configuration saved <span style="color: green;">successfully</span>.</b></h3>This page will be reloaded in <span id="cd">5</span>sec.';
+                $(qsp + '#r').innerHTML = '<h3><b>Configuration saved <span style="color: green;">successfully</span>.</b></h3>This page will be reloaded in <span id="cd">5</span>sec.';
                 runScript('var count=4;var cdi=setInterval(function(){$("#cd").innerText=count;if(!count){clearInterval(cdi);location.reload();}count--;},1000);');
             },
-            function(){
-                $(qsp+'#r').innerHTML='<h3><b>Configuration <span style="color: red;">error</span>.</b></h3>';
+            function () {
+                $(qsp + '#r').innerHTML = '<h3><b>Configuration <span style="color: red;">error</span>.</b></h3>';
             }
         );
         event.preventDefault();
     });
 
-    getJSON("/gc"+qsp[8],
-        function(GC){
-            for(k in GC){
-                if($(qsp+'#'+k)){
-                    if($(qsp+'#'+k).type!='checkbox') $(qsp+'#'+k).value=GC[k];
-                    else $(qsp+'#'+k).checked=GC[k];
+    getJSON("/gc" + qsp[8],
+        function (GC) {
+            for (k in GC) {
+                if ($(qsp + '#' + k)) {
+                    if ($(qsp + '#' + k).type != 'checkbox') $(qsp + '#' + k).value = GC[k];
+                    else $(qsp + '#' + k).checked = GC[k];
 
-                    triggerEvent($(qsp+'#'+k),'change');
+                    triggerEvent($(qsp + '#' + k), 'change');
                 }
             }
 
-            $(qsp+"#f input[type=submit]").disabled=false;
-            fadeOut($(qsp+"#l"));
+            $(qsp + "#f input[type=submit]").disabled = false;
+            fadeOut($(qsp + "#l"));
         },
-        function(){
-            $(qsp+"#l").innerHTML='<h6 style="display:inline;color:red;"><b> Failed</b></h6>';
+        function () {
+            $(qsp + "#l").innerHTML = '<h6 style="display:inline;color:red;"><b> Failed</b></h6>';
         }
     );
 </script>
