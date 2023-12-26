@@ -352,7 +352,7 @@ void WebPalaSensor::mqttCallback(char *topic, uint8_t *payload, unsigned int len
     }
   }
 
-  // if Home Automation is configured for MQTT, topic match
+  // if Home Automation is configured for MQTT and topic match
   if (_ha.cboxProtocol == CBOX_PROTO_MQTT && !strcmp(topic, _ha.mqtt.cboxT1Topic))
   {
     String strStoveTemperature;
@@ -361,6 +361,15 @@ void WebPalaSensor::mqttCallback(char *topic, uint8_t *payload, unsigned int len
     // convert payload to string
     for (unsigned int i = 0; i < length; i++)
       strStoveTemperature += (char)payload[i];
+
+    // if payload contains JSON, isolate T1 value
+    if (strStoveTemperature[0] == '{')
+    {
+      strStoveTemperature = strStoveTemperature.substring(strStoveTemperature.indexOf(F("\"T1\":")) + 5);
+      strStoveTemperature.trim();
+      strStoveTemperature = strStoveTemperature.substring(0, strStoveTemperature.indexOf(','));
+      strStoveTemperature.trim();
+    }
 
     // convert
     _lastMqttStoveTemperature = strStoveTemperature.toFloat();
