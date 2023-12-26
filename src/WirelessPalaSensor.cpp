@@ -324,36 +324,53 @@ void WebPalaSensor::mqttConnectedCallback(MQTTMan *mqttMan, bool firstConnection
 // Callback used when an MQTT message arrived
 void WebPalaSensor::mqttCallback(char *topic, uint8_t *payload, unsigned int length)
 {
-  // if Home Automation is configured for MQTT, topic match and payload length < 7
-  if (_ha.protocol == HA_PROTO_MQTT && !strcmp(topic, _ha.mqtt.temperatureTopic) && length < 7)
+  // if Home Automation is configured for MQTT and topic match
+  if (_ha.protocol == HA_PROTO_MQTT && !strcmp(topic, _ha.mqtt.temperatureTopic))
   {
-    _lastMqttHATemperatureMillis = millis();
+    String strHomeAutomationTemperature;
+    strHomeAutomationTemperature.reserve(length + 1);
 
-    // make payload a string
-    char strHomeAutomationTemperature[7];
-    memcpy(strHomeAutomationTemperature, payload, length);
-    strHomeAutomationTemperature[length] = 0;
+    // convert payload to string
+    for (unsigned int i = 0; i < length; i++)
+      strHomeAutomationTemperature += (char)payload[i];
 
     // convert
-    _lastMqttHATemperature = atof(strHomeAutomationTemperature);
-    // round it to tenth
-    _lastMqttHATemperature *= 10;
-    _lastMqttHATemperature = round(_lastMqttHATemperature);
-    _lastMqttHATemperature /= 10;
+    _lastMqttHATemperature = strHomeAutomationTemperature.toFloat();
+
+    // remove all 0 from str for conversion verification
+    // (remove all 0 from the string, then only one dot should remain like "0.00")
+    strHomeAutomationTemperature.replace("0", "");
+
+    if (_lastMqttHATemperature != 0.0F || strHomeAutomationTemperature == ".")
+    {
+      // round it to tenth
+      _lastMqttHATemperature *= 10;
+      _lastMqttHATemperature = round(_lastMqttHATemperature);
+      _lastMqttHATemperature /= 10;
+
+      _lastMqttHATemperatureMillis = millis();
+    }
   }
 
-  // if Home Automation is configured for MQTT, topic match and payload length < 6
-  if (_ha.cboxProtocol == CBOX_PROTO_MQTT && !strcmp(topic, _ha.mqtt.cboxT1Topic) && length < 6)
+  // if Home Automation is configured for MQTT, topic match
+  if (_ha.cboxProtocol == CBOX_PROTO_MQTT && !strcmp(topic, _ha.mqtt.cboxT1Topic))
   {
-    _lastMqttStoveTemperatureMillis = millis();
+    String strStoveTemperature;
+    strStoveTemperature.reserve(length + 1);
 
-    // make payload a string
-    char strStoveTemperature[6];
-    memcpy(strStoveTemperature, payload, length);
-    strStoveTemperature[length] = 0;
+    // convert payload to string
+    for (unsigned int i = 0; i < length; i++)
+      strStoveTemperature += (char)payload[i];
 
     // convert
-    _lastMqttStoveTemperature = atof(strStoveTemperature);
+    _lastMqttStoveTemperature = strStoveTemperature.toFloat();
+
+    // remove all 0 from str for conversion verification
+    // (remove all 0 from the string, then only one dot should remain like "0.00")
+    strStoveTemperature.replace("0", "");
+
+    if (_lastMqttStoveTemperature != 0.0F || strStoveTemperature == ".")
+      _lastMqttStoveTemperatureMillis = millis();
   }
 }
 
