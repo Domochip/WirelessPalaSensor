@@ -119,6 +119,7 @@ bool WifiMan::parseConfigWebRequest(ESP8266WebServer &server)
   // basic control
   if (!server.hasArg(F("s")))
   {
+    server.keepAlive(false);
     server.send_P(400, PSTR("text/html"), PSTR("SSID missing"));
     return false;
   }
@@ -347,6 +348,9 @@ bool WifiMan::appInit(bool reInit = false)
   // right config so no need to touch again flash
   WiFi.persistent(false);
 
+  // start MDNS
+  MDNS.begin(APPLICATION1_NAME);
+
   return (ssid[0] ? WiFi.isConnected() : true);
 }
 
@@ -391,12 +395,14 @@ void WifiMan::appInitWebServer(ESP8266WebServer &server, bool &shouldReboot, boo
     int8_t n = WiFi.scanComplete();
     if (n == -2)
     {
+      server.keepAlive(false);
       server.sendHeader(F("Cache-Control"), F("no-cache"));
       server.send(200, F("text/json"), F("{\"r\":-2,\"wnl\":[]}"));
       WiFi.scanNetworks(true);
     }
     else if (n == -1)
     {
+      server.keepAlive(false);
       server.sendHeader(F("Cache-Control"), F("no-cache"));
       server.send(200, F("text/json"), F("{\"r\":-1,\"wnl\":[]}"));
     }
@@ -411,6 +417,7 @@ void WifiMan::appInitWebServer(ESP8266WebServer &server, bool &shouldReboot, boo
           networksJSON += ',';
       }
       networksJSON += F("]}");
+      server.keepAlive(false);
       server.sendHeader(F("Cache-Control"), F("no-cache"));
       server.send(200, F("text/json"), networksJSON);
       WiFi.scanDelete();
@@ -425,4 +432,6 @@ void WifiMan::appRun()
     _needRefreshWifi = false;
     refreshWiFi();
   }
+
+  MDNS.update();
 }
