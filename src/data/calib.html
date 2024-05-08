@@ -1,7 +1,7 @@
 <span id="l">
     <h2><b>Loading...</b></h2>
 </span>
-<form class="pure-form pure-form-aligned" id='f' style='display:none'>
+<form class="pure-form pure-form-aligned" id='f1' style='display:none'>
     <fieldset>
 
         <h2 class="content-subhead">Step 1 : Thermistor simulator calibration</h2>
@@ -88,12 +88,12 @@
         return [A, B, C];
     }
 
-    $(qsp + "#f").addEventListener('submit', function (event) {
+    $(qsp + "#f1").addEventListener('submit', function (event) {
         $(qsp + "#r").innerHTML = "Saving Configuration...";
         post("/sc" + qsp[8],
-            new FormData($(qsp + "#f")),
+            new FormData($(qsp + "#f1")),
             function () {
-                $(qsp + "#f").style.display = 'none';
+                $(qsp + "#f1").style.display = 'none';
 
                 $(qsp + '#r').innerHTML = '<h3><b>Configuration saved <span style="color: green;">successfully</span>.</b></h3>This page will be reloaded in <span id="cd">5</span>sec.';
                 runScript('var count=4;var cdi=setInterval(function(){$("#cd").innerText=count;if(!count){clearInterval(cdi);location.reload();}count--;},1000);');
@@ -177,7 +177,7 @@
                 }
             }
 
-            $(qsp + "#f").style.display = '';
+            $(qsp + "#f1").style.display = '';
             fadeOut($(qsp + "#l"));
         },
         function () {
