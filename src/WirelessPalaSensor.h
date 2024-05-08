@@ -2,14 +2,14 @@
 #define WirelessPalaSensor_h
 
 #include "Main.h"
-#include "base\Utils.h"
-#include "base\MQTTMan.h"
-#include "base\Application.h"
+#include "base/Utils.h"
+#include "base/MQTTMan.h"
+#include "base/Application.h"
 
 const char appDataPredefPassword[] PROGMEM = "ewcXoCt4HHjZUvY1";
 
-#include "data\status1.html.gz.h"
-#include "data\config1.html.gz.h"
+#include "data/status1.html.gz.h"
+#include "data/config1.html.gz.h"
 
 #include <ESP8266HTTPClient.h>
 #include <SPI.h>

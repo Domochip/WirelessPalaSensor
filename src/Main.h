@@ -1,10 +1,10 @@
 #ifndef Main_h
 #define Main_h
 
-#include <arduino.h>
+#include <Arduino.h>
 
 // Specific
-#include "data\calib.html.gz.h"
+#include "data/calib.html.gz.h"
 
 // DomoChip Informations
 // Configuration Web Pages :
