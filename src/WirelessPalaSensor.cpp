@@ -423,7 +423,7 @@ void WebPalaSensor::setConfigDefaultValues()
 
 //------------------------------------------
 // Parse JSON object into configuration properties
-void WebPalaSensor::parseConfigJSON(DynamicJsonDocument &doc)
+void WebPalaSensor::parseConfigJSON(JsonDocument &doc)
 {
   if (!doc[F("rp")].isNull())
     _refreshPeriod = doc[F("rp")];
