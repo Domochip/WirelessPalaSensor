@@ -54,8 +54,13 @@ void WifiMan::refreshWiFi()
 #ifdef LOG_SERIAL
         LOG_SERIAL.print(F("AP not found "));
 #endif
+#ifdef ESP8266
         _refreshTicker.once(_refreshPeriod, [this]()
                             { _needRefreshWifi = true; });
+#else
+        _refreshTicker.once<typeof this>(_refreshPeriod * 1000, [](typeof this wifiMan)
+                                         { wifiMan->_needRefreshWifi = true; }, this);
+#endif
       }
     }
   }
@@ -92,34 +97,36 @@ void WifiMan::setConfigDefaultValues()
 
 void WifiMan::parseConfigJSON(JsonDocument &doc)
 {
-  if (!doc["s"].isNull())
-    strlcpy(ssid, doc["s"], sizeof(ssid));
+  JsonVariant v;
 
-  if (!doc["p"].isNull())
-    strlcpy(password, doc["p"], sizeof(password));
+  if ((v = doc["s"]).is<const char *>())
+    strlcpy(ssid, v, sizeof(ssid));
 
-  if (!doc["h"].isNull())
-    strlcpy(hostname, doc["h"], sizeof(hostname));
+  if ((v = doc["p"]).is<const char *>())
+    strlcpy(password, v, sizeof(password));
 
-  if (!doc["ip"].isNull())
-    ip = doc["ip"];
-  if (!doc["gw"].isNull())
-    gw = doc["gw"];
-  if (!doc["mask"].isNull())
-    mask = doc["mask"];
-  if (!doc["dns1"].isNull())
-    dns1 = doc["dns1"];
-  if (!doc["dns2"].isNull())
-    dns2 = doc["dns2"];
+  if ((v = doc["h"]).is<const char *>())
+    strlcpy(hostname, v, sizeof(hostname));
+
+  if ((v = doc["ip"]).is<uint32_t>())
+    ip = v;
+  if ((v = doc["gw"]).is<uint32_t>())
+    gw = v;
+  if ((v = doc["mask"]).is<uint32_t>())
+    mask = v;
+  if ((v = doc["dns1"]).is<uint32_t>())
+    dns1 = v;
+  if ((v = doc["dns2"]).is<uint32_t>())
+    dns2 = v;
 }
 
-bool WifiMan::parseConfigWebRequest(ESP8266WebServer &server)
+bool WifiMan::parseConfigWebRequest(WebServer &server)
 {
 
   // basic control
   if (!server.hasArg(F("s")))
   {
-    server.keepAlive(false);
+    SERVER_KEEPALIVE_FALSE()
     server.send_P(400, PSTR("text/html"), PSTR("SSID missing"));
     return false;
   }
@@ -310,7 +317,11 @@ bool WifiMan::appInit(bool reInit = false)
   // Configure handlers
   if (!reInit)
   {
+#ifdef ESP8266
     _discoEventHandler = WiFi.onStationModeDisconnected([this](const WiFiEventStationModeDisconnected &evt)
+#else
+    WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info)
+#endif
                                                         {
                                                           if (!(WiFi.getMode() & WIFI_AP) && ssid[0])
                                                           {
@@ -325,18 +336,42 @@ bool WifiMan::appInit(bool reInit = false)
 #ifdef STATUS_LED_WARNING
                                                           STATUS_LED_WARNING
 #endif
-                                                        });
+                                                        }
+#ifndef ESP8266
+                                                        ,
+                                                        WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED
+#endif
+    );
 
     // if station connect to softAP
+#ifdef ESP8266
     _staConnectedHandler = WiFi.onSoftAPModeStationConnected([this](const WiFiEventSoftAPModeStationConnected &evt)
+#else
+    WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info)
+#endif
                                                              {
       //flag it in _stationConnectedToSoftAP
-      _stationConnectedToSoftAP = true; });
+      _stationConnectedToSoftAP = true; }
+#ifndef ESP8266
+                                                             ,
+                                                             WiFiEvent_t::ARDUINO_EVENT_WIFI_AP_STACONNECTED
+#endif
+    );
+
     // if station disconnect of the softAP
+#ifdef ESP8266
     _staDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected([this](const WiFiEventSoftAPModeStationDisconnected &evt)
+#else
+    WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info)
+#endif
                                                                    {
       //check if a station left
-      _stationConnectedToSoftAP = WiFi.softAPgetStationNum(); });
+      _stationConnectedToSoftAP = WiFi.softAPgetStationNum(); }
+#ifndef ESP8266
+                                                                   ,
+                                                                   WiFiEvent_t::ARDUINO_EVENT_WIFI_AP_STADISCONNECTED
+#endif
+    );
   }
 
   // Set hostname
@@ -387,7 +422,7 @@ size_t WifiMan::getHTMLContentSize(WebPageForPlaceHolder wp)
   return 0;
 }
 
-void WifiMan::appInitWebServer(ESP8266WebServer &server, bool &shouldReboot, bool &pauseApplication)
+void WifiMan::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseApplication)
 {
 
   server.on("/wnl", HTTP_GET, [this, &server]()
@@ -395,14 +430,14 @@ void WifiMan::appInitWebServer(ESP8266WebServer &server, bool &shouldReboot, boo
     int8_t n = WiFi.scanComplete();
     if (n == -2)
     {
-      server.keepAlive(false);
+      SERVER_KEEPALIVE_FALSE()
       server.sendHeader(F("Cache-Control"), F("no-cache"));
       server.send(200, F("text/json"), F("{\"r\":-2,\"wnl\":[]}"));
       WiFi.scanNetworks(true);
     }
     else if (n == -1)
     {
-      server.keepAlive(false);
+      SERVER_KEEPALIVE_FALSE()
       server.sendHeader(F("Cache-Control"), F("no-cache"));
       server.send(200, F("text/json"), F("{\"r\":-1,\"wnl\":[]}"));
     }
@@ -412,12 +447,12 @@ void WifiMan::appInitWebServer(ESP8266WebServer &server, bool &shouldReboot, boo
       networksJSON = networksJSON + n + F(",\"wnl\":[");
       for (byte i = 0; i < n; i++)
       {
-        networksJSON = networksJSON + '"' + WiFi.SSID(i) + '"';
+        networksJSON = networksJSON + F("{\"SSID\":\"") + WiFi.SSID(i) + F("\",\"RSSI\":") + WiFi.RSSI(i) + F("}");
         if (i != (n - 1))
           networksJSON += ',';
       }
       networksJSON += F("]}");
-      server.keepAlive(false);
+      SERVER_KEEPALIVE_FALSE()
       server.sendHeader(F("Cache-Control"), F("no-cache"));
       server.send(200, F("text/json"), networksJSON);
       WiFi.scanDelete();
@@ -432,6 +467,7 @@ void WifiMan::appRun()
     _needRefreshWifi = false;
     refreshWiFi();
   }
-
+#ifdef ESP8266
   MDNS.update();
+#endif
 }
