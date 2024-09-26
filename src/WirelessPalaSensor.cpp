@@ -641,76 +641,76 @@ bool WebPalaSensor::parseConfigWebRequest(WebServer &server)
 // Generate JSON from configuration properties
 String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
 {
-  String gc('{');
-
+  JsonDocument doc;
   char fpStr[60];
 
-  gc = gc + F("\"rp\":") + _refreshPeriod;
+  doc["rp"] = _refreshPeriod;
 
-  gc = gc + F(",\"sha\":") + String(_digipotsNTC.steinhartHartCoeffs[0], 16);
-  gc = gc + F(",\"shb\":") + String(_digipotsNTC.steinhartHartCoeffs[1], 16);
-  gc = gc + F(",\"shc\":") + String(_digipotsNTC.steinhartHartCoeffs[2], 16);
+  doc["sha"] = serialized(String(_digipotsNTC.steinhartHartCoeffs[0], 16));
+  doc["shb"] = serialized(String(_digipotsNTC.steinhartHartCoeffs[1], 16));
+  doc["shc"] = serialized(String(_digipotsNTC.steinhartHartCoeffs[2], 16));
 
-  gc = gc + F(",\"hamfr\":") + _ha.maxFailedRequest;
-  gc = gc + F(",\"haproto\":") + _ha.protocol;
+  doc["hamfr"] = _ha.maxFailedRequest;
+  doc["haproto"] = _ha.protocol;
 
   // if for WebPage or protocol selected is HTTP
   if (!forSaveFile || _ha.protocol == HA_PROTO_HTTP)
   {
-    gc = gc + F(",\"hahtype\":") + _ha.http.type;
-    gc = gc + F(",\"hahhost\":\"") + _ha.http.hostname + '"';
-    gc = gc + F(",\"hahtls\":") + _ha.http.tls;
-    gc = gc + F(",\"hahfp\":\"") + Utils::fingerPrintA2S(fpStr, _ha.http.fingerPrint, forSaveFile ? 0 : ':') + '"';
-    gc = gc + F(",\"hahtempid\":") + _ha.http.temperatureId;
+    doc["hahtype"] = _ha.http.type;
+    doc["hahhost"] = _ha.http.hostname;
+    doc["hahtls"] = _ha.http.tls;
+    doc["hahfp"] = Utils::fingerPrintA2S(fpStr, _ha.http.fingerPrint, forSaveFile ? 0 : ':');
+    doc["hahtempid"] = _ha.http.temperatureId;
 
     if (forSaveFile)
-      gc = gc + F(",\"hahjak\":\"") + _ha.http.jeedom.apiKey + '"';
+      doc["hahjak"] = _ha.http.jeedom.apiKey;
     else
-      gc = gc + F(",\"hahjak\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"'; // predefined special password (mean to keep already saved one)
+      doc["hahjak"] = (const __FlashStringHelper *)appDataPredefPassword; // predefined special password (mean to keep already saved one)
 
-    gc = gc + F(",\"hahfuser\":\"") + _ha.http.fibaro.username + '"';
+    doc["hahfuser"] = _ha.http.fibaro.username;
     if (forSaveFile)
-      gc = gc + F(",\"hahfpass\":\"") + _ha.http.fibaro.password + '"';
+      doc["hahfpass"] = _ha.http.fibaro.password;
     else
-      gc = gc + F(",\"hahfpass\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"'; // predefined special password (mean to keep already saved one)
+      doc["hahfpass"] = (const __FlashStringHelper *)appDataPredefPassword; // predefined special password (mean to keep already saved one)
   }
 
   // if for WebPage or protocol selected is MQTT
   if (!forSaveFile || _ha.protocol == HA_PROTO_MQTT)
   {
-    gc = gc + F(",\"hamtemptopic\":\"") + _ha.mqtt.temperatureTopic + '"';
+    doc["hamtemptopic"] = _ha.mqtt.temperatureTopic;
   }
 
-  gc = gc + F(",\"cbproto\":") + _ha.cboxProtocol;
+  doc["cbproto"] = _ha.cboxProtocol;
 
   // if for WebPage or CBox protocol selected is HTTP
   if (!forSaveFile || _ha.cboxProtocol == CBOX_PROTO_HTTP)
   {
     if (forSaveFile)
-      gc = gc + F(",\"cbhip\":") + _ha.http.cboxIp;
+      doc["cbhip"] = _ha.http.cboxIp;
     else if (_ha.http.cboxIp)
-      gc = gc + F(",\"cbhip\":\"") + IPAddress(_ha.http.cboxIp).toString() + '"';
+      doc["cbhip"] = IPAddress(_ha.http.cboxIp).toString();
   }
 
   // if for WebPage or CBox protocol selected is MQTT
   if (!forSaveFile || _ha.cboxProtocol == CBOX_PROTO_MQTT)
   {
-    gc = gc + F(",\"cbmt1topic\":\"") + _ha.mqtt.cboxT1Topic + '"';
+    doc["cbmt1topic"] = _ha.mqtt.cboxT1Topic;
   }
 
   if (!forSaveFile || _ha.protocol == HA_PROTO_MQTT || _ha.cboxProtocol == CBOX_PROTO_MQTT)
   {
-    gc = gc + F(",\"hamhost\":\"") + _ha.mqtt.hostname + '"';
-    gc = gc + F(",\"hamport\":") + _ha.mqtt.port;
-    gc = gc + F(",\"hamu\":\"") + _ha.mqtt.username + '"';
+    doc["hamhost"] = _ha.mqtt.hostname;
+    doc["hamport"] = _ha.mqtt.port;
+    doc["hamu"] = _ha.mqtt.username;
     if (forSaveFile)
-      gc = gc + F(",\"hamp\":\"") + _ha.mqtt.password + '"';
+      doc["hamp"] = _ha.mqtt.password;
     else
-      gc = gc + F(",\"hamp\":\"") + (__FlashStringHelper *)appDataPredefPassword + '"'; // predefined special password (mean to keep already saved one)
-    gc = gc + F(",\"hambt\":\"") + _ha.mqtt.baseTopic + '"';
+      doc["hamp"] = (const __FlashStringHelper *)appDataPredefPassword; // predefined special password (mean to keep already saved one)
+    doc["hambt"] = _ha.mqtt.baseTopic;
   }
 
-  gc += '}';
+  String gc;
+  serializeJson(doc, gc);
 
   return gc;
 }
