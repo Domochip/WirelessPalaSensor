@@ -710,6 +710,7 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
   }
 
   String gc;
+  doc.shrinkToFit();
   serializeJson(doc, gc);
 
   return gc;
@@ -834,6 +835,7 @@ String WebPalaSensor::generateStatusJSON()
   doc["p5"] = _mcp4151_5k.getPosition(0);
 
   String gs;
+  doc.shrinkToFit();
   serializeJson(doc, gs);
 
   return gs;
