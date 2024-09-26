@@ -486,7 +486,7 @@ void WebPalaSensor::parseConfigJSON(JsonDocument &doc)
 
 //------------------------------------------
 // Parse HTTP POST parameters in request into configuration properties
-bool WebPalaSensor::parseConfigWebRequest(ESP8266WebServer &server)
+bool WebPalaSensor::parseConfigWebRequest(WebServer &server)
 {
   if (server.hasArg(F("rp")))
     _refreshPeriod = server.arg(F("rp")).toInt();
@@ -911,7 +911,7 @@ size_t WebPalaSensor::getHTMLContentSize(WebPageForPlaceHolder wp)
 
 //------------------------------------------
 // code to register web request answer to the web server
-void WebPalaSensor::appInitWebServer(ESP8266WebServer &server, bool &shouldReboot, bool &pauseApplication)
+void WebPalaSensor::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseApplication)
 {
   server.on("/calib.html", HTTP_GET, [&server]()
             {
