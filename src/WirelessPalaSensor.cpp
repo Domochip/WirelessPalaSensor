@@ -441,63 +441,65 @@ void WebPalaSensor::setConfigDefaultValues()
 // Parse JSON object into configuration properties
 void WebPalaSensor::parseConfigJSON(JsonDocument &doc)
 {
-  if (!doc[F("rp")].isNull())
-    _refreshPeriod = doc[F("rp")];
+  JsonVariant jv;
 
-  if (!doc[F("sha")].isNull())
-    _digipotsNTC.steinhartHartCoeffs[0] = doc[F("sha")];
-  if (!doc[F("shb")].isNull())
-    _digipotsNTC.steinhartHartCoeffs[1] = doc[F("shb")];
-  if (!doc[F("shc")].isNull())
-    _digipotsNTC.steinhartHartCoeffs[2] = doc[F("shc")];
+  if ((jv = doc["rp"]).is<uint8_t>())
+    _refreshPeriod = jv;
+
+  if ((jv = doc["sha"]).is<double>())
+    _digipotsNTC.steinhartHartCoeffs[0] = jv;
+  if ((jv = doc["shb"]).is<double>())
+    _digipotsNTC.steinhartHartCoeffs[1] = jv;
+  if ((jv = doc["shc"]).is<double>())
+    _digipotsNTC.steinhartHartCoeffs[2] = jv;
 
   // Parse Home Automation config
-  if (!doc[F("hamfr")].isNull())
-    _ha.maxFailedRequest = doc[F("hamfr")];
-  if (!doc[F("haproto")].isNull())
-    _ha.protocol = doc[F("haproto")];
+  if ((jv = doc["hamfr"]).is<byte>())
+    _ha.maxFailedRequest = jv;
+  if ((jv = doc["haproto"]).is<byte>())
+    _ha.protocol = jv;
 
-  if (!doc[F("hahtype")].isNull())
-    _ha.http.type = doc[F("hahtype")];
-  if (!doc[F("hahhost")].isNull())
-    strlcpy(_ha.http.hostname, doc["hahhost"], sizeof(_ha.http.hostname));
-  if (!doc[F("hahtls")].isNull())
-    _ha.http.tls = doc[F("hahtls")];
-  if (!doc[F("hahfp")].isNull())
-    Utils::fingerPrintS2A(_ha.http.fingerPrint, doc[F("hahfp")]);
-  if (!doc[F("hahtempid")].isNull())
-    _ha.http.temperatureId = doc[F("hahtempid")];
+  if ((jv = doc["hahtype"]).is<byte>())
+    _ha.http.type = jv;
+  if ((jv = doc["hahhost"]).is<const char *>() && strlen(jv) < sizeof(_ha.http.hostname))
+    strcpy(_ha.http.hostname, jv);
+  if ((jv = doc["hahtls"]).is<bool>())
+    _ha.http.tls = jv;
+  if ((jv = doc["hahfp"]).is<const char *>())
+    Utils::fingerPrintS2A(_ha.http.fingerPrint, jv);
+  if ((jv = doc["hahtempid"]).is<int>())
+    _ha.http.temperatureId = jv;
 
-  if (!doc[F("hahjak")].isNull())
-    strlcpy(_ha.http.jeedom.apiKey, doc[F("hahjak")], sizeof(_ha.http.jeedom.apiKey));
+  if ((jv = doc["hahjak"]).is<const char *>() && strlen(jv) < sizeof(_ha.http.jeedom.apiKey))
+    strcpy(_ha.http.jeedom.apiKey, jv);
 
-  if (!doc[F("hahfuser")].isNull())
-    strlcpy(_ha.http.fibaro.username, doc[F("hahfuser")], sizeof(_ha.http.fibaro.username));
-  if (!doc[F("hahfpass")].isNull())
-    strlcpy(_ha.http.fibaro.password, doc[F("hahfpass")], sizeof(_ha.http.fibaro.password));
+  if ((jv = doc["hahfuser"]).is<const char *>() && strlen(jv) < sizeof(_ha.http.fibaro.username))
+    strcpy(_ha.http.fibaro.username, jv);
+  if ((jv = doc["hahfpass"]).is<const char *>() && strlen(jv) < sizeof(_ha.http.fibaro.password))
+    strcpy(_ha.http.fibaro.password, jv);
 
-  if (!doc[F("hamtemptopic")].isNull())
-    strlcpy(_ha.mqtt.temperatureTopic, doc[F("hamtemptopic")], sizeof(_ha.mqtt.temperatureTopic));
+  if ((jv = doc["hamtemptopic"]).is<const char *>() && strlen(jv) < sizeof(_ha.mqtt.temperatureTopic))
+    strcpy(_ha.mqtt.temperatureTopic, jv);
 
-  if (!doc[F("cbproto")].isNull())
-    _ha.cboxProtocol = doc[F("cbproto")];
+  if ((jv = doc["cbproto"]).is<byte>())
+    _ha.cboxProtocol = jv;
 
-  if (!doc[F("cbhip")].isNull())
-    _ha.http.cboxIp = doc[F("cbhip")];
+  if ((jv = doc["cbhip"]).is<uint32_t>())
+    _ha.http.cboxIp = jv;
 
-  if (!doc[F("cbmt1topic")].isNull())
-    strlcpy(_ha.mqtt.cboxT1Topic, doc[F("cbmt1topic")], sizeof(_ha.mqtt.cboxT1Topic));
+  if ((jv = doc["cbmt1topic"]).is<const char *>() && strlen(jv) < sizeof(_ha.mqtt.cboxT1Topic))
+    strcpy(_ha.mqtt.cboxT1Topic, jv);
 
-  if (!doc[F("hamhost")].isNull())
-    strlcpy(_ha.mqtt.hostname, doc["hamhost"], sizeof(_ha.mqtt.hostname));
-  if (!doc[F("hamport")].isNull())
-    _ha.mqtt.port = doc[F("hamport")];
-  if (!doc[F("hamu")].isNull())
-    strlcpy(_ha.mqtt.username, doc[F("hamu")], sizeof(_ha.mqtt.username));
-  if (!doc[F("hamp")].isNull())
-    strlcpy(_ha.mqtt.password, doc[F("hamp")], sizeof(_ha.mqtt.password));
-  if (!doc[F("hambt")].isNull())
-    strlcpy(_ha.mqtt.baseTopic, doc[F("hambt")], sizeof(_ha.mqtt.baseTopic));
+  if ((jv = doc["hamhost"]).is<const char *>() && strlen(jv) < sizeof(_ha.mqtt.hostname))
+    strcpy(_ha.mqtt.hostname, jv);
+  if ((jv = doc["hamport"]).is<uint32_t>())
+    _ha.mqtt.port = jv;
+  if ((jv = doc["hamu"]).is<const char *>() && strlen(jv) < sizeof(_ha.mqtt.username))
+    strcpy(_ha.mqtt.username, jv);
+  if ((jv = doc["hamp"]).is<const char *>() && strlen(jv) < sizeof(_ha.mqtt.password))
+    strcpy(_ha.mqtt.password, jv);
+  if ((jv = doc["hambt"]).is<const char *>() && strlen(jv) < sizeof(_ha.mqtt.baseTopic))
+    strcpy(_ha.mqtt.baseTopic, jv);
 }
 
 //------------------------------------------
