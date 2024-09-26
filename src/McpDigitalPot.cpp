@@ -1,4 +1,3 @@
-
 // McpDigitalPot 2-channel Digital Potentiometer
 // ww1.microchip.com/downloads/en/DeviceDoc/22059b.pdf
 

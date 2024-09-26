@@ -1,9 +1,10 @@
-
 // McpDigitalPot 2-channel Digital Potentiometer
 // ww1.microchip.com/downloads/en/DeviceDoc/22059b.pdf
 
 #ifndef McpDigitalPot_h
 #define McpDigitalPot_h
+
+#include <Arduino.h>
 
 class McpDigitalPot
 {
