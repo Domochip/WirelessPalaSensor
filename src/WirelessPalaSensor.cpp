@@ -882,8 +882,13 @@ bool WebPalaSensor::appInit(bool reInit)
   timerTick();
 
   // then next will be done by refreshTicker
-  _refreshTicker.attach_scheduled(_refreshPeriod, [this]()
-                                  { this->_needTick = true; });
+#ifdef ESP8266
+  _refreshTicker.attach(_refreshPeriod, [this]()
+                        { this->_needTick = true; });
+#else
+  _refreshTicker.attach<typeof this>(_refreshPeriod, [](typeof this palaSensor)
+                                     { palaSensor->_needTick = true; }, this);
+#endif
 
   return _ds18b20.getReady();
 }
