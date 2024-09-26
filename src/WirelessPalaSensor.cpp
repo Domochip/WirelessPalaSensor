@@ -95,7 +95,15 @@ void WebPalaSensor::timerTick()
         if (Utils::isFingerPrintEmpty(_ha.http.fingerPrint))
           clientSecure.setInsecure();
         else
+        {
+#ifdef ESP8266
           clientSecure.setFingerprint(_ha.http.fingerPrint);
+#else
+          // TODO: First expand fingerprint to 32 bytes
+          // TODO: connect, verify with fingerprint, close and then setInsecure
+          clientSecure.setInsecure();
+#endif
+        }
         http.begin(clientSecure, completeURI);
       }
       // send request
@@ -144,7 +152,15 @@ void WebPalaSensor::timerTick()
         if (Utils::isFingerPrintEmpty(_ha.http.fingerPrint))
           clientSecure.setInsecure();
         else
+        {
+#ifdef ESP8266
           clientSecure.setFingerprint(_ha.http.fingerPrint);
+#else
+          // TODO: First expand fingerprint to 32 bytes
+          // TODO: connect, verify with fingerprint, close and then setInsecure
+          clientSecure.setInsecure();
+#endif
+        }
         http.begin(clientSecure, completeURI);
       }
 

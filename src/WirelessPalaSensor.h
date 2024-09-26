@@ -11,7 +11,11 @@ const char appDataPredefPassword[] PROGMEM = "ewcXoCt4HHjZUvY1";
 #include "data/status1.html.gz.h"
 #include "data/config1.html.gz.h"
 
+#ifdef ESP8266
 #include <ESP8266HTTPClient.h>
+#else
+#include <HTTPClient.h>
+#endif
 #include <SPI.h>
 #include <math.h>
 #include <Ticker.h>
