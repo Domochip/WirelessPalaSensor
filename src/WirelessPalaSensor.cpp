@@ -719,117 +719,122 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
 // Generate JSON of application status
 String WebPalaSensor::generateStatusJSON()
 {
-  String gs('{');
+  JsonDocument doc;
 
   // Home Automation infos
+  String has1, has2;
   switch (_ha.protocol)
   {
   case HA_PROTO_DISABLED:
-    gs = gs + F("\"has1\":\"Disabled\"");
+    has1 = F("Disabled");
     break;
   case HA_PROTO_HTTP:
-    gs = gs + F("\"has1\":\"Last Home Automation HTTP Result : ") + _homeAutomationRequestResult + '"';
-    gs = gs + F(",\"has2\":\"Last Home Automation Temperature : ") + _homeAutomationTemperature + '"';
+    doc["has1"] = String(F("Last Home Automation HTTP Result : ")) + _homeAutomationRequestResult;
+    doc["has2"] = String(F("Last Home Automation Temperature : ")) + _homeAutomationTemperature;
     break;
   case HA_PROTO_MQTT:
-    gs = gs + F("\"has1\":\"MQTT Connection State : ");
+    has1 = F("MQTT Connection State : ");
     switch (_mqttMan.state())
     {
     case MQTT_CONNECTION_TIMEOUT:
-      gs = gs + F("Timed Out");
+      has1 = has1 + F("Timed Out");
       break;
     case MQTT_CONNECTION_LOST:
-      gs = gs + F("Lost");
+      has1 = has1 + F("Lost");
       break;
     case MQTT_CONNECT_FAILED:
-      gs = gs + F("Failed");
+      has1 = has1 + F("Failed");
       break;
     case MQTT_CONNECTED:
-      gs = gs + F("Connected");
+      has1 = has1 + F("Connected");
       break;
     case MQTT_CONNECT_BAD_PROTOCOL:
-      gs = gs + F("Bad Protocol Version");
+      has1 = has1 + F("Bad Protocol Version");
       break;
     case MQTT_CONNECT_BAD_CLIENT_ID:
-      gs = gs + F("Incorrect ClientID ");
+      has1 = has1 + F("Incorrect ClientID ");
       break;
     case MQTT_CONNECT_UNAVAILABLE:
-      gs = gs + F("Server Unavailable");
+      has1 = has1 + F("Server Unavailable");
       break;
     case MQTT_CONNECT_BAD_CREDENTIALS:
-      gs = gs + F("Bad Credentials");
+      has1 = has1 + F("Bad Credentials");
       break;
     case MQTT_CONNECT_UNAUTHORIZED:
-      gs = gs + F("Connection Unauthorized");
+      has1 = has1 + F("Connection Unauthorized");
       break;
     }
-    gs = gs + F("\",\"has2\":\"Last Home Automation Temperature : ") + _lastMqttHATemperature;
+    doc["has1"] = has1;
+    has2 = String(F("Last Home Automation Temperature : ")) + _lastMqttHATemperature;
     if (_lastMqttHATemperatureMillis + (1000 * (unsigned long)_refreshPeriod) < millis())
-      gs = gs + F(" (") + ((millis() - _lastMqttHATemperatureMillis) / 1000) + F(" seconds ago)");
-    gs += '"';
+      has2 = has2 + F(" (") + ((millis() - _lastMqttHATemperatureMillis) / 1000) + F(" seconds ago)");
+    doc["has2"] = has2;
     break;
   }
 
-  gs = gs + F(",\"hafc\":") + _homeAutomationFailedCount;
+  doc["hafc"] = _homeAutomationFailedCount;
 
   // stove(ConnectionBox) infos
+  String cbs1, cbs2;
   switch (_ha.cboxProtocol)
   {
   case CBOX_PROTO_DISABLED:
-    gs = gs + F(",\"cbs1\":\"Disabled\"");
+    cbs1 = F("Disabled");
     break;
   case CBOX_PROTO_HTTP:
-    gs = gs + F(",\"cbs1\":\"Last ConnectionBox HTTP Result : ") + _stoveRequestResult + '"';
-    gs = gs + F(",\"cbs2\":\"Last ConnectionBox Temperature : ") + _stoveTemperature + '"';
+    doc["cbs1"] = String(F("Last ConnectionBox HTTP Result : ")) + _stoveRequestResult;
+    doc["cbs2"] = String(F("Last ConnectionBox Temperature : ")) + _stoveTemperature;
     break;
   case CBOX_PROTO_MQTT:
-    gs = gs + F(",\"cbs1\":\"MQTT Connection State : ");
+    cbs1 = F("MQTT Connection State : ");
     switch (_mqttMan.state())
     {
     case MQTT_CONNECTION_TIMEOUT:
-      gs = gs + F("Timed Out");
+      cbs1 = cbs1 + F("Timed Out");
       break;
     case MQTT_CONNECTION_LOST:
-      gs = gs + F("Lost");
+      cbs1 = cbs1 + F("Lost");
       break;
     case MQTT_CONNECT_FAILED:
-      gs = gs + F("Failed");
+      cbs1 = cbs1 + F("Failed");
       break;
     case MQTT_CONNECTED:
-      gs = gs + F("Connected");
+      cbs1 = cbs1 + F("Connected");
       break;
     case MQTT_CONNECT_BAD_PROTOCOL:
-      gs = gs + F("Bad Protocol Version");
+      cbs1 = cbs1 + F("Bad Protocol Version");
       break;
     case MQTT_CONNECT_BAD_CLIENT_ID:
-      gs = gs + F("Incorrect ClientID ");
+      cbs1 = cbs1 + F("Incorrect ClientID ");
       break;
     case MQTT_CONNECT_UNAVAILABLE:
-      gs = gs + F("Server Unavailable");
+      cbs1 = cbs1 + F("Server Unavailable");
       break;
     case MQTT_CONNECT_BAD_CREDENTIALS:
-      gs = gs + F("Bad Credentials");
+      cbs1 = cbs1 + F("Bad Credentials");
       break;
     case MQTT_CONNECT_UNAUTHORIZED:
-      gs = gs + F("Connection Unauthorized");
+      cbs1 = cbs1 + F("Connection Unauthorized");
       break;
     }
-    gs = gs + F("\",\"cbs2\":\"Last ConnectionBox Temperature : ") + _lastMqttStoveTemperature;
+    doc["cbs1"] = cbs1;
+    cbs2 = String(F("Last ConnectionBox Temperature : ")) + _lastMqttStoveTemperature;
     if (_lastMqttStoveTemperatureMillis + (1000 * (unsigned long)_refreshPeriod) < millis())
-      gs = gs + F(" (") + ((millis() - _lastMqttStoveTemperatureMillis) / 1000) + F(" seconds ago)");
-    gs += '"';
+      cbs2 = cbs2 + F(" (") + ((millis() - _lastMqttStoveTemperatureMillis) / 1000) + F(" seconds ago)");
+    doc["cbs2"] = cbs2;
     break;
   }
 
-  gs = gs + F(",\"cbfc\":") + _stoveRequestFailedCount;
+  doc["cbfc"] = _stoveRequestFailedCount;
 
-  gs = gs + F(",\"low\":") + _owTemperature;
-  gs = gs + F(",\"owu\":\"") + (_homeAutomationTemperatureUsed ? F("Not ") : F("")) + '"';
-  gs = gs + F(",\"pt\":") + _pushedTemperature;
-  gs = gs + F(",\"p50\":") + _mcp4151_50k.getPosition(0);
-  gs = gs + F(",\"p5\":") + _mcp4151_5k.getPosition(0);
+  doc["low"] = serialized(String(_owTemperature));
+  doc["owu"] = (_homeAutomationTemperatureUsed ? F("Not ") : F(""));
+  doc["pt"] = serialized(String(_pushedTemperature));
+  doc["p50"] = _mcp4151_50k.getPosition(0);
+  doc["p5"] = _mcp4151_5k.getPosition(0);
 
-  gs += '}';
+  String gs;
+  serializeJson(doc, gs);
 
   return gs;
 }
