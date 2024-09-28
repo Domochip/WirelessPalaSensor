@@ -443,63 +443,62 @@ void WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
 {
   JsonVariant jv;
 
-  if ((jv = doc["rp"]).is<uint8_t>())
+  if ((jv = doc["rp"]).is<JsonVariant>())
     _refreshPeriod = jv;
 
-  if ((jv = doc["sha"]).is<double>())
+  if ((jv = doc["sha"]).is<JsonVariant>())
     _digipotsNTC.steinhartHartCoeffs[0] = jv;
-  if ((jv = doc["shb"]).is<double>())
+  if ((jv = doc["shb"]).is<JsonVariant>())
     _digipotsNTC.steinhartHartCoeffs[1] = jv;
-  if ((jv = doc["shc"]).is<double>())
+  if ((jv = doc["shc"]).is<JsonVariant>())
     _digipotsNTC.steinhartHartCoeffs[2] = jv;
 
   // Parse Home Automation config
-  if ((jv = doc["hamfr"]).is<byte>())
+  if ((jv = doc["hamfr"]).is<JsonVariant>())
     _ha.maxFailedRequest = jv;
-  if ((jv = doc["haproto"]).is<byte>())
+  if ((jv = doc["haproto"]).is<JsonVariant>())
     _ha.protocol = jv;
 
-  if ((jv = doc["hahtype"]).is<byte>())
+  if ((jv = doc["hahtype"]).is<JsonVariant>())
     _ha.http.type = jv;
-  if ((jv = doc["hahhost"]).is<const char *>() && strlen(jv) < sizeof(_ha.http.hostname))
-    strcpy(_ha.http.hostname, jv);
-  if ((jv = doc["hahtls"]).is<bool>())
-    _ha.http.tls = jv;
+  if ((jv = doc["hahhost"]).is<const char *>())
+    strlcpy(_ha.http.hostname, jv, sizeof(_ha.http.hostname));
+  _ha.http.tls = doc["hahtls"];
   if ((jv = doc["hahfp"]).is<const char *>())
     Utils::fingerPrintS2A(_ha.http.fingerPrint, jv);
-  if ((jv = doc["hahtempid"]).is<int>())
+  if ((jv = doc["hahtempid"]).is<JsonVariant>())
     _ha.http.temperatureId = jv;
 
-  if ((jv = doc["hahjak"]).is<const char *>() && strlen(jv) < sizeof(_ha.http.jeedom.apiKey))
-    strcpy(_ha.http.jeedom.apiKey, jv);
+  if ((jv = doc["hahjak"]).is<const char *>())
+    strlcpy(_ha.http.jeedom.apiKey, jv, sizeof(_ha.http.jeedom.apiKey));
 
-  if ((jv = doc["hahfuser"]).is<const char *>() && strlen(jv) < sizeof(_ha.http.fibaro.username))
-    strcpy(_ha.http.fibaro.username, jv);
-  if ((jv = doc["hahfpass"]).is<const char *>() && strlen(jv) < sizeof(_ha.http.fibaro.password))
-    strcpy(_ha.http.fibaro.password, jv);
+  if ((jv = doc["hahfuser"]).is<const char *>())
+    strlcpy(_ha.http.fibaro.username, jv, sizeof(_ha.http.fibaro.username));
+  if ((jv = doc["hahfpass"]).is<const char *>())
+    strlcpy(_ha.http.fibaro.password, jv, sizeof(_ha.http.fibaro.password));
 
-  if ((jv = doc["hamtemptopic"]).is<const char *>() && strlen(jv) < sizeof(_ha.mqtt.temperatureTopic))
-    strcpy(_ha.mqtt.temperatureTopic, jv);
+  if ((jv = doc["hamtemptopic"]).is<const char *>())
+    strlcpy(_ha.mqtt.temperatureTopic, jv, sizeof(_ha.mqtt.temperatureTopic));
 
-  if ((jv = doc["cbproto"]).is<byte>())
+  if ((jv = doc["cbproto"]).is<JsonVariant>())
     _ha.cboxProtocol = jv;
 
-  if ((jv = doc["cbhip"]).is<uint32_t>())
+  if ((jv = doc["cbhip"]).is<JsonVariant>())
     _ha.http.cboxIp = jv;
 
-  if ((jv = doc["cbmt1topic"]).is<const char *>() && strlen(jv) < sizeof(_ha.mqtt.cboxT1Topic))
-    strcpy(_ha.mqtt.cboxT1Topic, jv);
+  if ((jv = doc["cbmt1topic"]).is<const char *>())
+    strlcpy(_ha.mqtt.cboxT1Topic, jv, sizeof(_ha.mqtt.cboxT1Topic));
 
-  if ((jv = doc["hamhost"]).is<const char *>() && strlen(jv) < sizeof(_ha.mqtt.hostname))
-    strcpy(_ha.mqtt.hostname, jv);
-  if ((jv = doc["hamport"]).is<uint32_t>())
+  if ((jv = doc["hamhost"]).is<const char *>())
+    strlcpy(_ha.mqtt.hostname, jv, sizeof(_ha.mqtt.hostname));
+  if ((jv = doc["hamport"]).is<JsonVariant>())
     _ha.mqtt.port = jv;
-  if ((jv = doc["hamu"]).is<const char *>() && strlen(jv) < sizeof(_ha.mqtt.username))
-    strcpy(_ha.mqtt.username, jv);
-  if ((jv = doc["hamp"]).is<const char *>() && strlen(jv) < sizeof(_ha.mqtt.password))
-    strcpy(_ha.mqtt.password, jv);
-  if ((jv = doc["hambt"]).is<const char *>() && strlen(jv) < sizeof(_ha.mqtt.baseTopic))
-    strcpy(_ha.mqtt.baseTopic, jv);
+  if ((jv = doc["hamu"]).is<const char *>())
+    strlcpy(_ha.mqtt.username, jv, sizeof(_ha.mqtt.username));
+  if ((jv = doc["hamp"]).is<const char *>())
+    strlcpy(_ha.mqtt.password, jv, sizeof(_ha.mqtt.password));
+  if ((jv = doc["hambt"]).is<const char *>())
+    strlcpy(_ha.mqtt.baseTopic, jv, sizeof(_ha.mqtt.baseTopic));
 }
 
 //------------------------------------------
