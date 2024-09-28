@@ -935,19 +935,30 @@ void WebPalaSensor::appInitWebServer(WebServer &server, bool &shouldReboot, bool
   // SetDigiPot
   server.on("/sdp", HTTP_POST, [this, &server]()
             {
-
 #define TICK_TO_SKIP 20
+
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, server.arg("plain"));
+
+    if (error)
+    {
+      server.send(400, F("text/html"), F("Malformed JSON"));
+      return;
+    }
+
+    JsonVariant jv;
+
     //look for temperature to apply
-    if (server.hasArg(F("temperature")))
+    if ((jv = doc["temperature"]).is<JsonVariant>())
     {
       //convert and set it
-      setDualDigiPot(server.arg(F("temperature")).toFloat());
+      setDualDigiPot(jv.as<float>());
       //go for timer tick skipped (time to look a value on stove)
       _skipTick = TICK_TO_SKIP;
     }
 
     //look for increase of digipots
-    if (server.hasArg(F("up")))
+    if (doc["up"].is<JsonVariant>())
     {
       //go one step up
       setDualDigiPot((int)(_mcp4151_50k.getPosition(0) * _digipotsNTC.rBW50KStep + _mcp4151_5k.getPosition(0) * _digipotsNTC.rBW5KStep + _digipotsNTC.rWTotal + _digipotsNTC.rBW5KStep));
@@ -956,7 +967,7 @@ void WebPalaSensor::appInitWebServer(WebServer &server, bool &shouldReboot, bool
     }
 
     //look for decrease of digipots
-    if (server.hasArg(F("down")))
+    if (doc["down"].is<JsonVariant>())
     {
       //go one step down
       setDualDigiPot((int)(_mcp4151_50k.getPosition(0) * _digipotsNTC.rBW50KStep + _mcp4151_5k.getPosition(0) * _digipotsNTC.rBW5KStep + _digipotsNTC.rWTotal - _digipotsNTC.rBW5KStep));
@@ -965,29 +976,30 @@ void WebPalaSensor::appInitWebServer(WebServer &server, bool &shouldReboot, bool
     }
 
 #if DEVELOPPER_MODE
+
     //look for 5k digipot requested position
-    if (server.hasArg(F("dp5k")))
+    if ((jv = doc["dp5k"]).is<JsonVariant>())
     {
       //convert and set it
-      _mcp4151_5k.setPosition(0, server.arg(F("dp5k")).toInt());
+      _mcp4151_5k.setPosition(0, jv);
       //go for timer tick skipped (time to look a value on stove)
       _skipTick = TICK_TO_SKIP;
     }
 
     //look for 50k digipot requested position
-    if (server.hasArg(F("dp50k")))
+    if ((jv = doc["dp50k"]).is<JsonVariant>())
     {
       //convert and set it
-      _mcp4151_50k.setPosition(0, server.arg(F("dp50k")).toInt());
+      _mcp4151_50k.setPosition(0, jv);
       //go for timer tick skipped (time to look a value on stove)
       _skipTick = TICK_TO_SKIP;
     }
 
     //look for resistance to apply
-    if (server.hasArg(F("resistance")))
+    if ((jv = doc["resistance"]).is<JsonVariant>())
     {
       //convert resistance value and call right function
-      setDualDigiPot(0, server.arg(F("resistance")).toInt());
+      setDualDigiPot(0, jv);
       //go for timer tick skipped (time to look a value on stove)
       _skipTick = TICK_TO_SKIP;
     }
