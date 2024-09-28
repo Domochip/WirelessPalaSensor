@@ -442,6 +442,7 @@ void WebPalaSensor::setConfigDefaultValues()
 void WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
 {
   JsonVariant jv;
+  char tempPassword[150 + 1] = {0};
 
   if ((jv = doc["rp"]).is<JsonVariant>())
     _refreshPeriod = jv;
@@ -454,184 +455,154 @@ void WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
     _digipotsNTC.steinhartHartCoeffs[2] = jv;
 
   // Parse Home Automation config
-  if ((jv = doc["hamfr"]).is<JsonVariant>())
-    _ha.maxFailedRequest = jv;
+
   if ((jv = doc["haproto"]).is<JsonVariant>())
     _ha.protocol = jv;
-
-  if ((jv = doc["hahtype"]).is<JsonVariant>())
-    _ha.http.type = jv;
-  if ((jv = doc["hahhost"]).is<const char *>())
-    strlcpy(_ha.http.hostname, jv, sizeof(_ha.http.hostname));
-  _ha.http.tls = doc["hahtls"];
-  if ((jv = doc["hahfp"]).is<const char *>())
-    Utils::fingerPrintS2A(_ha.http.fingerPrint, jv);
-  if ((jv = doc["hahtempid"]).is<JsonVariant>())
-    _ha.http.temperatureId = jv;
-
-  if ((jv = doc["hahjak"]).is<const char *>())
-    strlcpy(_ha.http.jeedom.apiKey, jv, sizeof(_ha.http.jeedom.apiKey));
-
-  if ((jv = doc["hahfuser"]).is<const char *>())
-    strlcpy(_ha.http.fibaro.username, jv, sizeof(_ha.http.fibaro.username));
-  if ((jv = doc["hahfpass"]).is<const char *>())
-    strlcpy(_ha.http.fibaro.password, jv, sizeof(_ha.http.fibaro.password));
-
-  if ((jv = doc["hamtemptopic"]).is<const char *>())
-    strlcpy(_ha.mqtt.temperatureTopic, jv, sizeof(_ha.mqtt.temperatureTopic));
-
   if ((jv = doc["cbproto"]).is<JsonVariant>())
     _ha.cboxProtocol = jv;
 
-  if ((jv = doc["cbhip"]).is<JsonVariant>())
-    _ha.http.cboxIp = jv;
+  // if an home Automation protocol has been selected then get common param
+  if (_ha.protocol != HA_PROTO_DISABLED)
+  {
+    if ((jv = doc["hamfr"]).is<JsonVariant>())
+      _ha.maxFailedRequest = jv;
+  }
 
-  if ((jv = doc["cbmt1topic"]).is<const char *>())
-    strlcpy(_ha.mqtt.cboxT1Topic, jv, sizeof(_ha.mqtt.cboxT1Topic));
+  // if home automation or CBox protocol is MQTT then get common mqtt params
+  if (_ha.protocol == HA_PROTO_MQTT || _ha.cboxProtocol == CBOX_PROTO_MQTT)
+  {
 
-  if ((jv = doc["hamhost"]).is<const char *>())
-    strlcpy(_ha.mqtt.hostname, jv, sizeof(_ha.mqtt.hostname));
-  if ((jv = doc["hamport"]).is<JsonVariant>())
-    _ha.mqtt.port = jv;
-  if ((jv = doc["hamu"]).is<const char *>())
-    strlcpy(_ha.mqtt.username, jv, sizeof(_ha.mqtt.username));
-  if ((jv = doc["hamp"]).is<const char *>())
-    strlcpy(_ha.mqtt.password, jv, sizeof(_ha.mqtt.password));
-  if ((jv = doc["hambt"]).is<const char *>())
-    strlcpy(_ha.mqtt.baseTopic, jv, sizeof(_ha.mqtt.baseTopic));
-}
+    if ((jv = doc["hamhost"]).is<const char *>())
+      strlcpy(_ha.mqtt.hostname, jv, sizeof(_ha.mqtt.hostname));
+    if ((jv = doc["hamport"]).is<JsonVariant>())
+      _ha.mqtt.port = jv;
+    if ((jv = doc["hamu"]).is<const char *>())
+      strlcpy(_ha.mqtt.username, jv, sizeof(_ha.mqtt.username));
 
-//------------------------------------------
-// Parse HTTP POST parameters in request into configuration properties
-bool WebPalaSensor::parseConfigWebRequest(WebServer &server)
-{
-  if (server.hasArg(F("rp")))
-    _refreshPeriod = server.arg(F("rp")).toInt();
+    // put MQTT password into tempPassword
+    if ((jv = doc["hamp"]).is<const char *>())
+    {
+      strlcpy(tempPassword, jv, sizeof(_ha.mqtt.password));
 
-  // Find Steinhart-Hart coeff then convert to double
-  // AND handle scientific notation
-  if (server.hasArg(F("sha")))
-    _digipotsNTC.steinhartHartCoeffs[0] = server.arg(F("sha")).toFloat();
-  if (server.hasArg(F("shb")))
-    _digipotsNTC.steinhartHartCoeffs[1] = server.arg(F("shb")).toFloat();
-  if (server.hasArg(F("shc")))
-    _digipotsNTC.steinhartHartCoeffs[2] = server.arg(F("shc")).toFloat();
+      // if not from web page or password is not the predefined one then copy it to _ha.mqtt.password
+      if (!fromWebPage || strcmp_P(tempPassword, appDataPredefPassword))
+        strcpy(_ha.mqtt.password, tempPassword);
+    }
+    if ((jv = doc["hambt"]).is<const char *>())
+      strlcpy(_ha.mqtt.baseTopic, jv, sizeof(_ha.mqtt.baseTopic));
+  }
 
-  if (server.hasArg(F("hamfr")))
-    _ha.maxFailedRequest = server.arg(F("hamfr")).toInt();
-
-  // Parse common MQTT param
-  if (server.hasArg(F("hamhost")) && server.arg(F("hamhost")).length() < sizeof(_ha.mqtt.hostname))
-    strcpy(_ha.mqtt.hostname, server.arg(F("hamhost")).c_str());
-  if (server.hasArg(F("hamport")))
-    _ha.mqtt.port = server.arg(F("hamport")).toInt();
-  if (server.hasArg(F("hamu")) && server.arg(F("hamu")).length() < sizeof(_ha.mqtt.username))
-    strcpy(_ha.mqtt.username, server.arg(F("hamu")).c_str());
-  char tempPassword[64 + 1] = {0};
-  // put MQTT password into temporary one for predefpassword
-  if (server.hasArg(F("hamp")) && server.arg(F("hamp")).length() < sizeof(tempPassword))
-    strcpy(tempPassword, server.arg(F("hamp")).c_str());
-  // check for previous password (there is a predefined special password that mean to keep already saved one)
-  if (strcmp_P(tempPassword, appDataPredefPassword))
-    strcpy(_ha.mqtt.password, tempPassword);
-  if (server.hasArg(F("hambt")) && server.arg(F("hambt")).length() < sizeof(_ha.mqtt.baseTopic))
-    strcpy(_ha.mqtt.baseTopic, server.arg(F("hambt")).c_str());
-
-  // Parse HA protocol
-  if (server.hasArg(F("haproto")))
-    _ha.protocol = server.arg(F("haproto")).toInt();
-
-  // Now get specific param
+  // Now get Home Automation specific params
   switch (_ha.protocol)
   {
   case HA_PROTO_HTTP:
 
-    if (server.hasArg(F("hahtype")))
-      _ha.http.type = server.arg(F("hahtype")).toInt();
-    if (server.hasArg(F("hahhost")) && server.arg(F("hahhost")).length() < sizeof(_ha.http.hostname))
-      strcpy(_ha.http.hostname, server.arg(F("hahhost")).c_str());
-    if (server.hasArg(F("hahtls")))
-      _ha.http.tls = (server.arg(F("hahtls")) == F("on"));
-    else
-      _ha.http.tls = false;
-    if (server.hasArg(F("hahfp")))
-      Utils::fingerPrintS2A(_ha.http.fingerPrint, server.arg(F("hahfp")).c_str());
-    if (server.hasArg(F("hahtempid")))
-      _ha.http.temperatureId = server.arg(F("hahtempid")).toInt();
+    if ((jv = doc["hahtype"]).is<JsonVariant>())
+      _ha.http.type = jv;
+    if ((jv = doc["hahhost"]).is<const char *>())
+      strlcpy(_ha.http.hostname, jv, sizeof(_ha.http.hostname));
+    _ha.http.tls = doc["hahtls"];
+    if ((jv = doc["hahfp"]).is<const char *>())
+      Utils::fingerPrintS2A(_ha.http.fingerPrint, jv);
+    if ((jv = doc["hahtempid"]).is<JsonVariant>())
+      _ha.http.temperatureId = jv;
 
     switch (_ha.http.type)
     {
     case HA_HTTP_JEEDOM:
 
-      char tempApiKey[48 + 1];
-      // put apiKey into temporary one for predefpassword
-      if (server.hasArg(F("hahjak")) && server.arg(F("hahjak")).length() < sizeof(tempApiKey))
-        strcpy(tempApiKey, server.arg(F("hahjak")).c_str());
-      // check for previous apiKey (there is a predefined special password that mean to keep already saved one)
-      if (strcmp_P(tempApiKey, appDataPredefPassword))
-        strcpy(_ha.http.jeedom.apiKey, tempApiKey);
+      // put apiKey into tempPassword
+      if ((jv = doc["hahjak"]).is<const char *>())
+      {
+        strlcpy(tempPassword, jv, sizeof(_ha.http.jeedom.apiKey));
+
+        // if not from web page or received apiKey is not the predefined one then copy it to _ha.http.jeedom.apiKey
+        if (!fromWebPage || strcmp_P(tempPassword, appDataPredefPassword))
+          strcpy(_ha.http.jeedom.apiKey, tempPassword);
+      }
+
       if (!_ha.http.hostname[0] || !_ha.http.jeedom.apiKey[0])
         _ha.protocol = HA_PROTO_DISABLED;
       break;
+
     case HA_HTTP_FIBARO:
 
-      if (server.hasArg(F("hahfuser")) && server.arg(F("hahfuser")).length() < sizeof(_ha.http.fibaro.username))
-        strcpy(_ha.http.fibaro.username, server.arg(F("hahfuser")).c_str());
+      if ((jv = doc["hahfuser"]).is<const char *>())
+        strlcpy(_ha.http.fibaro.username, jv, sizeof(_ha.http.fibaro.username));
 
-      char tempFibaroPassword[64 + 1];
-      // put Fibaropassword into temporary one for predefpassword
-      if (server.hasArg(F("hahfpass")) && server.arg(F("hahfpass")).length() < sizeof(_ha.http.fibaro.password))
-        strcpy(tempFibaroPassword, server.arg(F("hahfpass")).c_str());
-      // check for previous fibaro password (there is a predefined special password that mean to keep already saved one)
-      if (strcmp_P(tempFibaroPassword, appDataPredefPassword))
-        strcpy(_ha.http.fibaro.password, tempFibaroPassword);
+      // put Fibaropassword into tempPassword
+      if ((jv = doc["hahfpass"]).is<const char *>())
+      {
+        strlcpy(tempPassword, jv, sizeof(_ha.http.fibaro.password));
+
+        // if not from web page or password is not the predefined one then copy it to _ha.http.fibaro.password
+        if (!fromWebPage || strcmp_P(tempPassword, appDataPredefPassword))
+          strcpy(_ha.http.fibaro.password, tempPassword);
+      }
+
       if (!_ha.http.hostname[0])
-        _ha.protocol = 0;
+        _ha.protocol = HA_PROTO_DISABLED;
       break;
     }
-    break;
 
+    break;
   case HA_PROTO_MQTT:
 
-    if (server.hasArg(F("hamtemptopic")) && server.arg(F("hamtemptopic")).length() < sizeof(_ha.mqtt.temperatureTopic))
-      strcpy(_ha.mqtt.temperatureTopic, server.arg(F("hamtemptopic")).c_str());
+    if ((jv = doc["hamtemptopic"]).is<const char *>())
+      strlcpy(_ha.mqtt.temperatureTopic, jv, sizeof(_ha.mqtt.temperatureTopic));
 
     if (!_ha.mqtt.hostname[0] || !_ha.mqtt.baseTopic[0] || !_ha.mqtt.temperatureTopic[0])
       _ha.protocol = HA_PROTO_DISABLED;
     break;
   }
 
-  // Parse CBox protocol
-  if (server.hasArg(F("cbproto")))
-    _ha.cboxProtocol = server.arg(F("cbproto")).toInt();
-
-  // Now get specific param
+  // Now get ConnectionBox specific params
   switch (_ha.cboxProtocol)
   {
   case CBOX_PROTO_HTTP:
 
-    if (server.hasArg(F("cbhip")))
+    if ((jv = doc["cbhip"]).is<const char *>())
     {
       IPAddress ipParser;
-      if (ipParser.fromString(server.arg(F("cbhip"))))
+      if (ipParser.fromString(jv.as<const char *>()))
         _ha.http.cboxIp = static_cast<uint32_t>(ipParser);
       else
-      {
         _ha.http.cboxIp = 0;
-        _ha.cboxProtocol = CBOX_PROTO_DISABLED;
-      }
     }
+
+    if (!_ha.http.cboxIp)
+      _ha.cboxProtocol = CBOX_PROTO_DISABLED;
     break;
 
   case CBOX_PROTO_MQTT:
 
-    if (server.hasArg(F("cbmt1topic")) && server.arg(F("cbmt1topic")).length() < sizeof(_ha.mqtt.cboxT1Topic))
-      strcpy(_ha.mqtt.cboxT1Topic, server.arg(F("cbmt1topic")).c_str());
+    if ((jv = doc["cbmt1topic"]).is<const char *>())
+      strlcpy(_ha.mqtt.cboxT1Topic, jv, sizeof(_ha.mqtt.cboxT1Topic));
 
     if (!_ha.mqtt.hostname[0] || !_ha.mqtt.baseTopic[0] || !_ha.mqtt.cboxT1Topic[0])
       _ha.cboxProtocol = CBOX_PROTO_DISABLED;
     break;
   }
+}
+
+//------------------------------------------
+// Parse HTTP POST parameters in request into configuration properties
+bool WebPalaSensor::parseConfigWebRequest(WebServer &server)
+{
+  // config json is received in POST body (arg("plain"))
+
+  // parse JSON
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, server.arg("plain"));
+
+  if (error)
+  {
+    SERVER_KEEPALIVE_FALSE()
+    server.send(400, F("text/html"), F("Malformed JSON"));
+    return false;
+  }
+
+  parseConfigJSON(doc, true);
 
   return true;
 }
