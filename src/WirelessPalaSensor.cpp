@@ -432,7 +432,7 @@ void WebPalaSensor::setConfigDefaultValues()
   _ha.mqtt.port = 1883;
   _ha.mqtt.username[0] = 0;
   _ha.mqtt.password[0] = 0;
-  _ha.mqtt.baseTopic[0] = 0;
+  strcpy_P(_ha.mqtt.baseTopic, PSTR("$model$"));
   _ha.mqtt.temperatureTopic[0] = 0;
   _ha.mqtt.cboxT1Topic[0] = 0;
 }
