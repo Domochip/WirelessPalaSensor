@@ -439,7 +439,7 @@ void WebPalaSensor::setConfigDefaultValues()
 
 //------------------------------------------
 // Parse JSON object into configuration properties
-void WebPalaSensor::parseConfigJSON(JsonDocument &doc)
+void WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
 {
   JsonVariant jv;
 

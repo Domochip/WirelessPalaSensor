@@ -137,7 +137,7 @@ private:
   void mqttCallback(char *topic, uint8_t *payload, unsigned int length);
 
   void setConfigDefaultValues();
-  void parseConfigJSON(JsonDocument &doc);
+  void parseConfigJSON(JsonDocument &doc, bool fromWebPage);
   bool parseConfigWebRequest(WebServer &server);
   String generateConfigJSON(bool forSaveFile);
   String generateStatusJSON();
