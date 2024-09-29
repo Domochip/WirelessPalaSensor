@@ -70,14 +70,6 @@
                     <label for="hahtls">SSL/TLS</label>
                     <input type='checkbox' id='hahtls' name='hahtls'>
                 </div>
-                <div id='hahtlse'>
-                    <div class="pure-control-group">
-                        <label for="hahfp">TLS FingerPrint</label>
-                        <input type='text' id='hahfp' name='hahfp' maxlength='59'
-                            pattern='^([0-9A-Fa-f]{2}[ :-]*){19}([0-9A-Fa-f]{2})$' size='65'>
-                        <span class="pure-form-message-inline">(separators are : &lt;none&gt;,&lt;space&gt;,:,-)</span>
-                    </div>
-                </div>
 
                 <div id='hah0'>
                     <div class="pure-control-group">
@@ -236,15 +228,6 @@
                 $(qsp + "#hah0").style.display = 'none';
                 $(qsp + "#hah1").style.display = '';
                 break;
-        }
-    });
-
-    $(qsp + "#hahtls").addEventListener('change', function () {
-        if ($(qsp + "#hahtls").checked) {
-            $(qsp + "#hahtlse").style.display = '';
-        }
-        else {
-            $(qsp + "#hahtlse").style.display = 'none';
         }
     });
 
