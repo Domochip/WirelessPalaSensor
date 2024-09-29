@@ -692,9 +692,7 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
   // if for WebPage or CBox protocol selected is HTTP
   if (!forSaveFile || _ha.cboxProtocol == CBOX_PROTO_HTTP)
   {
-    if (forSaveFile)
-      doc["cbhip"] = _ha.http.cboxIp;
-    else if (_ha.http.cboxIp)
+    if (_ha.http.cboxIp)
       doc["cbhip"] = IPAddress(_ha.http.cboxIp).toString();
   }
 
