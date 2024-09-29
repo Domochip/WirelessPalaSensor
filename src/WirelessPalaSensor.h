@@ -2,6 +2,7 @@
 #define WirelessPalaSensor_h
 
 #include "Main.h"
+#include "base/Version.h" //for BASE_VERSION define
 #include "base/Utils.h"
 #include "base/MQTTMan.h"
 #include "base/Application.h"
@@ -69,6 +70,8 @@ private:
     char username[128 + 1] = {0};
     char password[150 + 1] = {0};
     char baseTopic[64 + 1] = {0};
+    bool hassDiscoveryEnabled = true;
+    char hassDiscoveryPrefix[64 + 1] = {0};
 
     char temperatureTopic[64 + 1] = {0};
 
@@ -107,6 +110,8 @@ private:
   bool _needTick = false;
   Ticker _refreshTicker;
   byte _skipTick = 0;
+  bool _needPublishHassDiscovery = false;
+
   // Used in TimerTick for logic and calculation
   int _homeAutomationRequestResult = 0;
   float _homeAutomationTemperature = 0.0;
@@ -124,8 +129,7 @@ private:
   float _lastMqttStoveTemperature = 0.0;
   unsigned long _lastMqttStoveTemperatureMillis = 0;
 
-  WiFiClient _wifiClient;
-
+  WiFiClient _wifiClient; // used by _mqttMan
   MQTTMan _mqttMan;
 
   void setDualDigiPot(float temperature);
@@ -134,6 +138,7 @@ private:
   void timerTick();
   void mqttConnectedCallback(MQTTMan *mqttMan, bool firstConnection);
   void mqttCallback(char *topic, uint8_t *payload, unsigned int length);
+  bool publishHassDiscoveryToMqtt();
 
   void setConfigDefaultValues();
   void parseConfigJSON(JsonDocument &doc, bool fromWebPage);

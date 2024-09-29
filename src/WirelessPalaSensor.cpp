@@ -142,7 +142,7 @@ void WebPalaSensor::timerTick()
             // read value (read until next doublequote)
             nb = stream->readBytesUntil('"', payload, sizeof(payload) - 1);
             payload[nb] = 0;
-            
+
             if (nb) // convert
               _homeAutomationTemperature = atof(payload);
           }
@@ -291,6 +291,9 @@ void WebPalaSensor::mqttConnectedCallback(MQTTMan *mqttMan, bool firstConnection
   {
     mqttMan->subscribe(_ha.mqtt.cboxT1Topic);
   }
+
+  // raise flag to publish Home Assistant discovery data
+  _needPublishHassDiscovery = true;
 }
 
 //------------------------------------------
@@ -357,6 +360,82 @@ void WebPalaSensor::mqttCallback(char *topic, uint8_t *payload, unsigned int len
 }
 
 //------------------------------------------
+bool WebPalaSensor::publishHassDiscoveryToMqtt()
+{
+  // if MQTT is not connected then return false
+  if (!_mqttMan.connected())
+    return false;
+
+  LOG_SERIAL.println(F("Publish Home Assistant Discovery data"));
+
+  // variables
+  JsonDocument jsonDoc;
+  String device, availability, payload;
+  String baseTopic;
+  String uniqueIdPrefixWPalaSensor;
+  String uniqueId;
+  String topic;
+
+  // prepare base topic
+  baseTopic = _ha.mqtt.baseTopic;
+  MQTTMan::prepareTopic(baseTopic);
+
+  // prepare unique id prefix for WPalaSensor
+  uniqueIdPrefixWPalaSensor = F("WPalaSensor_");
+  uniqueIdPrefixWPalaSensor += WiFi.macAddress();
+  uniqueIdPrefixWPalaSensor.replace(":", "");
+
+  // ---------- WPalaSensor Device ----------
+
+  // prepare WPalaSensor device JSON
+  jsonDoc["configuration_url"] = F("http://wpalasensor.local");
+  jsonDoc["identifiers"][0] = uniqueIdPrefixWPalaSensor;
+  jsonDoc["manufacturer"] = F("Domochip");
+  jsonDoc["model"] = F("WPalaSensor");
+  jsonDoc["name"] = WiFi.getHostname();
+  jsonDoc["sw_version"] = String(F("v")) + String(BASE_VERSION) + '-' + String(VERSION);
+  serializeJson(jsonDoc, device); // serialize to device String
+  jsonDoc.clear();                // clean jsonDoc
+
+  // ----- WPalaSensor Entities -----
+
+  //
+  // Connectivity entity
+  //
+
+  // prepare uniqueId, topic and payload for WPalaSensor connectivity sensor
+  uniqueId = uniqueIdPrefixWPalaSensor;
+  uniqueId += F("_Connectivity");
+
+  topic = _ha.mqtt.hassDiscoveryPrefix;
+  topic += F("/binary_sensor/");
+  topic += uniqueId;
+  topic += F("/config");
+
+  // prepare payload for WPalaSensor connectivity sensor
+  jsonDoc["~"] = baseTopic.substring(0, baseTopic.length() - 1); // remove ending '/'
+  jsonDoc["device_class"] = F("connectivity");
+  jsonDoc["device"] = serialized(device);
+  jsonDoc["entity_category"] = F("diagnostic");
+  jsonDoc["object_id"] = F("wpalasensor_connectivity");
+  jsonDoc["state_topic"] = F("~/connected");
+  jsonDoc["unique_id"] = uniqueId;
+  jsonDoc["value_template"] = F("{{ iif(int(value) > 0, 'ON', 'OFF') }}");
+
+  jsonDoc.shrinkToFit();
+  serializeJson(jsonDoc, payload);
+
+  // publish
+  _mqttMan.publish(topic.c_str(), payload.c_str(), true);
+
+  // clean
+  jsonDoc.clear();
+  payload = "";
+
+  return true;
+}
+
+//------------------------------------------
 // Used to initialize configuration properties to default values
 void WebPalaSensor::setConfigDefaultValues()
 {
@@ -389,6 +468,8 @@ void WebPalaSensor::setConfigDefaultValues()
   _ha.mqtt.username[0] = 0;
   _ha.mqtt.password[0] = 0;
   strcpy_P(_ha.mqtt.baseTopic, PSTR("$model$"));
+  _ha.mqtt.hassDiscoveryEnabled = true;
+  strcpy_P(_ha.mqtt.hassDiscoveryPrefix, PSTR("homeassistant"));
   _ha.mqtt.temperatureTopic[0] = 0;
   _ha.mqtt.cboxT1Topic[0] = 0;
 }
@@ -446,6 +527,10 @@ void WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
     }
     if ((jv = doc["hambt"]).is<const char *>())
       strlcpy(_ha.mqtt.baseTopic, jv, sizeof(_ha.mqtt.baseTopic));
+
+    _ha.mqtt.hassDiscoveryEnabled = doc["hamhassde"];
+    if ((jv = doc["hamhassdp"]).is<const char *>())
+      strlcpy(_ha.mqtt.hassDiscoveryPrefix, jv, sizeof(_ha.mqtt.hassDiscoveryPrefix));
   }
 
   // Now get Home Automation specific params
@@ -629,6 +714,8 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
     else
       doc["hamp"] = (const __FlashStringHelper *)appDataPredefPassword; // predefined special password (mean to keep already saved one)
     doc["hambt"] = _ha.mqtt.baseTopic;
+    doc["hamhassde"] = _ha.mqtt.hassDiscoveryEnabled;
+    doc["hamhassdp"] = _ha.mqtt.hassDiscoveryPrefix;
   }
 
   String gc;
@@ -782,6 +869,7 @@ bool WebPalaSensor::appInit(bool reInit)
     willTopic += F("connected");
 
     // setup MQTT
+    _mqttMan.setBufferSize(600); // max JSON size (Connectivity HAss discovery ~450)
     _mqttMan.setClient(_wifiClient).setServer(_ha.mqtt.hostname, _ha.mqtt.port);
     _mqttMan.setConnectedAndWillTopic(willTopic.c_str());
     _mqttMan.setConnectedCallback(std::bind(&WebPalaSensor::mqttConnectedCallback, this, std::placeholders::_1, std::placeholders::_2));
@@ -965,13 +1053,23 @@ void WebPalaSensor::appInitWebServer(WebServer &server, bool &shouldReboot, bool
 void WebPalaSensor::appRun()
 {
   if (_ha.protocol == HA_PROTO_MQTT || _ha.cboxProtocol == CBOX_PROTO_MQTT)
+  {
     _mqttMan.loop();
+
+    // if Home Assistant discovery enabled and publish is needed
+    if (_ha.mqtt.hassDiscoveryEnabled && _needPublishHassDiscovery)
+    {
+      if (publishHassDiscoveryToMqtt()) // publish discovery
+      {
+        _needPublishHassDiscovery = false;
+        _needTick = true;
+      }
+    }
+  }
 
   if (_needTick)
   {
-    // disable needTick
     _needTick = false;
-    // then run
     timerTick();
   }
 }
