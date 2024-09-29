@@ -587,7 +587,6 @@ bool WebPalaSensor::parseConfigWebRequest(WebServer &server)
 String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
 {
   JsonDocument doc;
-  char fpStr[60];
 
   doc["rp"] = _refreshPeriod;
 
