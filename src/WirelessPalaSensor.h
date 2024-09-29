@@ -46,7 +46,6 @@ private:
     byte type = HA_HTTP_JEEDOM;
     char hostname[64 + 1] = {0};
     bool tls = false;
-    byte fingerPrint[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     int temperatureId = 0;
 
     struct

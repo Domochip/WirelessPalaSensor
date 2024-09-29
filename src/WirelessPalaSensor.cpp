@@ -92,18 +92,7 @@ void WebPalaSensor::timerTick()
         http.begin(client, completeURI);
       else
       {
-        if (Utils::isFingerPrintEmpty(_ha.http.fingerPrint))
-          clientSecure.setInsecure();
-        else
-        {
-#ifdef ESP8266
-          clientSecure.setFingerprint(_ha.http.fingerPrint);
-#else
-          // TODO: First expand fingerprint to 32 bytes
-          // TODO: connect, verify with fingerprint, close and then setInsecure
-          clientSecure.setInsecure();
-#endif
-        }
+        clientSecure.setInsecure();
         http.begin(clientSecure, completeURI);
       }
       // send request
@@ -149,18 +138,7 @@ void WebPalaSensor::timerTick()
         http.begin(client, completeURI);
       else
       {
-        if (Utils::isFingerPrintEmpty(_ha.http.fingerPrint))
-          clientSecure.setInsecure();
-        else
-        {
-#ifdef ESP8266
-          clientSecure.setFingerprint(_ha.http.fingerPrint);
-#else
-          // TODO: First expand fingerprint to 32 bytes
-          // TODO: connect, verify with fingerprint, close and then setInsecure
-          clientSecure.setInsecure();
-#endif
-        }
+        clientSecure.setInsecure();
         http.begin(clientSecure, completeURI);
       }
 
@@ -421,7 +399,6 @@ void WebPalaSensor::setConfigDefaultValues()
   _ha.http.type = HA_HTTP_JEEDOM;
   _ha.http.hostname[0] = 0;
   _ha.http.tls = false;
-  memset(_ha.http.fingerPrint, 0, 20);
   _ha.http.temperatureId = 0;
   _ha.http.jeedom.apiKey[0] = 0;
   _ha.http.fibaro.username[0] = 0;
@@ -502,8 +479,6 @@ void WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
     if ((jv = doc["hahhost"]).is<const char *>())
       strlcpy(_ha.http.hostname, jv, sizeof(_ha.http.hostname));
     _ha.http.tls = doc["hahtls"];
-    if ((jv = doc["hahfp"]).is<const char *>())
-      Utils::fingerPrintS2A(_ha.http.fingerPrint, jv);
     if ((jv = doc["hahtempid"]).is<JsonVariant>())
       _ha.http.temperatureId = jv;
 
@@ -629,7 +604,6 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
     doc["hahtype"] = _ha.http.type;
     doc["hahhost"] = _ha.http.hostname;
     doc["hahtls"] = _ha.http.tls;
-    doc["hahfp"] = Utils::fingerPrintA2S(fpStr, _ha.http.fingerPrint, forSaveFile ? 0 : ':');
     doc["hahtempid"] = _ha.http.temperatureId;
 
     if (forSaveFile)
