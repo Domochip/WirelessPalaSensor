@@ -393,7 +393,7 @@ bool WebPalaSensor::publishHassDiscoveryToMqtt()
   jsonDoc["manufacturer"] = F("Domochip");
   jsonDoc["model"] = F("WPalaSensor");
   jsonDoc["name"] = WiFi.getHostname();
-  jsonDoc["sw_version"] = String(F("v")) + String(BASE_VERSION) + '-' + String(VERSION);
+  jsonDoc["sw_version"] = VERSION;
   serializeJson(jsonDoc, device); // serialize to device String
   jsonDoc.clear();                // clean jsonDoc
 
