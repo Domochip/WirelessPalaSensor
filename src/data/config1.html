@@ -43,9 +43,18 @@
         <div id='hae' style='display:none'>
 
             <div class="pure-control-group">
-                <label for="hamfr">Max Failed Request</label>
-                <input type='number' id='hamfr' name='hamfr' min='0' max='255'>
-                <span class="pure-form-message-inline">before failover to local sensor</span>
+                <label for="hatt">No Response Timeout</label>
+                <input type='number' id='hatt' name='hatt' min='0' max='3601'>
+                <span class="pure-form-message-inline">seconds</span>
+                <span id="hatti" name="hatti" class="infotip">?</span>
+            </div>
+
+            <div class="pure-control-group" id="hattidiv" name="hattidiv" style="display:none;">
+                <label></label>
+                <div class="infotipdiv">
+                    If no Home Automation temperature is retrieved/received within this time, local temperature sensor will
+                    be used.
+                </div>
             </div>
 
             <div id='hahe'>
@@ -106,7 +115,7 @@
             </div>
         </div>
 
-        <h3 class="content-subhead">Palazzetti / PalaControl</h3>
+        <h3 class="content-subhead">WPalaControl / CBox</h3>
 
         <div class="pure-control-group">
             <label for="cbproto">Protocol</label>
@@ -118,6 +127,21 @@
         </div>
 
         <div id='cbe' style='display:none'>
+
+            <div class="pure-control-group">
+                <label for="cbtt">No Response Timeout</label>
+                <input type='number' id='cbtt' name='cbtt' min='0' max='3601'>
+                <span class="pure-form-message-inline">seconds</span>
+                <span id="cbtti" name="cbtti" class="infotip">?</span>
+            </div>
+
+            <div class="pure-control-group" id="cbttidiv" name="cbttidiv" style="display:none;">
+                <label></label>
+                <div class="infotipdiv">
+                    If no stove temperature is retrieved/received within this time, feedback correction will be disabled
+                    until we get a new temperature value.
+                </div>
+            </div>
 
             <div id='cbhe'>
 
@@ -222,6 +246,10 @@
         isMQTTSelected();
     });
 
+    $(qsp + "#hatti").addEventListener('click', function () {
+        $(qsp + "#hattidiv").style.display = ($(qsp + "#hattidiv").style.display == '' ? 'none' : '');
+    });
+
     $(qsp + "#hahtype").addEventListener('change', function () {
         switch ($(qsp + "#hahtype").value) {
             case "0":
@@ -252,6 +280,10 @@
                 break;
         }
         isMQTTSelected();
+    });
+
+    $(qsp + "#cbtti").addEventListener('click', function () {
+        $(qsp + "#cbttidiv").style.display = ($(qsp + "#cbttidiv").style.display == '' ? 'none' : '');
     });
 
     $(qsp + "#hambti").addEventListener('click', function () {
