@@ -48,13 +48,13 @@ void WebPalaSensor::timerTick()
 
   float temperatureToDisplay = 20.0;
   float previousTemperatureToDisplay;
-  if (_homeAutomationTemperatureUsed)
-    previousTemperatureToDisplay = _homeAutomationTemperature;
+  if (_haTemperatureUsed)
+    previousTemperatureToDisplay = _haTemperature;
   else
     previousTemperatureToDisplay = _owTemperature;
   _stoveTemperature = 0.0;
-  _homeAutomationTemperature = 0.0;
-  _homeAutomationTemperatureUsed = false;
+  _haTemperature = 0.0;
+  _haTemperatureUsed = false;
 
   // LOG
   LOG_SERIAL.println(F("TimerTick"));
@@ -111,9 +111,9 @@ void WebPalaSensor::timerTick()
       http.setAuthorization(_ha.http.fibaro.username, _ha.http.fibaro.password);
 
     // send request
-    _homeAutomationRequestResult = http.GET();
+    _haRequestResult = http.GET();
 
-    if (_homeAutomationRequestResult == 200)
+    if (_haRequestResult == 200)
     {
       WiFiClient *stream = http.getStreamPtr();
 
@@ -129,7 +129,7 @@ void WebPalaSensor::timerTick()
         payload[nb] = 0;
 
         if (nb) // convert
-          _homeAutomationTemperature = atof(payload);
+          _haTemperature = atof(payload);
         break;
 
       case HA_HTTP_FIBARO:
@@ -144,16 +144,16 @@ void WebPalaSensor::timerTick()
             payload[nb] = 0;
 
             if (nb) // convert
-              _homeAutomationTemperature = atof(payload);
+              _haTemperature = atof(payload);
           }
         }
         break;
       }
 
       // round it to tenth
-      _homeAutomationTemperature *= 10;
-      _homeAutomationTemperature = round(_homeAutomationTemperature);
-      _homeAutomationTemperature /= 10;
+      _haTemperature *= 10;
+      _haTemperature = round(_haTemperature);
+      _haTemperature /= 10;
     }
     http.end();
   }
@@ -165,7 +165,7 @@ void WebPalaSensor::timerTick()
     if (_lastMqttHATemperatureMillis + (1000 * (unsigned long)_refreshPeriod) >= millis())
     {
       // then use it
-      _homeAutomationTemperature = _lastMqttHATemperature;
+      _haTemperature = _lastMqttHATemperature;
     }
   }
 
@@ -226,20 +226,20 @@ void WebPalaSensor::timerTick()
   if (_ha.protocol != HA_PROTO_DISABLED)
   {
     // if we got an HA temperature
-    if (_homeAutomationTemperature > 0.1)
+    if (_haTemperature > 0.1)
     {
-      _homeAutomationFailedCount = 0;
-      _homeAutomationTemperatureUsed = true;
-      temperatureToDisplay = _homeAutomationTemperature;
+      _haFailedCount = 0;
+      _haTemperatureUsed = true;
+      temperatureToDisplay = _haTemperature;
     }
     else
     {
       // else if failed count is good and previousTemperature is good too
-      if (_homeAutomationFailedCount <= _ha.maxFailedRequest && previousTemperatureToDisplay > 0.1)
+      if (_haFailedCount <= _ha.maxFailedRequest && previousTemperatureToDisplay > 0.1)
       {
-        _homeAutomationFailedCount++;
-        _homeAutomationTemperatureUsed = true;
-        _homeAutomationTemperature = previousTemperatureToDisplay;
+        _haFailedCount++;
+        _haTemperatureUsed = true;
+        _haTemperature = previousTemperatureToDisplay;
         temperatureToDisplay = previousTemperatureToDisplay;
       }
       // otherwise failover to oneWire
@@ -717,8 +717,8 @@ String WebPalaSensor::generateStatusJSON()
     has1 = F("Disabled");
     break;
   case HA_PROTO_HTTP:
-    doc["has1"] = String(F("Last Home Automation HTTP Result : ")) + _homeAutomationRequestResult;
-    doc["has2"] = String(F("Last Home Automation Temperature : ")) + _homeAutomationTemperature;
+    doc["has1"] = String(F("Last Home Automation HTTP Result : ")) + _haRequestResult;
+    doc["has2"] = String(F("Last Home Automation Temperature : ")) + _haTemperature;
     break;
   case HA_PROTO_MQTT:
     has1 = F("MQTT Connection State : ");
@@ -760,7 +760,7 @@ String WebPalaSensor::generateStatusJSON()
     break;
   }
 
-  doc["hafc"] = _homeAutomationFailedCount;
+  doc["hafc"] = _haFailedCount;
 
   // stove(ConnectionBox) infos
   String cbs1, cbs2;
@@ -816,7 +816,7 @@ String WebPalaSensor::generateStatusJSON()
   doc["cbfc"] = _stoveRequestFailedCount;
 
   doc["low"] = serialized(String(_owTemperature));
-  doc["owu"] = (_homeAutomationTemperatureUsed ? F("Not ") : F(""));
+  doc["owu"] = (_haTemperatureUsed ? F("Not ") : F(""));
   doc["pt"] = serialized(String(_pushedTemperature));
   doc["p50"] = _mcp4151_50k.getPosition(0);
   doc["p5"] = _mcp4151_5k.getPosition(0);
@@ -860,14 +860,14 @@ bool WebPalaSensor::appInit(bool reInit)
   if (reInit)
   {
     // reset run variables to initial values
-    _homeAutomationRequestResult = 0;
-    _homeAutomationTemperature = 0.0;
-    _homeAutomationFailedCount = 0;
+    _haRequestResult = 0;
+    _haTemperature = 0.0;
+    _haFailedCount = 0;
     _stoveRequestResult = 0;
     _stoveTemperature = 0.0;
     _stoveRequestFailedCount = 0;
     _owTemperature = 0.0;
-    _homeAutomationTemperatureUsed = false;
+    _haTemperatureUsed = false;
     _stoveDelta = 0.0;
     _pushedTemperature = 0.0;
 

@@ -112,14 +112,22 @@ private:
   bool _needPublishHassDiscovery = false;
 
   // Used in TimerTick for logic and calculation
-  int _homeAutomationRequestResult = 0;
-  float _homeAutomationTemperature = 0.0;
-  int _homeAutomationFailedCount = 0;
-  int _stoveRequestResult = 0;
-  float _stoveTemperature = 0.0;
-  int _stoveRequestFailedCount = 0;
+
+  float _haTemperature = 0.0;
+  unsigned long _haTemperatureMillis = 0;
+  int _haRequestResult = 0;
+  int _haFailedCount = 0;
+  int _haTemperatureTimeout = 0;
   float _owTemperature = 0.0;
-  bool _homeAutomationTemperatureUsed = false;
+  bool _haTemperatureUsed = false;
+  float _lastHATemperatureUsed = 0.0;
+
+  float _stoveTemperature = 0.0;
+  unsigned long _stoveTemperatureMillis = 0;
+  int _stoveRequestResult = 0;
+  int _stoveRequestFailedCount = 0;
+  int _stoveTemperatureTimeout = 0;
+
   float _stoveDelta = 0.0;
   float _pushedTemperature = 0.0;
 
