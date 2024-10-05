@@ -272,6 +272,42 @@ void WebPalaSensor::timerTick()
   setDualDigiPot(temperatureToDisplay + _stoveDelta);
 
   _pushedTemperature = temperatureToDisplay + _stoveDelta;
+
+#if DEVELOPPER_MODE
+
+  //publish to MQTT
+  if (_mqttMan.connected())
+  {
+    // prepare base topic
+    String baseTopic = _ha.mqtt.baseTopic;
+    MQTTMan::prepareTopic(baseTopic);
+
+    // publish oneWire temperature
+    _mqttMan.publish((baseTopic + F("OWTemp")).c_str(), String(_owTemperature).c_str(), true);
+
+    // publish Home Automation failed count
+    _mqttMan.publish((baseTopic + F("HAFailedCount")).c_str(), String(_haFailedCount).c_str(), true);
+
+    // publish Home Automation temperature
+    _mqttMan.publish((baseTopic + F("HATemp")).c_str(), String(_haTemperature).c_str(), true);
+
+    // publish Stove failed count
+    _mqttMan.publish((baseTopic + F("StoveFailedCount")).c_str(), String(_stoveRequestFailedCount).c_str(), true);
+
+    // publish Stove temperature
+    _mqttMan.publish((baseTopic + F("StoveTemp")).c_str(), String(_stoveTemperature).c_str(), true);
+
+    // publish temperature to display
+    _mqttMan.publish((baseTopic + F("TempToDisplay")).c_str(), String(temperatureToDisplay).c_str(), true);
+
+    // publish Delta
+    _mqttMan.publish((baseTopic + F("Delta")).c_str(), String(_stoveDelta).c_str(), true);
+
+    // publish Pushed temperature
+    _mqttMan.publish((baseTopic + F("PushedTemp")).c_str(), String(_pushedTemperature).c_str(), true);
+  }
+#endif
+
 }
 
 //------------------------------------------
