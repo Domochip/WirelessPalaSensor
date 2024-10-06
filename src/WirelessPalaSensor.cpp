@@ -47,14 +47,6 @@ void WebPalaSensor::timerTick()
   }
 
   float temperatureToDisplay = 20.0;
-  float previousTemperatureToDisplay;
-  if (_haTemperatureUsed)
-    previousTemperatureToDisplay = _haTemperature;
-  else
-    previousTemperatureToDisplay = _owTemperature;
-  _stoveTemperature = 0.0;
-  _haTemperature = 0.0;
-  _haTemperatureUsed = false;
 
   // LOG
   LOG_SERIAL.println(F("TimerTick"));
@@ -83,7 +75,7 @@ void WebPalaSensor::timerTick()
     // set timeOut
     http.setTimeout(5000);
 
-    // try to get house automation sensor value -----------------
+    // try to get HomeAutomation sensor value -----------------
 
     // build the complete URI
     String completeURI = String(F("http")) + (_ha.http.tls ? F("s") : F("")) + F("://") + _ha.http.hostname;
@@ -118,8 +110,7 @@ void WebPalaSensor::timerTick()
       WiFiClient *stream = http.getStreamPtr();
 
       char payload[60] = {0};
-      int nb;
-      JsonDocument doc;
+      int nb = 0;
 
       switch (_ha.http.type)
       {
@@ -127,9 +118,6 @@ void WebPalaSensor::timerTick()
 
         nb = stream->readBytes(payload, 5);
         payload[nb] = 0;
-
-        if (nb) // convert
-          _haTemperature = atof(payload);
         break;
 
       case HA_HTTP_FIBARO:
@@ -142,31 +130,34 @@ void WebPalaSensor::timerTick()
             // read value (read until next doublequote)
             nb = stream->readBytesUntil('"', payload, sizeof(payload) - 1);
             payload[nb] = 0;
-
-            if (nb) // convert
-              _haTemperature = atof(payload);
           }
         }
         break;
       }
 
-      // round it to tenth
-      _haTemperature *= 10;
-      _haTemperature = round(_haTemperature);
-      _haTemperature /= 10;
+      // if we readed some bytes
+      if (nb)
+      {
+        // convert to float
+        float haTemperature = atof(payload);
+        String strHATemperature(payload);
+        strHATemperature.replace("0", "");
+
+        // if we got a correct value
+        if (haTemperature != 0.0F || strHATemperature == ".")
+        {
+          // round it to tenth
+          haTemperature *= 10;
+          haTemperature = round(haTemperature);
+          haTemperature /= 10;
+
+          // place it in global _haTemperature and store millis
+          _haTemperature = haTemperature;
+          _haTemperatureMillis = millis();
+        }
+      }
     }
     http.end();
-  }
-
-  // if HomeAutomation protocol is MQTT
-  if (_ha.protocol == HA_PROTO_MQTT)
-  {
-    // if mqtt received value is still valid (not too old)
-    if (_lastMqttHATemperatureMillis + (1000 * (unsigned long)_refreshPeriod) >= millis())
-    {
-      // then use it
-      _haTemperature = _lastMqttHATemperature;
-    }
   }
 
   // if ConnectionBox protocol is HTTP and WiFi is connected
@@ -204,72 +195,52 @@ void WebPalaSensor::timerTick()
           while ((payload[posTRW] == ' ' || payload[posTRW] == ':' || payload[posTRW] == '\t') && posTRW < nb)
             posTRW++;
 
-          _stoveTemperature = atof(payload + posTRW); // convert
+          // convert to float
+          float stoveTemperature = atof(payload + posTRW);
+          String strStoveTemperature(payload + posTRW);
+          strStoveTemperature.replace("0", "");
+
+          // if we got a correct value
+          if (stoveTemperature != 0.0F || strStoveTemperature == ".")
+          {
+            // place it in global _stoveTemperature and store millis
+            _stoveTemperature = stoveTemperature;
+            _stoveTemperatureMillis = millis();
+          }
         }
       }
     }
     http.end();
   }
 
-  // if ConnectionBox protocol is MQTT
-  if (_ha.cboxProtocol == CBOX_PROTO_MQTT)
+  // if Home Automation protocol is defined and temperature is not too old
+  if (_ha.protocol != HA_PROTO_DISABLED && (_haTemperatureMillis + _ha.temperatureTimeout * 1000) > millis())
   {
-    // if mqtt received value is still valid (not too old)
-    if (_lastMqttStoveTemperatureMillis + (1000 * (unsigned long)_refreshPeriod) >= millis())
-    {
-      // then use it
-      _stoveTemperature = _lastMqttStoveTemperature;
-    }
-  }
-
-  // select temperature source
-  if (_ha.protocol != HA_PROTO_DISABLED)
-  {
-    // if we got an HA temperature
-    if (_haTemperature > 0.1)
-    {
-      _haFailedCount = 0;
-      _haTemperatureUsed = true;
-      temperatureToDisplay = _haTemperature;
-    }
-    else
-    {
-      // else if failed count is good and previousTemperature is good too
-      if (_haFailedCount <= _ha.maxFailedRequest && previousTemperatureToDisplay > 0.1)
-      {
-        _haFailedCount++;
-        _haTemperatureUsed = true;
-        _haTemperature = previousTemperatureToDisplay;
-        temperatureToDisplay = previousTemperatureToDisplay;
-      }
-      // otherwise failover to oneWire
-      else
-        temperatureToDisplay = _owTemperature;
-    }
+    temperatureToDisplay = _haTemperature;
+    _haTemperatureUsed = true;
   }
   else
-    temperatureToDisplay = _owTemperature; // HA not enable
-
-  // if connectionBox is enabled, make delta adjustment calculation
-  if (_ha.cboxProtocol != CBOX_PROTO_DISABLED)
   {
+    temperatureToDisplay = _owTemperature;
+    _haTemperatureUsed = false;
+  }
 
-    // if _stoveTemperature is correct so failed counter reset
-    if (_stoveTemperature > 0.1)
-      _stoveRequestFailedCount = 0;
-    else if (_stoveRequestFailedCount <= _ha.maxFailedRequest)
-      _stoveRequestFailedCount++; // else increment failed counter
-
-    // if failed counter went over maxFailedRequest then reset calculated delta
-    if (_stoveRequestFailedCount > _ha.maxFailedRequest)
-      _stoveDelta = 0;
-    // if stoveTemp is ok and previousTemperatureToDisplay also so adjust delta
-    if (_stoveTemperature > 0.1 && previousTemperatureToDisplay > 0.1)
-      _stoveDelta += (previousTemperatureToDisplay - _stoveTemperature) / 2.5F;
+  // if Connection Box protocol is defined and stove temperature arrived after last refresh
+  if (_ha.cboxProtocol != CBOX_PROTO_DISABLED && (_stoveTemperatureMillis + _refreshPeriod * 1000) > millis())
+  {
+    // adjust delta
+    _stoveDelta += (_lastTemperatureUsed - _stoveTemperature) / 2.5F;
+  }
+  // else if stove temperature is too old (older for more than timeout) then reset delta
+  else if ((_stoveTemperatureMillis + _ha.cboxTemperatureTimeout * 1000) <= millis())
+  {
+    _stoveDelta = 0;
   }
 
   // Set DigiPot position according to resistance calculated from temperature to display with delta
   setDualDigiPot(temperatureToDisplay + _stoveDelta);
+
+  _lastTemperatureUsed = temperatureToDisplay;
 
   _pushedTemperature = temperatureToDisplay + _stoveDelta;
 
@@ -285,20 +256,17 @@ void WebPalaSensor::timerTick()
     // publish oneWire temperature
     _mqttMan.publish((baseTopic + F("OWTemp")).c_str(), String(_owTemperature).c_str(), true);
 
-    // publish Home Automation failed count
-    _mqttMan.publish((baseTopic + F("HAFailedCount")).c_str(), String(_haFailedCount).c_str(), true);
-
     // publish Home Automation temperature
     _mqttMan.publish((baseTopic + F("HATemp")).c_str(), String(_haTemperature).c_str(), true);
 
-    // publish Stove failed count
-    _mqttMan.publish((baseTopic + F("StoveFailedCount")).c_str(), String(_stoveRequestFailedCount).c_str(), true);
+    // publish temperature to display
+    _mqttMan.publish((baseTopic + F("TempToDisplay")).c_str(), String(temperatureToDisplay).c_str(), true);
+
+    // publish last used temperature
+    _mqttMan.publish((baseTopic + F("LastTempUsed")).c_str(), String(_lastTemperatureUsed).c_str(), true);
 
     // publish Stove temperature
     _mqttMan.publish((baseTopic + F("StoveTemp")).c_str(), String(_stoveTemperature).c_str(), true);
-
-    // publish temperature to display
-    _mqttMan.publish((baseTopic + F("TempToDisplay")).c_str(), String(temperatureToDisplay).c_str(), true);
 
     // publish Delta
     _mqttMan.publish((baseTopic + F("Delta")).c_str(), String(_stoveDelta).c_str(), true);
@@ -338,28 +306,29 @@ void WebPalaSensor::mqttCallback(char *topic, uint8_t *payload, unsigned int len
   // if Home Automation is configured for MQTT and topic match
   if (_ha.protocol == HA_PROTO_MQTT && !strcmp(topic, _ha.mqtt.temperatureTopic))
   {
-    String strHomeAutomationTemperature;
-    strHomeAutomationTemperature.reserve(length + 1);
+    String strHATemperature;
+    strHATemperature.reserve(length + 1);
 
     // convert payload to string
     for (unsigned int i = 0; i < length; i++)
-      strHomeAutomationTemperature += (char)payload[i];
+      strHATemperature += (char)payload[i];
 
     // convert
-    _lastMqttHATemperature = strHomeAutomationTemperature.toFloat();
+    float haTemperature = strHATemperature.toFloat();
 
     // remove all 0 from str for conversion verification
     // (remove all 0 from the string, then only one dot should remain like "0.00")
-    strHomeAutomationTemperature.replace("0", "");
+    strHATemperature.replace("0", "");
 
-    if (_lastMqttHATemperature != 0.0F || strHomeAutomationTemperature == ".")
+    if (haTemperature != 0.0F || strHATemperature == ".")
     {
       // round it to tenth
-      _lastMqttHATemperature *= 10;
-      _lastMqttHATemperature = round(_lastMqttHATemperature);
-      _lastMqttHATemperature /= 10;
+      haTemperature *= 10;
+      haTemperature = round(haTemperature);
+      haTemperature /= 10;
 
-      _lastMqttHATemperatureMillis = millis();
+      _haTemperature = haTemperature;
+      _haTemperatureMillis = millis();
     }
   }
 
@@ -383,14 +352,17 @@ void WebPalaSensor::mqttCallback(char *topic, uint8_t *payload, unsigned int len
     }
 
     // convert
-    _lastMqttStoveTemperature = strStoveTemperature.toFloat();
+    float stoveTemperature = strStoveTemperature.toFloat();
 
     // remove all 0 from str for conversion verification
     // (remove all 0 from the string, then only one dot should remain like "0.00")
     strStoveTemperature.replace("0", "");
 
-    if (_lastMqttStoveTemperature != 0.0F || strStoveTemperature == ".")
-      _lastMqttStoveTemperatureMillis = millis();
+    if (stoveTemperature != 0.0F || strStoveTemperature == ".")
+    {
+      _stoveTemperature = stoveTemperature;
+      _stoveTemperatureMillis = millis();
+    }
   }
 }
 
@@ -804,16 +776,12 @@ String WebPalaSensor::generateStatusJSON()
       break;
     }
     doc["has1"] = has1;
-    has2 = String(F("Last Home Automation Temperature : ")) + _lastMqttHATemperature;
-    if (_lastMqttHATemperatureMillis + (1000 * (unsigned long)_refreshPeriod) < millis())
-      has2 = has2 + F(" (") + ((millis() - _lastMqttHATemperatureMillis) / 1000) + F(" seconds ago)");
+    has2 = String(F("Last Home Automation Temperature : ")) + _haTemperature + F(" (") + ((millis() - _haTemperatureMillis) / 1000) + F(" seconds ago)");
     doc["has2"] = has2;
     break;
   }
 
-  doc["hafc"] = _haFailedCount;
-
-  // stove(ConnectionBox) infos
+  // stove(WPalaControl/CBox) infos
   String cbs1, cbs2;
   switch (_ha.cboxProtocol)
   {
@@ -821,8 +789,8 @@ String WebPalaSensor::generateStatusJSON()
     cbs1 = F("Disabled");
     break;
   case CBOX_PROTO_HTTP:
-    doc["cbs1"] = String(F("Last ConnectionBox HTTP Result : ")) + _stoveRequestResult;
-    doc["cbs2"] = String(F("Last ConnectionBox Temperature : ")) + _stoveTemperature;
+    doc["cbs1"] = String(F("Last WPalaControl/CBox HTTP Result : ")) + _stoveRequestResult;
+    doc["cbs2"] = String(F("Last WPalaControl/CBox Temperature : ")) + _stoveTemperature;
     break;
   case CBOX_PROTO_MQTT:
     cbs1 = F("MQTT Connection State : ");
@@ -857,14 +825,10 @@ String WebPalaSensor::generateStatusJSON()
       break;
     }
     doc["cbs1"] = cbs1;
-    cbs2 = String(F("Last ConnectionBox Temperature : ")) + _lastMqttStoveTemperature;
-    if (_lastMqttStoveTemperatureMillis + (1000 * (unsigned long)_refreshPeriod) < millis())
-      cbs2 = cbs2 + F(" (") + ((millis() - _lastMqttStoveTemperatureMillis) / 1000) + F(" seconds ago)");
+    cbs2 = String(F("Last WPalaControl/CBox Temperature : ")) + _stoveTemperature + F(" (") + ((millis() - _stoveTemperatureMillis) / 1000) + F(" seconds ago)");
     doc["cbs2"] = cbs2;
     break;
   }
-
-  doc["cbfc"] = _stoveRequestFailedCount;
 
   doc["low"] = serialized(String(_owTemperature));
   doc["owu"] = (_haTemperatureUsed ? F("Not ") : F(""));
@@ -908,25 +872,13 @@ bool WebPalaSensor::appInit(bool reInit)
     _mqttMan.connect(_ha.mqtt.username, _ha.mqtt.password);
   }
 
-  if (reInit)
-  {
-    // reset run variables to initial values
-    _haRequestResult = 0;
-    _haTemperature = 0.0;
-    _haFailedCount = 0;
-    _stoveRequestResult = 0;
-    _stoveTemperature = 0.0;
-    _stoveRequestFailedCount = 0;
-    _owTemperature = 0.0;
-    _haTemperatureUsed = false;
-    _stoveDelta = 0.0;
-    _pushedTemperature = 0.0;
+  // initialize run variables
+  _haTemperatureMillis = millis(); // keep last received HA temperature fresh
+  _haRequestResult = 0;
+  _stoveTemperatureMillis = millis() - (1000 * _refreshPeriod); // delta is kept but will evolve only if a new value is received
+  _stoveRequestResult = 0;
 
-    _lastMqttHATemperatureMillis = millis();
-    _lastMqttStoveTemperatureMillis = millis();
-  }
-
-  // first call
+  // first call to see immediate result
   timerTick();
 
   // then next will be done by refreshTicker

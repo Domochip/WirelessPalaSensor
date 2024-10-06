@@ -104,6 +104,8 @@ private:
   DigiPotsNTC _digipotsNTC;
   HomeAutomation _ha;
 
+  // Run variables
+
   SingleDS18B20 _ds18b20;
   McpDigitalPot _mcp4151_5k;
   McpDigitalPot _mcp4151_50k;
@@ -115,26 +117,19 @@ private:
 
   // Used in TimerTick for logic and calculation
 
-  float _haTemperature = 0.0;
+  float _haTemperature = 20.0;
   unsigned long _haTemperatureMillis = 0;
   int _haRequestResult = 0;
-  int _haFailedCount = 0;
   float _owTemperature = 0.0;
   bool _haTemperatureUsed = false;
-  float _lastHATemperatureUsed = 0.0;
+  float _lastTemperatureUsed = 20.0;
 
-  float _stoveTemperature = 0.0;
+  float _stoveTemperature = 20.0;
   unsigned long _stoveTemperatureMillis = 0;
   int _stoveRequestResult = 0;
-  int _stoveRequestFailedCount = 0;
 
   float _stoveDelta = 0.0;
-  float _pushedTemperature = 0.0;
-
-  float _lastMqttHATemperature = 0.0;
-  unsigned long _lastMqttHATemperatureMillis = 0;
-  float _lastMqttStoveTemperature = 0.0;
-  unsigned long _lastMqttStoveTemperatureMillis = 0;
+  float _pushedTemperature = 20.0;
 
   WiFiClient _wifiClient; // used by _mqttMan
   MQTTMan _mqttMan;
