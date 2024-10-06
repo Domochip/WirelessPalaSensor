@@ -275,7 +275,7 @@ void WebPalaSensor::timerTick()
 
 #if DEVELOPPER_MODE
 
-  //publish to MQTT
+  // publish to MQTT
   if (_mqttMan.connected())
   {
     // prepare base topic
@@ -307,7 +307,6 @@ void WebPalaSensor::timerTick()
     _mqttMan.publish((baseTopic + F("PushedTemp")).c_str(), String(_pushedTemperature).c_str(), true);
   }
 #endif
-
 }
 
 //------------------------------------------
@@ -488,7 +487,9 @@ void WebPalaSensor::setConfigDefaultValues()
 
   _ha.maxFailedRequest = 10;
   _ha.protocol = HA_PROTO_DISABLED;
+  _ha.temperatureTimeout = 300;
   _ha.cboxProtocol = CBOX_PROTO_DISABLED;
+  _ha.cboxTemperatureTimeout = 300;
 
   _ha.http.type = HA_HTTP_JEEDOM;
   _ha.http.hostname[0] = 0;
@@ -531,14 +532,26 @@ bool WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
 
   if ((jv = doc["haproto"]).is<JsonVariant>())
     _ha.protocol = jv;
-  if ((jv = doc["cbproto"]).is<JsonVariant>())
-    _ha.cboxProtocol = jv;
 
   // if an home Automation protocol has been selected then get common param
   if (_ha.protocol != HA_PROTO_DISABLED)
   {
     if ((jv = doc["hamfr"]).is<JsonVariant>())
       _ha.maxFailedRequest = jv;
+
+    if ((jv = doc["hatimeout"]).is<JsonVariant>())
+      _ha.temperatureTimeout = jv;
+  }
+
+  // Parse ConnectionBox config
+  if ((jv = doc["cbproto"]).is<JsonVariant>())
+    _ha.cboxProtocol = jv;
+
+  // if an ConnectionBox protocol has been selected then get common param
+  if (_ha.cboxProtocol != CBOX_PROTO_DISABLED)
+  {
+    if ((jv = doc["cbtimeout"]).is<JsonVariant>())
+      _ha.cboxTemperatureTimeout = jv;
   }
 
   // if home automation or CBox protocol is MQTT then get common mqtt params
@@ -676,6 +689,7 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
 
   doc["hamfr"] = _ha.maxFailedRequest;
   doc["haproto"] = _ha.protocol;
+  doc["hatimeout"] = _ha.temperatureTimeout;
 
   // if for WebPage or protocol selected is HTTP
   if (!forSaveFile || _ha.protocol == HA_PROTO_HTTP)
@@ -704,6 +718,7 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
   }
 
   doc["cbproto"] = _ha.cboxProtocol;
+  doc["cbtimeout"] = _ha.cboxTemperatureTimeout;
 
   // if for WebPage or CBox protocol selected is HTTP
   if (!forSaveFile || _ha.cboxProtocol == CBOX_PROTO_HTTP)

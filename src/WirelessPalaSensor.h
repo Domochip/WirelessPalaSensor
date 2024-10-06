@@ -90,7 +90,9 @@ private:
     byte maxFailedRequest = 0; // number of failed requests to HA before failover to local temperature sensor
 
     byte protocol = HA_PROTO_DISABLED;
+    uint16_t temperatureTimeout = 0;
     byte cboxProtocol = CBOX_PROTO_DISABLED;
+    uint16_t cboxTemperatureTimeout = 0;
 
     HTTP http;
     MQTT mqtt;
@@ -117,7 +119,6 @@ private:
   unsigned long _haTemperatureMillis = 0;
   int _haRequestResult = 0;
   int _haFailedCount = 0;
-  int _haTemperatureTimeout = 0;
   float _owTemperature = 0.0;
   bool _haTemperatureUsed = false;
   float _lastHATemperatureUsed = 0.0;
@@ -126,7 +127,6 @@ private:
   unsigned long _stoveTemperatureMillis = 0;
   int _stoveRequestResult = 0;
   int _stoveRequestFailedCount = 0;
-  int _stoveTemperatureTimeout = 0;
 
   float _stoveDelta = 0.0;
   float _pushedTemperature = 0.0;
