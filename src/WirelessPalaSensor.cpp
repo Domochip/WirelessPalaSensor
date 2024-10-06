@@ -539,7 +539,7 @@ bool WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
     if ((jv = doc["hamfr"]).is<JsonVariant>())
       _ha.maxFailedRequest = jv;
 
-    if ((jv = doc["hatimeout"]).is<JsonVariant>())
+    if ((jv = doc["hatt"]).is<JsonVariant>())
       _ha.temperatureTimeout = jv;
   }
 
@@ -550,7 +550,7 @@ bool WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
   // if an ConnectionBox protocol has been selected then get common param
   if (_ha.cboxProtocol != CBOX_PROTO_DISABLED)
   {
-    if ((jv = doc["cbtimeout"]).is<JsonVariant>())
+    if ((jv = doc["cbtt"]).is<JsonVariant>())
       _ha.cboxTemperatureTimeout = jv;
   }
 
@@ -689,7 +689,7 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
 
   doc["hamfr"] = _ha.maxFailedRequest;
   doc["haproto"] = _ha.protocol;
-  doc["hatimeout"] = _ha.temperatureTimeout;
+  doc["hatt"] = _ha.temperatureTimeout;
 
   // if for WebPage or protocol selected is HTTP
   if (!forSaveFile || _ha.protocol == HA_PROTO_HTTP)
@@ -718,7 +718,7 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
   }
 
   doc["cbproto"] = _ha.cboxProtocol;
-  doc["cbtimeout"] = _ha.cboxTemperatureTimeout;
+  doc["cbtt"] = _ha.cboxTemperatureTimeout;
 
   // if for WebPage or CBox protocol selected is HTTP
   if (!forSaveFile || _ha.cboxProtocol == CBOX_PROTO_HTTP)
