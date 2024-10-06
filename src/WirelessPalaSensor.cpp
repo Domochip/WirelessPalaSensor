@@ -225,8 +225,8 @@ void WebPalaSensor::timerTick()
     _haTemperatureUsed = false;
   }
 
-  // if Connection Box protocol is defined and stove temperature arrived after last refresh
-  if (_ha.cboxProtocol != CBOX_PROTO_DISABLED && (_stoveTemperatureMillis + _refreshPeriod * 1000) > millis())
+  // if Connection Box protocol is defined and stove temperature arrived after last refresh and not first timer tick
+  if (_ha.cboxProtocol != CBOX_PROTO_DISABLED && (_stoveTemperatureMillis + _refreshPeriod * 1000) > millis() && !_firstTimerTick)
   {
     // adjust delta
     _stoveDelta += (_lastTemperatureUsed - _stoveTemperature) / 2.5F;
@@ -243,6 +243,10 @@ void WebPalaSensor::timerTick()
   _lastTemperatureUsed = temperatureToDisplay;
 
   _pushedTemperature = temperatureToDisplay + _stoveDelta;
+
+  // if first timer tick then set flag to false
+  if (_firstTimerTick)
+    _firstTimerTick = false;
 
 #if DEVELOPPER_MODE
 

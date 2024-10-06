@@ -117,6 +117,9 @@ private:
 
   // Used in TimerTick for logic and calculation
 
+  // to avoid delta calculation on first call (then 20° is applied at first call and then delta is calculated at least during 2nd call)
+  bool _firstTimerTick = true;
+
   float _haTemperature = 20.0;
   unsigned long _haTemperatureMillis = 0;
   int _haRequestResult = 0;
