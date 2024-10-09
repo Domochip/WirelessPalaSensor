@@ -44,8 +44,9 @@
 #define ONEWIRE_BUS_PIN 16
 
 #endif
+
 // Enable developper mode (fwdev webpage and SPIFFS is used)
-#define DEVELOPPER_MODE 0
+#define DEVELOPPER_MODE 1
 
 // Log Serial Object
 #define LOG_SERIAL Serial
