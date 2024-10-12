@@ -20,10 +20,10 @@
 #define DEFAULT_AP_SSID "WirelessPala"
 #define DEFAULT_AP_PSK "PasswordPala"
 
-// Enable status webpage EventSource
-#define ENABLE_STATUS_EVTSRC 1
-#define STATUS_EVTSRC_MAX_CLIENTS 2
-#define ENABLE_STATUS_EVTSRC_KEEPALIVE 0
+// Control EventSource code
+#define EVTSRC_ENABLED 0
+#define EVTSRC_MAX_CLIENTS 2
+#define EVTSRC_KEEPALIVE_ENABLED 0
 
 #ifdef ESP8266
 
