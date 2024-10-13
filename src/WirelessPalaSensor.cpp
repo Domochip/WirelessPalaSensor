@@ -474,6 +474,7 @@ void WebPalaSensor::setConfigDefaultValues()
   _ha.http.jeedom.apiKey[0] = 0;
   _ha.http.fibaro.username[0] = 0;
   _ha.http.fibaro.password[0] = 0;
+  _ha.http.homeassistant.entityId[0] = 0;
   _ha.http.homeassistant.longLivedAccessToken[0] = 0;
   _ha.http.cboxIp = 0;
 
@@ -611,6 +612,13 @@ bool WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
 
     case HA_HTTP_HOMEASSISTANT:
 
+      // if hostname is not empty and doesn't contains ":" then add ":8123" (if it fits)
+      if (_ha.http.hostname[0] && !strchr(_ha.http.hostname, ':') && (strlen(_ha.http.hostname) + 5 < sizeof(_ha.http.hostname) - 1))
+        strcat(_ha.http.hostname, ":8123");
+
+      if ((jv = doc["hahhaei"]).is<const char *>())
+        strlcpy(_ha.http.homeassistant.entityId, jv, sizeof(_ha.http.homeassistant.entityId));
+
       // put longLivedAccessToken into tempPassword
       if ((jv = doc["hahhallat"]).is<const char *>())
       {
@@ -621,7 +629,7 @@ bool WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
           strcpy(_ha.http.homeassistant.longLivedAccessToken, tempPassword);
       }
 
-      if (!_ha.http.hostname[0] || !_ha.http.homeassistant.longLivedAccessToken[0])
+      if (!_ha.http.hostname[0] || !_ha.http.homeassistant.entityId[0] || !_ha.http.homeassistant.longLivedAccessToken[0])
         _ha.protocol = HA_PROTO_DISABLED;
       break;
     }
@@ -703,6 +711,7 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
     else
       doc["hahfpass"] = (const __FlashStringHelper *)appDataPredefPassword; // predefined special password (mean to keep already saved one)
 
+    doc["hahhaei"] = _ha.http.homeassistant.entityId;
     if (forSaveFile)
       doc["hahhallat"] = _ha.http.homeassistant.longLivedAccessToken;
     else

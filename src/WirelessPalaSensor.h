@@ -61,6 +61,7 @@ private:
 
     struct
     {
+      char entityId[64 + 1] = {0};
       char longLivedAccessToken[183 + 1] = {0};
     } homeassistant;
 
