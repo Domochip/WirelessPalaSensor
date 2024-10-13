@@ -108,7 +108,7 @@ void WebPalaSensor::timerTick()
     // For HomeAssistant, Pass long-lived access token and set content type
     if (_ha.http.type == HA_HTTP_HOMEASSISTANT)
     {
-      http.addHeader(F("Authorization"), String(F("Bearer ")) + _ha.http.homeassistant.longLivedAccessToken);
+      http.addHeader(F("Authorization"), String(F("Bearer ")) + _ha.http.secret);
       http.addHeader(F("Content-Type"), F("application/json"));
     }
 
@@ -498,7 +498,6 @@ void WebPalaSensor::setConfigDefaultValues()
   _ha.http.secret[0] = 0;
   _ha.http.fibaro.username[0] = 0;
   _ha.http.homeassistant.entityId[0] = 0;
-  _ha.http.homeassistant.longLivedAccessToken[0] = 0;
   _ha.http.cboxIp = 0;
 
   _ha.mqtt.hostname[0] = 0;
@@ -645,14 +644,14 @@ bool WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
       // put longLivedAccessToken into tempPassword
       if ((jv = doc["hahhallat"]).is<const char *>())
       {
-        strlcpy(tempPassword, jv, sizeof(_ha.http.homeassistant.longLivedAccessToken));
+        strlcpy(tempPassword, jv, sizeof(_ha.http.secret));
 
-        // if not from web page or long-lived access token is not the predefined one then copy it to _ha.http.homeassistant.longLivedAccessToken
+        // if not from web page or long-lived access token is not the predefined one then copy it to _ha.http.secret
         if (!fromWebPage || strcmp_P(tempPassword, appDataPredefPassword))
-          strcpy(_ha.http.homeassistant.longLivedAccessToken, tempPassword);
+          strcpy(_ha.http.secret, tempPassword);
       }
 
-      if (!_ha.http.hostname[0] || !_ha.http.homeassistant.entityId[0] || !_ha.http.homeassistant.longLivedAccessToken[0])
+      if (!_ha.http.hostname[0] || !_ha.http.homeassistant.entityId[0] || !_ha.http.secret[0])
         _ha.protocol = HA_PROTO_DISABLED;
       break;
     }
@@ -747,7 +746,7 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
     {
       doc["hahhaei"] = _ha.http.homeassistant.entityId;
       if (forSaveFile)
-        doc["hahhallat"] = _ha.http.homeassistant.longLivedAccessToken;
+        doc["hahhallat"] = _ha.http.secret;
       else
         doc["hahhallat"] = (const __FlashStringHelper *)appDataPredefPassword; // predefined special password (mean to keep already saved one)
     }

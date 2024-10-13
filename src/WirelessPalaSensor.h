@@ -57,7 +57,6 @@ private:
     struct
     {
       char entityId[64 + 1] = {0};
-      char longLivedAccessToken[183 + 1] = {0};
     } homeassistant;
 
     uint32_t cboxIp = 0;
