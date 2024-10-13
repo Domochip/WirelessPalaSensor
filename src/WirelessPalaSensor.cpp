@@ -103,7 +103,7 @@ void WebPalaSensor::timerTick()
 
     // For Fibaro, Pass authentication if specified in configuration
     if (_ha.http.type == HA_HTTP_FIBARO && _ha.http.fibaro.username[0])
-      http.setAuthorization(_ha.http.fibaro.username, _ha.http.fibaro.password);
+      http.setAuthorization(_ha.http.fibaro.username, _ha.http.secret);
 
     // For HomeAssistant, Pass long-lived access token and set content type
     if (_ha.http.type == HA_HTTP_HOMEASSISTANT)
@@ -497,7 +497,6 @@ void WebPalaSensor::setConfigDefaultValues()
   _ha.http.temperatureId = 0;
   _ha.http.secret[0] = 0;
   _ha.http.fibaro.username[0] = 0;
-  _ha.http.fibaro.password[0] = 0;
   _ha.http.homeassistant.entityId[0] = 0;
   _ha.http.homeassistant.longLivedAccessToken[0] = 0;
   _ha.http.cboxIp = 0;
@@ -623,11 +622,11 @@ bool WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
       // put Fibaropassword into tempPassword
       if ((jv = doc["hahfpass"]).is<const char *>())
       {
-        strlcpy(tempPassword, jv, sizeof(_ha.http.fibaro.password));
+        strlcpy(tempPassword, jv, sizeof(_ha.http.secret));
 
-        // if not from web page or password is not the predefined one then copy it to _ha.http.fibaro.password
+        // if not from web page or password is not the predefined one then copy it to _ha.http.secret
         if (!fromWebPage || strcmp_P(tempPassword, appDataPredefPassword))
-          strcpy(_ha.http.fibaro.password, tempPassword);
+          strcpy(_ha.http.secret, tempPassword);
       }
 
       if (!_ha.http.hostname[0])
@@ -738,7 +737,7 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
     {
       doc["hahfuser"] = _ha.http.fibaro.username;
       if (forSaveFile)
-        doc["hahfpass"] = _ha.http.fibaro.password;
+        doc["hahfpass"] = _ha.http.secret;
       else
         doc["hahfpass"] = (const __FlashStringHelper *)appDataPredefPassword; // predefined special password (mean to keep already saved one)
     }

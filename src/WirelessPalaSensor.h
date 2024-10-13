@@ -52,7 +52,6 @@ private:
     struct
     {
       char username[64 + 1] = {0};
-      char password[64 + 1] = {0};
     } fibaro;
 
     struct
