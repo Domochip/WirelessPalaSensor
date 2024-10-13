@@ -39,10 +39,11 @@ private:
 
 #define HA_HTTP_JEEDOM 0
 #define HA_HTTP_FIBARO 1
+#define HA_HTTP_HOMEASSISTANT 2
 
   typedef struct
   {
-    byte type = HA_HTTP_JEEDOM;
+    byte type = HA_HTTP_HOMEASSISTANT;
     char hostname[64 + 1] = {0};
     bool tls = false;
     int temperatureId = 0;
@@ -57,6 +58,11 @@ private:
       char username[64 + 1] = {0};
       char password[64 + 1] = {0};
     } fibaro;
+
+    struct
+    {
+      char longLivedAccessToken[183 + 1] = {0};
+    } homeassistant;
 
     uint32_t cboxIp = 0;
   } HTTP;

@@ -467,13 +467,14 @@ void WebPalaSensor::setConfigDefaultValues()
   _ha.cboxProtocol = CBOX_PROTO_DISABLED;
   _ha.cboxTemperatureTimeout = 300;
 
-  _ha.http.type = HA_HTTP_JEEDOM;
+  _ha.http.type = HA_HTTP_HOMEASSISTANT;
   _ha.http.hostname[0] = 0;
   _ha.http.tls = false;
   _ha.http.temperatureId = 0;
   _ha.http.jeedom.apiKey[0] = 0;
   _ha.http.fibaro.username[0] = 0;
   _ha.http.fibaro.password[0] = 0;
+  _ha.http.homeassistant.longLivedAccessToken[0] = 0;
   _ha.http.cboxIp = 0;
 
   _ha.mqtt.hostname[0] = 0;
@@ -492,7 +493,7 @@ void WebPalaSensor::setConfigDefaultValues()
 bool WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
 {
   JsonVariant jv;
-  char tempPassword[150 + 1] = {0};
+  char tempPassword[183 + 1] = {0};
 
   if ((jv = doc["rp"]).is<JsonVariant>())
     _refreshPeriod = jv;
@@ -607,6 +608,22 @@ bool WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
       if (!_ha.http.hostname[0])
         _ha.protocol = HA_PROTO_DISABLED;
       break;
+
+    case HA_HTTP_HOMEASSISTANT:
+
+      // put longLivedAccessToken into tempPassword
+      if ((jv = doc["hahhallat"]).is<const char *>())
+      {
+        strlcpy(tempPassword, jv, sizeof(_ha.http.homeassistant.longLivedAccessToken));
+
+        // if not from web page or long-lived access token is not the predefined one then copy it to _ha.http.homeassistant.longLivedAccessToken
+        if (!fromWebPage || strcmp_P(tempPassword, appDataPredefPassword))
+          strcpy(_ha.http.homeassistant.longLivedAccessToken, tempPassword);
+      }
+
+      if (!_ha.http.hostname[0] || !_ha.http.homeassistant.longLivedAccessToken[0])
+        _ha.protocol = HA_PROTO_DISABLED;
+      break;
     }
 
     break;
@@ -685,6 +702,11 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
       doc["hahfpass"] = _ha.http.fibaro.password;
     else
       doc["hahfpass"] = (const __FlashStringHelper *)appDataPredefPassword; // predefined special password (mean to keep already saved one)
+
+    if (forSaveFile)
+      doc["hahhallat"] = _ha.http.homeassistant.longLivedAccessToken;
+    else
+      doc["hahhallat"] = (const __FlashStringHelper *)appDataPredefPassword; // predefined special password (mean to keep already saved one)
   }
 
   // if for WebPage or protocol selected is MQTT
