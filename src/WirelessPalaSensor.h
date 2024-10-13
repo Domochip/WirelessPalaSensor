@@ -47,11 +47,7 @@ private:
     char hostname[64 + 1] = {0};
     bool tls = false;
     int temperatureId = 0;
-
-    struct
-    {
-      char apiKey[48 + 1] = {0};
-    } jeedom;
+    char secret[183 + 1] = {0}; // store Home Assistant long lived access token or Jeedom API key or Fibaro password
 
     struct
     {
