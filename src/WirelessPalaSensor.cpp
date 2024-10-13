@@ -87,6 +87,9 @@ void WebPalaSensor::timerTick()
     case HA_HTTP_FIBARO:
       completeURI = completeURI + F("/api/devices?id=") + _ha.http.temperatureId;
       break;
+    case HA_HTTP_HOMEASSISTANT:
+      completeURI = completeURI + F("/api/states/") + _ha.http.homeassistant.entityId;
+      break;
     }
 
     // if not TLS then use client, else use clientSecure
@@ -101,6 +104,13 @@ void WebPalaSensor::timerTick()
     // For Fibaro, Pass authentication if specified in configuration
     if (_ha.http.type == HA_HTTP_FIBARO && _ha.http.fibaro.username[0])
       http.setAuthorization(_ha.http.fibaro.username, _ha.http.fibaro.password);
+
+    // For HomeAssistant, Pass long-lived access token and set content type
+    if (_ha.http.type == HA_HTTP_HOMEASSISTANT)
+    {
+      http.addHeader(F("Authorization"), String(F("Bearer ")) + _ha.http.homeassistant.longLivedAccessToken);
+      http.addHeader(F("Content-Type"), F("application/json"));
+    }
 
     // send request
     _haRequestResult = http.GET();
@@ -123,6 +133,20 @@ void WebPalaSensor::timerTick()
       case HA_HTTP_FIBARO:
 
         while (http.connected() && stream->find("\"value\""))
+        {
+          // go to first next double quote (or return false if a comma appears first)
+          if (stream->findUntil("\"", ","))
+          {
+            // read value (read until next doublequote)
+            nb = stream->readBytesUntil('"', payload, sizeof(payload) - 1);
+            payload[nb] = 0;
+          }
+        }
+        break;
+
+      case HA_HTTP_HOMEASSISTANT:
+
+        while (http.connected() && stream->find("\"state\""))
         {
           // go to first next double quote (or return false if a comma appears first)
           if (stream->findUntil("\"", ","))
