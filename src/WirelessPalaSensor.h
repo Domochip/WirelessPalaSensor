@@ -70,7 +70,7 @@ private:
     char password[64 + 1] = {0};
     char baseTopic[64 + 1] = {0};
     bool hassDiscoveryEnabled = true;
-    char hassDiscoveryPrefix[64 + 1] = {0};
+    char hassDiscoveryPrefix[32 + 1] = {0};
 
     char temperatureTopic[64 + 1] = {0};
 
