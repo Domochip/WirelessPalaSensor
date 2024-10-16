@@ -66,7 +66,7 @@ private:
   {
     char hostname[64 + 1] = {0};
     uint32_t port = 0;
-    char username[128 + 1] = {0};
+    char username[32 + 1] = {0};
     char password[150 + 1] = {0};
     char baseTopic[64 + 1] = {0};
     bool hassDiscoveryEnabled = true;
