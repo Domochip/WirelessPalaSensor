@@ -802,15 +802,14 @@ String WebPalaSensor::generateStatusJSON()
   JsonDocument doc;
 
   // Home Automation infos
-  String has1, has2;
+  String has1;
   switch (_ha.protocol)
   {
   case HA_PROTO_DISABLED:
     has1 = F("Disabled");
     break;
   case HA_PROTO_HTTP:
-    doc["has1"] = String(F("Last Home Automation HTTP Result : ")) + _haRequestResult;
-    doc["has2"] = String(F("Last Home Automation Temperature : ")) + _haTemperature;
+    has1 = String(F("Last Home Automation HTTP Result : ")) + _haRequestResult;
     break;
   case HA_PROTO_MQTT:
     has1 = F("MQTT Connection State : ");
@@ -844,22 +843,21 @@ String WebPalaSensor::generateStatusJSON()
       has1 = has1 + F("Connection Unauthorized");
       break;
     }
-    doc["has1"] = has1;
-    has2 = String(F("Last Home Automation Temperature : ")) + _haTemperature + F(" (") + ((millis() - _haTemperatureMillis) / 1000) + F(" seconds ago)");
-    doc["has2"] = has2;
     break;
   }
+  doc["has1"] = has1;
+  if (_ha.protocol != HA_PROTO_DISABLED)
+    doc["has2"] = String(F("Last Home Automation Temperature : ")) + _haTemperature + F(" (") + ((millis() - _haTemperatureMillis) / 1000) + F(" seconds ago)");
 
   // stove(WPalaControl/CBox) infos
-  String cbs1, cbs2;
+  String cbs1;
   switch (_ha.cboxProtocol)
   {
   case CBOX_PROTO_DISABLED:
     cbs1 = F("Disabled");
     break;
   case CBOX_PROTO_HTTP:
-    doc["cbs1"] = String(F("Last WPalaControl/CBox HTTP Result : ")) + _stoveRequestResult;
-    doc["cbs2"] = String(F("Last WPalaControl/CBox Temperature : ")) + _stoveTemperature;
+    cbs1 = String(F("Last WPalaControl/CBox HTTP Result : ")) + _stoveRequestResult;
     break;
   case CBOX_PROTO_MQTT:
     cbs1 = F("MQTT Connection State : ");
@@ -893,11 +891,11 @@ String WebPalaSensor::generateStatusJSON()
       cbs1 = cbs1 + F("Connection Unauthorized");
       break;
     }
-    doc["cbs1"] = cbs1;
-    cbs2 = String(F("Last WPalaControl/CBox Temperature : ")) + _stoveTemperature + F(" (") + ((millis() - _stoveTemperatureMillis) / 1000) + F(" seconds ago)");
-    doc["cbs2"] = cbs2;
     break;
   }
+  doc["cbs1"] = cbs1;
+  if (_ha.cboxProtocol != CBOX_PROTO_DISABLED)
+    doc["cbs2"] = String(F("Last WPalaControl/CBox Temperature : ")) + _stoveTemperature + F(" (") + ((millis() - _stoveTemperatureMillis) / 1000) + F(" seconds ago)");
 
   doc["low"] = serialized(String(_owTemperature));
   doc["owu"] = (_haTemperatureUsed ? F("Not ") : F(""));
