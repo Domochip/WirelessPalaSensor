@@ -634,8 +634,8 @@ bool WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
 
     case HA_HTTP_HOMEASSISTANT:
 
-      // if hostname is not empty and doesn't contains ":" then add ":8123" (if it fits)
-      if (_ha.http.hostname[0] && !strchr(_ha.http.hostname, ':') && (strlen(_ha.http.hostname) + 5 < sizeof(_ha.http.hostname) - 1))
+      // if hostname is not empty and doesn't contains ":" and tls not enabled then add ":8123" (if it fits)
+      if (_ha.http.hostname[0] && !strchr(_ha.http.hostname, ':') && !_ha.http.tls && (strlen(_ha.http.hostname) + 5 < sizeof(_ha.http.hostname) - 1))
         strcat(_ha.http.hostname, ":8123");
 
       if ((jv = doc["hahhaei"]).is<const char *>())
