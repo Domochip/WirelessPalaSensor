@@ -74,7 +74,7 @@ private:
 
     char temperatureTopic[64 + 1] = {0};
 
-    char cboxT1Topic[64 + 1] = {0};
+    char cboxT1Topic[32 + 1] = {0};
   } MQTT;
 
 #define HA_PROTO_DISABLED 0
