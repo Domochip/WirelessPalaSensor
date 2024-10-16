@@ -64,6 +64,7 @@
                     <select id='hahtype' name='hahtype'>
                         <option value="0">Jeedom Virtual</option>
                         <option value="1">Fibaro</option>
+                        <option value="2">Home Assistant</option>
                     </select>
                 </div>
 
@@ -98,11 +99,24 @@
                         <input type='password' id='hahfpass' name='hahfpass' maxlength='64'>
                     </div>
                 </div>
+                <div id='hah0-1'> <!-- common for hah0 and hah1 -->
+                    <div class="pure-control-group">
+                        <label for="hahtempid">Temperature Id</label>
+                        <input type='number' id='hahtempid' name='hahtempid' min='0' max='65535'>
+                        <span class="pure-form-message-inline">(Command Or Device Id)</span>
+                    </div>
+                </div>
 
-                <div class="pure-control-group">
-                    <label for="hahtempid">Temperature Id</label>
-                    <input type='number' id='hahtempid' name='hahtempid' min='0' max='65535'>
-                    <span class="pure-form-message-inline">(Command Or Device Id)</span>
+                <div id='hah2'>
+                    <div class="pure-control-group">
+                        <label for="hahhallat">Long-lived Access Token</label>
+                        <input type='password' id='hahhallat' name='hahhallat' maxlength='183'>
+                    </div>
+                    <div class="pure-control-group">
+                        <label for="hahhaei">Temperature Entity Id</label>
+                        <input type='text' id='hahhaei' name='hahhaei' maxlength='64'>
+                        <span class="pure-form-message-inline">(like sensor.average_temperature)</span>
+                    </div>
                 </div>
             </div>
 
@@ -255,10 +269,20 @@
             case "0":
                 $(qsp + "#hah0").style.display = '';
                 $(qsp + "#hah1").style.display = 'none';
+                $(qsp + "#hah0-1").style.display = '';
+                $(qsp + "#hah2").style.display = 'none';
                 break;
             case "1":
                 $(qsp + "#hah0").style.display = 'none';
                 $(qsp + "#hah1").style.display = '';
+                $(qsp + "#hah0-1").style.display = '';
+                $(qsp + "#hah2").style.display = 'none';
+                break;
+            case "2":
+                $(qsp + "#hah0").style.display = 'none';
+                $(qsp + "#hah1").style.display = 'none';
+                $(qsp + "#hah0-1").style.display = 'none';
+                $(qsp + "#hah2").style.display = '';
                 break;
         }
     });
