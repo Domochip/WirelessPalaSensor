@@ -46,7 +46,7 @@
 #endif
 
 // Enable developper mode (fwdev webpage and SPIFFS is used)
-#define DEVELOPPER_MODE 1
+#define DEVELOPPER_MODE 0
 
 // Log Serial Object
 #define LOG_SERIAL Serial

@@ -39,24 +39,25 @@ private:
 
 #define HA_HTTP_JEEDOM 0
 #define HA_HTTP_FIBARO 1
+#define HA_HTTP_HOMEASSISTANT 2
 
   typedef struct
   {
-    byte type = HA_HTTP_JEEDOM;
+    byte type = HA_HTTP_HOMEASSISTANT;
     char hostname[64 + 1] = {0};
     bool tls = false;
     int temperatureId = 0;
-
-    struct
-    {
-      char apiKey[48 + 1] = {0};
-    } jeedom;
+    char secret[183 + 1] = {0}; // store Home Assistant long lived access token or Jeedom API key or Fibaro password
 
     struct
     {
       char username[64 + 1] = {0};
-      char password[64 + 1] = {0};
     } fibaro;
+
+    struct
+    {
+      char entityId[64 + 1] = {0};
+    } homeassistant;
 
     uint32_t cboxIp = 0;
   } HTTP;
@@ -65,15 +66,15 @@ private:
   {
     char hostname[64 + 1] = {0};
     uint32_t port = 0;
-    char username[128 + 1] = {0};
-    char password[150 + 1] = {0};
+    char username[32 + 1] = {0};
+    char password[64 + 1] = {0};
     char baseTopic[64 + 1] = {0};
     bool hassDiscoveryEnabled = true;
-    char hassDiscoveryPrefix[64 + 1] = {0};
+    char hassDiscoveryPrefix[32 + 1] = {0};
 
     char temperatureTopic[64 + 1] = {0};
 
-    char cboxT1Topic[64 + 1] = {0};
+    char cboxT1Topic[32 + 1] = {0};
   } MQTT;
 
 #define HA_PROTO_DISABLED 0

@@ -82,10 +82,13 @@ void WebPalaSensor::timerTick()
     switch (_ha.http.type)
     {
     case HA_HTTP_JEEDOM:
-      completeURI = completeURI + F("/core/api/jeeApi.php?apikey=") + _ha.http.jeedom.apiKey + F("&type=cmd&id=") + _ha.http.temperatureId;
+      completeURI = completeURI + F("/core/api/jeeApi.php?apikey=") + _ha.http.secret + F("&type=cmd&id=") + _ha.http.temperatureId;
       break;
     case HA_HTTP_FIBARO:
       completeURI = completeURI + F("/api/devices?id=") + _ha.http.temperatureId;
+      break;
+    case HA_HTTP_HOMEASSISTANT:
+      completeURI = completeURI + F("/api/states/") + _ha.http.homeassistant.entityId;
       break;
     }
 
@@ -100,7 +103,14 @@ void WebPalaSensor::timerTick()
 
     // For Fibaro, Pass authentication if specified in configuration
     if (_ha.http.type == HA_HTTP_FIBARO && _ha.http.fibaro.username[0])
-      http.setAuthorization(_ha.http.fibaro.username, _ha.http.fibaro.password);
+      http.setAuthorization(_ha.http.fibaro.username, _ha.http.secret);
+
+    // For HomeAssistant, Pass long-lived access token and set content type
+    if (_ha.http.type == HA_HTTP_HOMEASSISTANT)
+    {
+      http.addHeader(F("Authorization"), String(F("Bearer ")) + _ha.http.secret);
+      http.addHeader(F("Content-Type"), F("application/json"));
+    }
 
     // send request
     _haRequestResult = http.GET();
@@ -123,6 +133,20 @@ void WebPalaSensor::timerTick()
       case HA_HTTP_FIBARO:
 
         while (http.connected() && stream->find("\"value\""))
+        {
+          // go to first next double quote (or return false if a comma appears first)
+          if (stream->findUntil("\"", ","))
+          {
+            // read value (read until next doublequote)
+            nb = stream->readBytesUntil('"', payload, sizeof(payload) - 1);
+            payload[nb] = 0;
+          }
+        }
+        break;
+
+      case HA_HTTP_HOMEASSISTANT:
+
+        while (http.connected() && stream->find("\"state\""))
         {
           // go to first next double quote (or return false if a comma appears first)
           if (stream->findUntil("\"", ","))
@@ -467,13 +491,13 @@ void WebPalaSensor::setConfigDefaultValues()
   _ha.cboxProtocol = CBOX_PROTO_DISABLED;
   _ha.cboxTemperatureTimeout = 300;
 
-  _ha.http.type = HA_HTTP_JEEDOM;
+  _ha.http.type = HA_HTTP_HOMEASSISTANT;
   _ha.http.hostname[0] = 0;
   _ha.http.tls = false;
   _ha.http.temperatureId = 0;
-  _ha.http.jeedom.apiKey[0] = 0;
+  _ha.http.secret[0] = 0;
   _ha.http.fibaro.username[0] = 0;
-  _ha.http.fibaro.password[0] = 0;
+  _ha.http.homeassistant.entityId[0] = 0;
   _ha.http.cboxIp = 0;
 
   _ha.mqtt.hostname[0] = 0;
@@ -492,7 +516,7 @@ void WebPalaSensor::setConfigDefaultValues()
 bool WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
 {
   JsonVariant jv;
-  char tempPassword[150 + 1] = {0};
+  char tempPassword[183 + 1] = {0};
 
   if ((jv = doc["rp"]).is<JsonVariant>())
     _refreshPeriod = jv;
@@ -578,14 +602,14 @@ bool WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
       // put apiKey into tempPassword
       if ((jv = doc["hahjak"]).is<const char *>())
       {
-        strlcpy(tempPassword, jv, sizeof(_ha.http.jeedom.apiKey));
+        strlcpy(tempPassword, jv, sizeof(_ha.http.secret));
 
-        // if not from web page or received apiKey is not the predefined one then copy it to _ha.http.jeedom.apiKey
+        // if not from web page or received apiKey is not the predefined one then copy it to _ha.http.secret
         if (!fromWebPage || strcmp_P(tempPassword, appDataPredefPassword))
-          strcpy(_ha.http.jeedom.apiKey, tempPassword);
+          strcpy(_ha.http.secret, tempPassword);
       }
 
-      if (!_ha.http.hostname[0] || !_ha.http.jeedom.apiKey[0])
+      if (!_ha.http.hostname[0] || !_ha.http.secret[0])
         _ha.protocol = HA_PROTO_DISABLED;
       break;
 
@@ -597,14 +621,37 @@ bool WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
       // put Fibaropassword into tempPassword
       if ((jv = doc["hahfpass"]).is<const char *>())
       {
-        strlcpy(tempPassword, jv, sizeof(_ha.http.fibaro.password));
+        strlcpy(tempPassword, jv, sizeof(_ha.http.secret));
 
-        // if not from web page or password is not the predefined one then copy it to _ha.http.fibaro.password
+        // if not from web page or password is not the predefined one then copy it to _ha.http.secret
         if (!fromWebPage || strcmp_P(tempPassword, appDataPredefPassword))
-          strcpy(_ha.http.fibaro.password, tempPassword);
+          strcpy(_ha.http.secret, tempPassword);
       }
 
       if (!_ha.http.hostname[0])
+        _ha.protocol = HA_PROTO_DISABLED;
+      break;
+
+    case HA_HTTP_HOMEASSISTANT:
+
+      // if hostname is not empty and doesn't contains ":" and tls not enabled then add ":8123" (if it fits)
+      if (_ha.http.hostname[0] && !strchr(_ha.http.hostname, ':') && !_ha.http.tls && (strlen(_ha.http.hostname) + 5 < sizeof(_ha.http.hostname) - 1))
+        strcat(_ha.http.hostname, ":8123");
+
+      if ((jv = doc["hahhaei"]).is<const char *>())
+        strlcpy(_ha.http.homeassistant.entityId, jv, sizeof(_ha.http.homeassistant.entityId));
+
+      // put longLivedAccessToken into tempPassword
+      if ((jv = doc["hahhallat"]).is<const char *>())
+      {
+        strlcpy(tempPassword, jv, sizeof(_ha.http.secret));
+
+        // if not from web page or long-lived access token is not the predefined one then copy it to _ha.http.secret
+        if (!fromWebPage || strcmp_P(tempPassword, appDataPredefPassword))
+          strcpy(_ha.http.secret, tempPassword);
+      }
+
+      if (!_ha.http.hostname[0] || !_ha.http.homeassistant.entityId[0] || !_ha.http.secret[0])
         _ha.protocol = HA_PROTO_DISABLED;
       break;
     }
@@ -675,16 +722,34 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
     doc["hahtls"] = _ha.http.tls;
     doc["hahtempid"] = _ha.http.temperatureId;
 
-    if (forSaveFile)
-      doc["hahjak"] = _ha.http.jeedom.apiKey;
-    else
-      doc["hahjak"] = (const __FlashStringHelper *)appDataPredefPassword; // predefined special password (mean to keep already saved one)
+    // if Home Automation protocol selected is Jeedom
+    if (_ha.http.type == HA_HTTP_JEEDOM)
+    {
+      if (forSaveFile)
+        doc["hahjak"] = _ha.http.secret;
+      else
+        doc["hahjak"] = (const __FlashStringHelper *)appDataPredefPassword; // predefined special password (mean to keep already saved one)
+    }
 
-    doc["hahfuser"] = _ha.http.fibaro.username;
-    if (forSaveFile)
-      doc["hahfpass"] = _ha.http.fibaro.password;
-    else
-      doc["hahfpass"] = (const __FlashStringHelper *)appDataPredefPassword; // predefined special password (mean to keep already saved one)
+    // if Home Automation protocol selected is Fibaro
+    if (_ha.http.type == HA_HTTP_FIBARO)
+    {
+      doc["hahfuser"] = _ha.http.fibaro.username;
+      if (forSaveFile)
+        doc["hahfpass"] = _ha.http.secret;
+      else
+        doc["hahfpass"] = (const __FlashStringHelper *)appDataPredefPassword; // predefined special password (mean to keep already saved one)
+    }
+
+    // if Home Automation protocol selected is HomeAssistant
+    if (_ha.http.type == HA_HTTP_HOMEASSISTANT)
+    {
+      doc["hahhaei"] = _ha.http.homeassistant.entityId;
+      if (forSaveFile)
+        doc["hahhallat"] = _ha.http.secret;
+      else
+        doc["hahhallat"] = (const __FlashStringHelper *)appDataPredefPassword; // predefined special password (mean to keep already saved one)
+    }
   }
 
   // if for WebPage or protocol selected is MQTT
