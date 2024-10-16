@@ -809,10 +809,10 @@ String WebPalaSensor::generateStatusJSON()
     has1 = F("Disabled");
     break;
   case HA_PROTO_HTTP:
-    has1 = String(F("Last Home Automation HTTP Result : ")) + _haRequestResult;
+    has1 = String(F("Last HTTP Result : ")) + _haRequestResult;
     break;
   case HA_PROTO_MQTT:
-    has1 = F("MQTT Connection State : ");
+    has1 = F("MQTT State : ");
     switch (_mqttMan.state())
     {
     case MQTT_CONNECTION_TIMEOUT:
@@ -847,7 +847,7 @@ String WebPalaSensor::generateStatusJSON()
   }
   doc["has1"] = has1;
   if (_ha.protocol != HA_PROTO_DISABLED)
-    doc["has2"] = String(F("Last Home Automation Temperature : ")) + _haTemperature + F(" (") + ((millis() - _haTemperatureMillis) / 1000) + F(" seconds ago)");
+    doc["has2"] = String(F("Last Temperature : ")) + _haTemperature + F(" (") + ((millis() - _haTemperatureMillis) / 1000) + F(" seconds ago)");
 
   // stove(WPalaControl/CBox) infos
   String cbs1;
@@ -857,10 +857,10 @@ String WebPalaSensor::generateStatusJSON()
     cbs1 = F("Disabled");
     break;
   case CBOX_PROTO_HTTP:
-    cbs1 = String(F("Last WPalaControl/CBox HTTP Result : ")) + _stoveRequestResult;
+    cbs1 = String(F("Last HTTP Result : ")) + _stoveRequestResult;
     break;
   case CBOX_PROTO_MQTT:
-    cbs1 = F("MQTT Connection State : ");
+    cbs1 = F("MQTT State : ");
     switch (_mqttMan.state())
     {
     case MQTT_CONNECTION_TIMEOUT:
@@ -895,11 +895,11 @@ String WebPalaSensor::generateStatusJSON()
   }
   doc["cbs1"] = cbs1;
   if (_ha.cboxProtocol != CBOX_PROTO_DISABLED)
-    doc["cbs2"] = String(F("Last WPalaControl/CBox Temperature : ")) + _stoveTemperature + F(" (") + ((millis() - _stoveTemperatureMillis) / 1000) + F(" seconds ago)");
+    doc["cbs2"] = String(F("Last Temperature : ")) + _stoveTemperature + F(" (") + ((millis() - _stoveTemperatureMillis) / 1000) + F(" seconds ago)");
 
-  doc["low"] = serialized(String(_owTemperature));
+  doc["owt"] = serialized(String(_owTemperature, 2));
   doc["owu"] = (_haTemperatureUsed ? F("Not ") : F(""));
-  doc["pt"] = serialized(String(_pushedTemperature));
+  doc["pt"] = serialized(String(_pushedTemperature, 2));
   doc["p50"] = _mcp4151_50k.getPosition(0);
   doc["p5"] = _mcp4151_5k.getPosition(0);
 
