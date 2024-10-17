@@ -1,3 +1,12 @@
+<style>
+    .connected {
+        border: 3px solid #1Cb841;
+        padding: 10px;
+        position: relative;
+        top: -10px;
+    }
+</style>
+
 <h2 class="content-subhead">Sensor Simulator<span id="l">
         <h6 style="display:inline"><b> Loading...</b></h6>
     </span></h2>
@@ -13,7 +22,51 @@
         <h3 class="content-subhead">Calibration</h3>
         <div class="pure-control-group">
             <label>Calibrator</label>
-            <a class="pure-button" id="calibButton" style="background: rgb(28, 184, 65);">Run</a>
+            <a class="pure-button" id="calibButton" style="background: #1cb841;">Show</a>
+        </div>
+        <div id='calib' class='connected' style='display:none'>
+
+            <h2 class="content-subhead">Step 1 : Thermistor simulator calibration</h2>
+            <em>All buttons of this section stop the WPalaSensor refresh for 20 periods (<span
+                    id="twentyRefreshPeriodDuration"></span> seconds).</em><br>
+            <em>This allows you to adjust the thermistor and see the result on the stove display.</em><br>
+
+            <br>
+            <div class="pure-control-group">
+                <label for="set10">Set Thermistor to 10°</label>
+                <input type='button' id='set10' value='Set Thermistor to 10°'><span id='set10res'></span>
+            </div>
+            <div class="pure-control-group">
+                <label for="set10d">Adjust to get 10.0° on stove display</label>
+                <input type='button' id='set10d' value='-'><input type='button' id='set10u' value='+'>
+            </div>
+
+            <br>
+            <div class="pure-control-group">
+                <label for="set20">Set Thermistor to 20°</label>
+                <input type='button' id='set20' value='Set Thermistor to 20°'><span id='set20res'></span>
+            </div>
+            <div class="pure-control-group">
+                <label for="set20d">Adjust to get 20.0° on stove display</label>
+                <input type='button' id='set20d' value='-'><input type='button' id='set20u' value='+'>
+            </div>
+
+            <br>
+            <div class="pure-control-group">
+                <label for="set30">Set Thermistor to 30°</label>
+                <input type='button' id='set30' value='Set Thermistor to 30°'><span id='set30res'></span>
+            </div>
+            <div class="pure-control-group">
+                <label for="set30d">Adjust to get 30.0° on stove display</label>
+                <input type='button' id='set30d' value='-'><input type='button' id='set30u' value='+'>
+            </div>
+
+            <h2 class="content-subhead">Step 2 : calculate</h2>
+
+            <div class="pure-control-group">
+                <label for="calc">Calculate new Coeff A,B and C</label>
+                <input type='button' id='calc' value='Run Calculation'>
+            </div>
         </div>
         <div class="pure-control-group">
             <label for="sha">Coeff A</label>
@@ -223,16 +276,105 @@
 </form>
 <span id='r'></span>
 
+<!-- inputs used for A,B and C Coeff calculation during calibration -->
+<input type='number' id='R1' style='display:none'>
+<input type='number' id='R2' style='display:none'>
+<input type='number' id='R3' style='display:none'>
+
 <script>
     //QuerySelector Prefix is added by load function to know into what element queySelector need to look for
     //var qsp = '#contentX ';
 
+    function getSteinhartHart(R1, T1, R2, T2, R3, T3) {
+        T1 = T1 + 273.15; T2 = T2 + 273.15; T3 = T3 + 273.15;
+
+        var L1 = Math.log(R1); var L2 = Math.log(R2); var L3 = Math.log(R3);
+
+        var Y1 = 1 / T1; var Y2 = 1 / T2; var Y3 = 1 / T3;
+
+        var Lambda2 = (Y2 - Y1) / (L2 - L1);
+        var Lambda3 = (Y3 - Y1) / (L3 - L1);
+
+        var C = ((Lambda3 - Lambda2) / (L3 - L2)) / (L1 + L2 + L3);
+        var B = Lambda2 - C * (L1 * L1 + L1 * L2 + L2 * L2);
+        var A = Y1 - (B + L1 * L1 * C) * L1;
+        return [A, B, C];
+    }
+
     $(qsp + "#calibButton").addEventListener('click', function (evt) {
         evt.preventDefault();
-        emptyContents();
-        $("#mainHeader").textContent = "Calibration";
-        load($("#content1"), "/calib.html");
+        if ($(qsp + "#calib").style.display == 'none') {
+            $(qsp + "#calibButton").text = 'Hide';
+            $(qsp + "#calib").style.display = '';
+            $(qsp + "#twentyRefreshPeriodDuration").innerText = $(qsp + "#rp").value * 20;
+        }
+        else {
+            $(qsp + "#calibButton").text = 'Show';
+            $(qsp + "#calib").style.display = 'none';
+        }
     });
+
+
+    $(qsp + "#set10").addEventListener('click', function () {
+        post("/sdp", "{\"temperature\":10}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R1").value = data.r })
+        })
+    })
+
+    $(qsp + "#set10d").addEventListener('click', function () {
+        post("/sdp", "{\"up\":1}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R1").value = data.r })
+        })
+    })
+
+    $(qsp + "#set10u").addEventListener('click', function () {
+        post("/sdp", "{\"down\":1}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R1").value = data.r })
+        })
+    })
+
+    $(qsp + "#set20").addEventListener('click', function () {
+        post("/sdp", "{\"temperature\":20}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R2").value = data.r })
+        })
+    })
+
+    $(qsp + "#set20d").addEventListener('click', function () {
+        post("/sdp", "{\"up\":1}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R2").value = data.r })
+        })
+    })
+
+    $(qsp + "#set20u").addEventListener('click', function () {
+        post("/sdp", "{\"down\":1}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R2").value = data.r })
+        })
+    })
+
+    $(qsp + "#set30").addEventListener('click', function () {
+        post("/sdp", "{\"temperature\":30}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R3").value = data.r })
+        })
+    })
+
+    $(qsp + "#set30d").addEventListener('click', function () {
+        post("/sdp", "{\"up\":1}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R3").value = data.r })
+        })
+    })
+
+    $(qsp + "#set30u").addEventListener('click', function () {
+        post("/sdp", "{\"down\":1}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R3").value = data.r })
+        })
+    })
+
+    $(qsp + "#calc").addEventListener('click', function () {
+        var coeffs = getSteinhartHart($(qsp + "#R1").value, 10.0, $(qsp + "#R2").value, 20.0, $(qsp + "#R3").value, 30.0);
+        $(qsp + "#sha").value = Math.round(coeffs[0] * 10000000000000000) / 10000000000000000;
+        $(qsp + "#shb").value = Math.round(coeffs[1] * 10000000000000000) / 10000000000000000;
+        $(qsp + "#shc").value = Math.round(coeffs[2] * 10000000000000000) / 10000000000000000;
+    })
 
     function isMQTTSelected() {
         if ($(qsp + "#haproto").value == 2 || $(qsp + "#cbproto").value == 2) {
