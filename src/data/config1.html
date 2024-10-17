@@ -308,6 +308,68 @@
         $(qsp + "#twentyRefreshPeriodDuration").innerText = $(qsp + "#rp").value * 20;
     });
 
+
+    $(qsp + "#set10").addEventListener('click', function () {
+        post("/sdp", "{\"temperature\":10}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R1").value = data.r })
+        })
+    })
+
+    $(qsp + "#set10d").addEventListener('click', function () {
+        post("/sdp", "{\"up\":1}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R1").value = data.r })
+        })
+    })
+
+    $(qsp + "#set10u").addEventListener('click', function () {
+        post("/sdp", "{\"down\":1}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R1").value = data.r })
+        })
+    })
+
+    $(qsp + "#set20").addEventListener('click', function () {
+        post("/sdp", "{\"temperature\":20}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R2").value = data.r })
+        })
+    })
+
+    $(qsp + "#set20d").addEventListener('click', function () {
+        post("/sdp", "{\"up\":1}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R2").value = data.r })
+        })
+    })
+
+    $(qsp + "#set20u").addEventListener('click', function () {
+        post("/sdp", "{\"down\":1}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R2").value = data.r })
+        })
+    })
+
+    $(qsp + "#set30").addEventListener('click', function () {
+        post("/sdp", "{\"temperature\":30}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R3").value = data.r })
+        })
+    })
+
+    $(qsp + "#set30d").addEventListener('click', function () {
+        post("/sdp", "{\"up\":1}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R3").value = data.r })
+        })
+    })
+
+    $(qsp + "#set30u").addEventListener('click', function () {
+        post("/sdp", "{\"down\":1}", function () {
+            getJSON("/gdp", function (data) { $(qsp + "#R3").value = data.r })
+        })
+    })
+
+    $(qsp + "#calc").addEventListener('click', function () {
+        var coeffs = getSteinhartHart($(qsp + "#R1").value, 10.0, $(qsp + "#R2").value, 20.0, $(qsp + "#R3").value, 30.0);
+        $(qsp + "#sha").value = Math.round(coeffs[0] * 10000000000000000) / 10000000000000000;
+        $(qsp + "#shb").value = Math.round(coeffs[1] * 10000000000000000) / 10000000000000000;
+        $(qsp + "#shc").value = Math.round(coeffs[2] * 10000000000000000) / 10000000000000000;
+    })
+
     function isMQTTSelected() {
         if ($(qsp + "#haproto").value == 2 || $(qsp + "#cbproto").value == 2) {
             $(qsp + "#mqtte").style.display = '';
