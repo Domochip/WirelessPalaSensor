@@ -303,9 +303,15 @@
 
     $(qsp + "#calibButton").addEventListener('click', function (evt) {
         evt.preventDefault();
-        $(qsp + "#calibButton").text = ($(qsp + "#calib").style.display == '' ? 'Hide' : 'Show');
-        $(qsp + "#calib").style.display = ($(qsp + "#calib").style.display == '' ? 'none' : '');
-        $(qsp + "#twentyRefreshPeriodDuration").innerText = $(qsp + "#rp").value * 20;
+        if ($(qsp + "#calib").style.display == 'none') {
+            $(qsp + "#calibButton").text = 'Hide';
+            $(qsp + "#calib").style.display = '';
+            $(qsp + "#twentyRefreshPeriodDuration").innerText = $(qsp + "#rp").value * 20;
+        }
+        else {
+            $(qsp + "#calibButton").text = 'Show';
+            $(qsp + "#calib").style.display = 'none';
+        }
     });
 
 
