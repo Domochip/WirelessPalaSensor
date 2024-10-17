@@ -27,7 +27,8 @@
         <div id='calib' class='connected' style='display:none'>
 
             <h2 class="content-subhead">Step 1 : Thermistor simulator calibration</h2>
-            <em>All buttons of this section stop the WPalaSensor refresh for 20 periods (<span id="twentyRefreshPeriodDuration"></span> seconds).</em><br>
+            <em>All buttons of this section stop the WPalaSensor refresh for 20 periods (<span
+                    id="twentyRefreshPeriodDuration"></span> seconds).</em><br>
             <em>This allows you to adjust the thermistor and see the result on the stove display.</em><br>
 
             <br>
@@ -283,6 +284,22 @@
 <script>
     //QuerySelector Prefix is added by load function to know into what element queySelector need to look for
     //var qsp = '#contentX ';
+
+    function getSteinhartHart(R1, T1, R2, T2, R3, T3) {
+        T1 = T1 + 273.15; T2 = T2 + 273.15; T3 = T3 + 273.15;
+
+        var L1 = Math.log(R1); var L2 = Math.log(R2); var L3 = Math.log(R3);
+
+        var Y1 = 1 / T1; var Y2 = 1 / T2; var Y3 = 1 / T3;
+
+        var Lambda2 = (Y2 - Y1) / (L2 - L1);
+        var Lambda3 = (Y3 - Y1) / (L3 - L1);
+
+        var C = ((Lambda3 - Lambda2) / (L3 - L2)) / (L1 + L2 + L3);
+        var B = Lambda2 - C * (L1 * L1 + L1 * L2 + L2 * L2);
+        var A = Y1 - (B + L1 * L1 * C) * L1;
+        return [A, B, C];
+    }
 
     $(qsp + "#calibButton").addEventListener('click', function (evt) {
         evt.preventDefault();
