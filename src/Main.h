@@ -3,9 +3,6 @@
 
 #include <Arduino.h>
 
-// Specific
-#include "data/calib.html.gz.h"
-
 // DomoChip Informations
 // Configuration Web Pages :
 // http://IP/

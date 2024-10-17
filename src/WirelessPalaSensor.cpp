@@ -1001,11 +1001,6 @@ size_t WebPalaSensor::getHTMLContentSize(WebPageForPlaceHolder wp)
 // code to register web request answer to the web server
 void WebPalaSensor::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseApplication)
 {
-  server.on("/calib.html", HTTP_GET, [&server]()
-            {
-    server.sendHeader(F("Content-Encoding"), F("gzip"));
-    server.send_P(200, PSTR("text/html"), calibhtmlgz, sizeof(calibhtmlgz)); });
-
   // GetDigiPot
   server.on("/gdp", HTTP_GET, [this, &server]()
             {
