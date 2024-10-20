@@ -54,7 +54,7 @@ void WebPalaSensor::timerTick()
     JsonDocument doc;
     doc["Core"] = serialized(_applicationList[Core]->getStatusJSON());
     doc["Wifi"] = serialized(_applicationList[WifiMan]->getStatusJSON());
-    doc[APPLICATION1_NAME] = serialized(getStatusJSON());
+    doc[_appName] = serialized(getStatusJSON());
 
     String strJson;
     serializeJson(doc, strJson);
