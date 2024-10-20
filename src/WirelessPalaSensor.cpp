@@ -820,53 +820,58 @@ String WebPalaSensor::generateStatusJSON()
 {
   JsonDocument doc;
 
-  // Home Automation infos
-  String has1;
-  switch (_ha.protocol)
+  if (_ha.protocol == HA_PROTO_HTTP)
+    doc["haprotocol"] = F("HTTP");
+  else if (_ha.protocol == HA_PROTO_MQTT)
+    doc["haprotocol"] = F("MQTT");
+  else
+    doc["haprotocol"] = F("Disabled");
+
+  // Home automation connection status
+  if (_ha.protocol == HA_PROTO_HTTP)
   {
-  case HA_PROTO_DISABLED:
-    has1 = F("Disabled");
-    break;
-  case HA_PROTO_HTTP:
-    has1 = String(F("Last HTTP Result : ")) + _haRequestResult;
-    break;
-  case HA_PROTO_MQTT:
-    has1 = F("MQTT State : ");
+    doc["hahttplastrespcode"] = _haRequestResult;
+  }
+  else if (_ha.protocol == HA_PROTO_MQTT)
+  {
     switch (_mqttMan.state())
     {
     case MQTT_CONNECTION_TIMEOUT:
-      has1 = has1 + F("Timed Out");
+      doc["hamqttstatus"] = F("Timed Out");
       break;
     case MQTT_CONNECTION_LOST:
-      has1 = has1 + F("Lost");
+      doc["hamqttstatus"] = F("Lost");
       break;
     case MQTT_CONNECT_FAILED:
-      has1 = has1 + F("Failed");
+      doc["hamqttstatus"] = F("Failed");
       break;
     case MQTT_CONNECTED:
-      has1 = has1 + F("Connected");
+      doc["hamqttstatus"] = F("Connected");
       break;
     case MQTT_CONNECT_BAD_PROTOCOL:
-      has1 = has1 + F("Bad Protocol Version");
+      doc["hamqttstatus"] = F("Bad Protocol Version");
       break;
     case MQTT_CONNECT_BAD_CLIENT_ID:
-      has1 = has1 + F("Incorrect ClientID ");
+      doc["hamqttstatus"] = F("Incorrect ClientID ");
       break;
     case MQTT_CONNECT_UNAVAILABLE:
-      has1 = has1 + F("Server Unavailable");
+      doc["hamqttstatus"] = F("Server Unavailable");
       break;
     case MQTT_CONNECT_BAD_CREDENTIALS:
-      has1 = has1 + F("Bad Credentials");
+      doc["hamqttstatus"] = F("Bad Credentials");
       break;
     case MQTT_CONNECT_UNAUTHORIZED:
-      has1 = has1 + F("Connection Unauthorized");
+      doc["hamqttstatus"] = F("Connection Unauthorized");
       break;
     }
-    break;
   }
-  doc["has1"] = has1;
+
+  // Home Automation last temperature
   if (_ha.protocol != HA_PROTO_DISABLED)
-    doc["has2"] = String(F("Last Temperature : ")) + _haTemperature + F(" (") + ((millis() - _haTemperatureMillis) / 1000) + F(" seconds ago)");
+  {
+    doc["haslasttemp"] = String(_haTemperature, 2);
+    doc["haslasttempage"] = ((millis() - _haTemperatureMillis) / 1000);
+  }
 
   // stove(WPalaControl/CBox) infos
   String cbs1;

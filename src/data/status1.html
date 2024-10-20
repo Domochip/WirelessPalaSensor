@@ -5,8 +5,11 @@
         <h6 style="display:inline"><b> Loading...</b></h6>
     </span></h2>
 <h4>Home Automation</h4>
-<span id="has1"></span><br>
-<span id="has2"></span><br>
+Protocol: <span id="haprotocol"></span><br>
+<span id="hahttplastrespcodee" style='display:none'>Last HTTP response code: <span id="hahttplastrespcode"></span><br></span>
+<span id="hamqttstatuse" style='display:none'>Connection State: <span id="hamqttstatus"></span><br></span>
+<span id="haslasttempe" style='display:none'>Last HA Temperature: <span id="haslasttemp"></span><br></span>
+<span id="haslasttempagee" style='display:none'>Last HA Temperature Age: <span id="haslasttempage"></span> seconds<br></span>
 <h4>WPalaControl/CBox</h4>
 <span id="cbs1"></span><br>
 <span id="cbs2"></span><br>
@@ -24,6 +27,12 @@ Pushed Temperature <span id="pt"></span> (pos: <span id="p50"></span>/<span id="
             for (k in GS) {
                 if ((e = $(qsp + '#' + k)) != undefined) e.innerHTML = GS[k];
             }
+
+            $(qsp + "#hahttplastrespcodee").style.display = (GS["hahttplastrespcode"] ? '' : 'none');
+            $(qsp + "#hamqttstatuse").style.display = (GS["hamqttstatus"] ? '' : 'none');
+            $(qsp + "#haslasttempe").style.display = (GS["haslasttemp"] ? '' : 'none');
+            $(qsp + "#haslasttempagee").style.display = (GS["haslasttempage"] ? '' : 'none');
+
             fadeOut($(qsp + "#l"));
         },
         function () {
