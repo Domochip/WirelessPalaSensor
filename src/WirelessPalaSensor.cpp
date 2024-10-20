@@ -40,6 +40,28 @@ void WebPalaSensor::setDualDigiPot(unsigned int dp50kPosition, unsigned int dp5k
 //-----------------------------------------------------------------------
 void WebPalaSensor::timerTick()
 {
+  // LOG
+  LOG_SERIAL.println(F("TimerTick"));
+
+  // if MQTT protocol is enabled and connected then publish Core, Wifi and WPalaControl status
+  if ((_ha.protocol == HA_PROTO_MQTT || _ha.cboxProtocol == CBOX_PROTO_MQTT) && _mqttMan.connected())
+  {
+    String baseTopic = _ha.mqtt.baseTopic;
+    MQTTMan::prepareTopic(baseTopic);
+    // remove the last char of baseTopic which is a '/'
+    baseTopic.remove(baseTopic.length() - 1);
+
+    JsonDocument doc;
+    doc["Core"] = serialized(_applicationList[Core]->getStatusJSON());
+    doc["Wifi"] = serialized(_applicationList[WifiMan]->getStatusJSON());
+    doc[APPLICATION1_NAME] = serialized(getStatusJSON());
+
+    String strJson;
+    serializeJson(doc, strJson);
+
+    _mqttMan.publish(baseTopic.c_str(), strJson.c_str(), true);
+  }
+
   if (_skipTick)
   {
     _skipTick--;
@@ -47,9 +69,6 @@ void WebPalaSensor::timerTick()
   }
 
   float temperatureToDisplay = 20.0;
-
-  // LOG
-  LOG_SERIAL.println(F("TimerTick"));
 
   // read temperature from the local sensor
   _owTemperature = _ds18b20.readTemp();
