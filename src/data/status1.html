@@ -6,17 +6,37 @@
     </span></h2>
 <h4>Home Automation</h4>
 Protocol: <span id="haprotocol"></span><br>
-<span id="hahttplastrespcodee" style='display:none'>Last HTTP response code: <span id="hahttplastrespcode"></span><br></span>
-<span id="hamqttstatuse" style='display:none'>Connection State: <span id="hamqttstatus"></span><br></span>
-<span id="haslasttempe" style='display:none'>Last HA Temperature: <span id="haslasttemp"></span><br></span>
-<span id="haslasttempagee" style='display:none'>Last HA Temperature Age: <span id="haslasttempage"></span> seconds<br></span>
+<span id="hahttplastrespcodee" style='display:none'>
+    Last HTTP response code: <span id="hahttplastrespcode"></span><br>
+</span>
+<span id="hamqttstatuse" style='display:none'>
+    Connection State: <span id="hamqttstatus"></span><br>
+</span>
+<span id="haslasttempe" style='display:none'>
+    Last HA Temperature: <span id="haslasttemp"></span><br>
+</span>
+<span id="haslasttempagee" style='display:none'>
+    Last HA Temperature Age: <span id="haslasttempage"></span> seconds<br>
+</span>
 <h4>WPalaControl/CBox</h4>
-<span id="cbs1"></span><br>
-<span id="cbs2"></span><br>
+Protocol: <span id="cboxprotocol"></span><br>
+<span id="cboxhttplastrespcodee" style='display:none'>
+    Last HTTP response code: <span id="cboxhttplastrespcode"></span><br>
+</span>
+<span id="cboxmqttstatuse" style='display:none'>
+    Connection State: <span id="cboxmqttstatus"></span><br>
+</span>
+<span id="cboxlasttempe" style='display:none'>
+    Last WPalaControl/CBox Temperature: <span id="cboxlasttemp"></span><br>
+</span>
+<span id="cboxlasttempagee" style='display:none'>
+    Last WPalaControl/CBox Temperature Age: <span id="cboxlasttempage"></span> seconds<br>
+</span>
 <h4>Built-In Temperature</h4>
-Temperature: <span id="owt"></span> (<span id="owu"></span>Used)<br>
+Temperature: <span id="onewiretemp"></span><br>
+Used: <span id="onewiretempused"></span><br>
 <h4>WPalaSensor output</h4>
-Pushed Temperature <span id="pt"></span> (pos: <span id="p50"></span>/<span id="p5"></span>)<br>
+Pushed Temperature: <span id="pushedtemp"></span> (pos: <span id="dgp50k"></span>/<span id="dgp5k"></span>)<br>
 
 <script>
     //QuerySelector Prefix is added by load function to know into what element queySelector need to look for
@@ -32,6 +52,11 @@ Pushed Temperature <span id="pt"></span> (pos: <span id="p50"></span>/<span id="
             $(qsp + "#hamqttstatuse").style.display = (GS["hamqttstatus"] ? '' : 'none');
             $(qsp + "#haslasttempe").style.display = (GS["haslasttemp"] ? '' : 'none');
             $(qsp + "#haslasttempagee").style.display = (GS["haslasttempage"] ? '' : 'none');
+
+            $(qsp + "#cboxhttplastrespcodee").style.display = (GS["cboxhttplastrespcode"] ? '' : 'none');
+            $(qsp + "#cboxmqttstatuse").style.display = (GS["cboxmqttstatus"] ? '' : 'none');
+            $(qsp + "#cboxlasttempe").style.display = (GS["cboxlasttemp"] ? '' : 'none');
+            $(qsp + "#cboxlasttempagee").style.display = (GS["cboxlasttempage"] ? '' : 'none');
 
             fadeOut($(qsp + "#l"));
         },

@@ -820,6 +820,7 @@ String WebPalaSensor::generateStatusJSON()
 {
   JsonDocument doc;
 
+  // Home automation protocol
   if (_ha.protocol == HA_PROTO_HTTP)
     doc["haprotocol"] = F("HTTP");
   else if (_ha.protocol == HA_PROTO_MQTT)
@@ -866,66 +867,73 @@ String WebPalaSensor::generateStatusJSON()
     }
   }
 
-  // Home Automation last temperature
+  // Home Automation last temperature and age
   if (_ha.protocol != HA_PROTO_DISABLED)
   {
     doc["haslasttemp"] = String(_haTemperature, 2);
     doc["haslasttempage"] = ((millis() - _haTemperatureMillis) / 1000);
   }
 
-  // stove(WPalaControl/CBox) infos
-  String cbs1;
-  switch (_ha.cboxProtocol)
+  // WPalaControl/CBox protocol
+  if (_ha.cboxProtocol == CBOX_PROTO_HTTP)
+    doc["cboxprotocol"] = F("HTTP");
+  else if (_ha.cboxProtocol == CBOX_PROTO_MQTT)
+    doc["cboxprotocol"] = F("MQTT");
+  else
+    doc["cboxprotocol"] = F("Disabled");
+
+  // WPalaControl/CBox connection status
+  if (_ha.cboxProtocol == CBOX_PROTO_HTTP)
   {
-  case CBOX_PROTO_DISABLED:
-    cbs1 = F("Disabled");
-    break;
-  case CBOX_PROTO_HTTP:
-    cbs1 = String(F("Last HTTP Result : ")) + _stoveRequestResult;
-    break;
-  case CBOX_PROTO_MQTT:
-    cbs1 = F("MQTT State : ");
+    doc["cboxhttplastrespcode"] = _stoveRequestResult;
+  }
+  else if (_ha.cboxProtocol == CBOX_PROTO_MQTT)
+  {
     switch (_mqttMan.state())
     {
     case MQTT_CONNECTION_TIMEOUT:
-      cbs1 = cbs1 + F("Timed Out");
+      doc["cboxmqttstatus"] = F("Timed Out");
       break;
     case MQTT_CONNECTION_LOST:
-      cbs1 = cbs1 + F("Lost");
+      doc["cboxmqttstatus"] = F("Lost");
       break;
     case MQTT_CONNECT_FAILED:
-      cbs1 = cbs1 + F("Failed");
+      doc["cboxmqttstatus"] = F("Failed");
       break;
     case MQTT_CONNECTED:
-      cbs1 = cbs1 + F("Connected");
+      doc["cboxmqttstatus"] = F("Connected");
       break;
     case MQTT_CONNECT_BAD_PROTOCOL:
-      cbs1 = cbs1 + F("Bad Protocol Version");
+      doc["cboxmqttstatus"] = F("Bad Protocol Version");
       break;
     case MQTT_CONNECT_BAD_CLIENT_ID:
-      cbs1 = cbs1 + F("Incorrect ClientID ");
+      doc["cboxmqttstatus"] = F("Incorrect ClientID ");
       break;
     case MQTT_CONNECT_UNAVAILABLE:
-      cbs1 = cbs1 + F("Server Unavailable");
+      doc["cboxmqttstatus"] = F("Server Unavailable");
       break;
     case MQTT_CONNECT_BAD_CREDENTIALS:
-      cbs1 = cbs1 + F("Bad Credentials");
+      doc["cboxmqttstatus"] = F("Bad Credentials");
       break;
     case MQTT_CONNECT_UNAUTHORIZED:
-      cbs1 = cbs1 + F("Connection Unauthorized");
+      doc["cboxmqttstatus"] = F("Connection Unauthorized");
       break;
     }
-    break;
   }
-  doc["cbs1"] = cbs1;
-  if (_ha.cboxProtocol != CBOX_PROTO_DISABLED)
-    doc["cbs2"] = String(F("Last Temperature : ")) + _stoveTemperature + F(" (") + ((millis() - _stoveTemperatureMillis) / 1000) + F(" seconds ago)");
 
-  doc["owt"] = serialized(String(_owTemperature, 2));
-  doc["owu"] = (_haTemperatureUsed ? F("Not ") : F(""));
-  doc["pt"] = serialized(String(_pushedTemperature, 2));
-  doc["p50"] = _mcp4151_50k.getPosition(0);
-  doc["p5"] = _mcp4151_5k.getPosition(0);
+  // WPalaControl/CBox last temperature and age
+  if (_ha.cboxProtocol != CBOX_PROTO_DISABLED)
+  {
+    doc["cboxlasttemp"] = String(_stoveTemperature, 2);
+    doc["cboxlasttempage"] = ((millis() - _stoveTemperatureMillis) / 1000);
+  }
+
+  doc["onewiretemp"] = String(_owTemperature, 2);
+  doc["onewiretempused"] = (_haTemperatureUsed ? F("No") : F("Yes"));
+
+  doc["pushedtemp"] = String(_pushedTemperature, 2);
+  doc["dgp50k"] = _mcp4151_50k.getPosition(0);
+  doc["dgp5k"] = _mcp4151_5k.getPosition(0);
 
   String gs;
   doc.shrinkToFit();
