@@ -1,4 +1,4 @@
-# WirelessPalaSensor
+# WPalaSensor
 
 This project aims to replace the Palazzetti (Fumis) room temperature sensor by an electronic simulator.  
 It allows you to push home automation temperature to the stove.  
@@ -26,11 +26,11 @@ All files are inside `schematic` subfolder and has been designed with KiCad (fre
 
 ### Schematic
 
-![WirelessPalaSensor schematic](https://raw.github.com/Domochip/WirelessPalaSensor/master/img/schematic.png)
+![WPalaSensor schematic](https://raw.github.com/Domochip/WirelessPalaSensor/master/img/schematic.png)
 
 ### PCB
 
-![WirelessPalaSensor PCB](https://raw.github.com/Domochip/WirelessPalaSensor/master/img/pcb-top.png)![WirelessPalaSensor PCB2](https://raw.github.com/Domochip/WirelessPalaSensor/master/img/pcb-bottom.png)
+![WPalaSensor PCB](https://raw.github.com/Domochip/WirelessPalaSensor/master/img/pcb-top.png)![WirelessPalaSensor PCB2](https://raw.github.com/Domochip/WirelessPalaSensor/master/img/pcb-bottom.png)
 
 *We produced a small batch of this adapter for test/debugging and our personal use.
 If you are interested, please PM.*
@@ -39,7 +39,7 @@ If you are interested, please PM.*
 
 Box project (Fusion 360 & STL) can be found into `box` folder
 
-![WirelessPalaSensor box](https://raw.github.com/Domochip/WirelessPalaSensor/master/img/box.png)
+![WPalaSensor box](https://raw.github.com/Domochip/WirelessPalaSensor/master/img/box.png)
 
 ### Code/Compile/Flash
 
