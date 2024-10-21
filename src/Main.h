@@ -10,7 +10,7 @@
 #define APPLICATION1_HEADER "WirelessPalaSensor.h"
 #define APPLICATION1_NAME "WPalaSensor"
 #define APPLICATION1_DESC "DomoChip Wireless Palazzetti Sensor"
-#define APPLICATION1_CLASS WebPalaSensor
+#define APPLICATION1_CLASS WPalaSensor
 
 #define VERSION_NUMBER "4.0.7"
 

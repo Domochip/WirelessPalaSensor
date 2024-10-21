@@ -21,7 +21,7 @@ const char appDataPredefPassword[] PROGMEM = "ewcXoCt4HHjZUvY1";
 #include "SingleDS18B20.h"
 #include "McpDigitalPot.h"
 
-class WebPalaSensor : public Application
+class WPalaSensor : public Application
 {
 private:
   // -------------------- DigiPots Classes--------------------
@@ -156,7 +156,7 @@ private:
   void appRun();
 
 public:
-  WebPalaSensor(char appId, String fileName);
+  WPalaSensor(char appId, String fileName);
 };
 
 #endif

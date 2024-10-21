@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------
 // Steinhart–Hart reverse function
 //-----------------------------------------------------------------------
-void WebPalaSensor::setDualDigiPot(float temperature)
+void WPalaSensor::setDualDigiPot(float temperature)
 {
   // convert temperature from Celsius to Kevin degrees
   float temperatureK = temperature + 273.15;
@@ -16,7 +16,7 @@ void WebPalaSensor::setDualDigiPot(float temperature)
 //-----------------------------------------------------------------------
 // Set Dual DigiPot resistance (serial rBW)
 //-----------------------------------------------------------------------
-void WebPalaSensor::setDualDigiPot(int resistance)
+void WPalaSensor::setDualDigiPot(int resistance)
 {
   float adjustedResistance = resistance - _digipotsNTC.rWTotal - (_digipotsNTC.rBW5KStep * _digipotsNTC.dp5kOffset);
 
@@ -26,7 +26,7 @@ void WebPalaSensor::setDualDigiPot(int resistance)
   setDualDigiPot(digiPot50k_position, digiPot5k_position + _digipotsNTC.dp5kOffset);
 }
 
-void WebPalaSensor::setDualDigiPot(unsigned int dp50kPosition, unsigned int dp5kPosition)
+void WPalaSensor::setDualDigiPot(unsigned int dp50kPosition, unsigned int dp5kPosition)
 {
   // Set DigiPot position
   if (_mcp4151_50k.getPosition(0) != dp50kPosition)
@@ -38,7 +38,7 @@ void WebPalaSensor::setDualDigiPot(unsigned int dp50kPosition, unsigned int dp5k
 //-----------------------------------------------------------------------
 // Main Timer Tick (aka this should be done every 30sec)
 //-----------------------------------------------------------------------
-void WebPalaSensor::timerTick()
+void WPalaSensor::timerTick()
 {
   // LOG
   LOG_SERIAL.println(F("TimerTick"));
@@ -326,7 +326,7 @@ void WebPalaSensor::timerTick()
 
 //------------------------------------------
 // Connect then Subscribe to MQTT
-void WebPalaSensor::mqttConnectedCallback(MQTTMan *mqttMan, bool firstConnection)
+void WPalaSensor::mqttConnectedCallback(MQTTMan *mqttMan, bool firstConnection)
 {
 
   // Subscribe to needed topic
@@ -348,7 +348,7 @@ void WebPalaSensor::mqttConnectedCallback(MQTTMan *mqttMan, bool firstConnection
 
 //------------------------------------------
 // Callback used when an MQTT message arrived
-void WebPalaSensor::mqttCallback(char *topic, uint8_t *payload, unsigned int length)
+void WPalaSensor::mqttCallback(char *topic, uint8_t *payload, unsigned int length)
 {
   // if Home Automation is configured for MQTT and topic match
   if (_ha.protocol == HA_PROTO_MQTT && !strcmp(topic, _ha.mqtt.temperatureTopic))
@@ -414,7 +414,7 @@ void WebPalaSensor::mqttCallback(char *topic, uint8_t *payload, unsigned int len
 }
 
 //------------------------------------------
-bool WebPalaSensor::publishHassDiscoveryToMqtt()
+bool WPalaSensor::publishHassDiscoveryToMqtt()
 {
   // if MQTT is not connected then return false
   if (!_mqttMan.connected())
@@ -491,7 +491,7 @@ bool WebPalaSensor::publishHassDiscoveryToMqtt()
 
 //------------------------------------------
 // Used to initialize configuration properties to default values
-void WebPalaSensor::setConfigDefaultValues()
+void WPalaSensor::setConfigDefaultValues()
 {
   _refreshPeriod = 30;
 
@@ -532,7 +532,7 @@ void WebPalaSensor::setConfigDefaultValues()
 
 //------------------------------------------
 // Parse JSON object into configuration properties
-bool WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
+bool WPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
 {
   JsonVariant jv;
   char tempPassword[183 + 1] = {0};
@@ -719,7 +719,7 @@ bool WebPalaSensor::parseConfigJSON(JsonDocument &doc, bool fromWebPage = false)
 
 //------------------------------------------
 // Generate JSON from configuration properties
-String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
+String WPalaSensor::generateConfigJSON(bool forSaveFile = false)
 {
   JsonDocument doc;
 
@@ -816,7 +816,7 @@ String WebPalaSensor::generateConfigJSON(bool forSaveFile = false)
 
 //------------------------------------------
 // Generate JSON of application status
-String WebPalaSensor::generateStatusJSON()
+String WPalaSensor::generateStatusJSON()
 {
   JsonDocument doc;
 
@@ -948,7 +948,7 @@ String WebPalaSensor::generateStatusJSON()
 
 //------------------------------------------
 // code to execute during initialization and reinitialization of the app
-bool WebPalaSensor::appInit(bool reInit)
+bool WPalaSensor::appInit(bool reInit)
 {
   // stop Ticker
   _refreshTicker.detach();
@@ -968,8 +968,8 @@ bool WebPalaSensor::appInit(bool reInit)
     _mqttMan.setBufferSize(600); // max JSON size (Connectivity HAss discovery ~450)
     _mqttMan.setClient(_wifiClient).setServer(_ha.mqtt.hostname, _ha.mqtt.port);
     _mqttMan.setConnectedAndWillTopic(willTopic.c_str());
-    _mqttMan.setConnectedCallback(std::bind(&WebPalaSensor::mqttConnectedCallback, this, std::placeholders::_1, std::placeholders::_2));
-    _mqttMan.setCallback(std::bind(&WebPalaSensor::mqttCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    _mqttMan.setConnectedCallback(std::bind(&WPalaSensor::mqttConnectedCallback, this, std::placeholders::_1, std::placeholders::_2));
+    _mqttMan.setCallback(std::bind(&WPalaSensor::mqttCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
     // Connect
     _mqttMan.connect(_ha.mqtt.username, _ha.mqtt.password);
@@ -998,7 +998,7 @@ bool WebPalaSensor::appInit(bool reInit)
 
 //------------------------------------------
 // Return HTML Code to insert into Status Web page
-const PROGMEM char *WebPalaSensor::getHTMLContent(WebPageForPlaceHolder wp)
+const PROGMEM char *WPalaSensor::getHTMLContent(WebPageForPlaceHolder wp)
 {
   switch (wp)
   {
@@ -1016,7 +1016,7 @@ const PROGMEM char *WebPalaSensor::getHTMLContent(WebPageForPlaceHolder wp)
 }
 
 // and his Size
-size_t WebPalaSensor::getHTMLContentSize(WebPageForPlaceHolder wp)
+size_t WPalaSensor::getHTMLContentSize(WebPageForPlaceHolder wp)
 {
   switch (wp)
   {
@@ -1035,7 +1035,7 @@ size_t WebPalaSensor::getHTMLContentSize(WebPageForPlaceHolder wp)
 
 //------------------------------------------
 // code to register web request answer to the web server
-void WebPalaSensor::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseApplication)
+void WPalaSensor::appInitWebServer(WebServer &server, bool &shouldReboot, bool &pauseApplication)
 {
   // GetDigiPot
   server.on("/gdp", HTTP_GET, [this, &server]()
@@ -1129,7 +1129,7 @@ void WebPalaSensor::appInitWebServer(WebServer &server, bool &shouldReboot, bool
 
 //------------------------------------------
 // Run for timer
-void WebPalaSensor::appRun()
+void WPalaSensor::appRun()
 {
   if (_ha.protocol == HA_PROTO_MQTT || _ha.cboxProtocol == CBOX_PROTO_MQTT)
   {
@@ -1155,7 +1155,7 @@ void WebPalaSensor::appRun()
 
 //------------------------------------------
 // Constructor
-WebPalaSensor::WebPalaSensor(char appId, String appName) : Application(appId, appName), _ds18b20(ONEWIRE_BUS_PIN), _mcp4151_5k(MCP4151_5k_SSPIN), _mcp4151_50k(MCP4151_50k_SSPIN)
+WPalaSensor::WPalaSensor(char appId, String appName) : Application(appId, appName), _ds18b20(ONEWIRE_BUS_PIN), _mcp4151_5k(MCP4151_5k_SSPIN), _mcp4151_50k(MCP4151_50k_SSPIN)
 {
   _applicationList[Application::Applications::Application1] = this;
 
