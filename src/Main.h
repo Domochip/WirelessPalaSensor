@@ -7,7 +7,7 @@
 // Configuration Web Pages :
 // http://IP/
 
-#define APPLICATION1_HEADER "WirelessPalaSensor.h"
+#define APPLICATION1_HEADER "WPalaSensor.h"
 #define APPLICATION1_NAME "WPalaSensor"
 #define APPLICATION1_DESC "DomoChip Wireless Palazzetti Sensor"
 #define APPLICATION1_CLASS WPalaSensor

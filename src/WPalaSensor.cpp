@@ -1,4 +1,4 @@
-#include "WirelessPalaSensor.h"
+#include "WPalaSensor.h"
 
 //-----------------------------------------------------------------------
 // Steinhart–Hart reverse function

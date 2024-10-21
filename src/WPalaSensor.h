@@ -1,5 +1,5 @@
-#ifndef WirelessPalaSensor_h
-#define WirelessPalaSensor_h
+#ifndef WPalaSensor_h
+#define WPalaSensor_h
 
 #include "Main.h"
 #include "base/MQTTMan.h"
